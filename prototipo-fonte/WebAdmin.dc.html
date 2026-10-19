@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Usuários e permissões</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#EEF3F7}
+a{color:#0057A8}a:hover{color:#0A2E5C}
+button,input{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #0091BF;outline-offset:2px}
+.side a{color:#3D4E63;text-decoration:none}
+.side a:hover{color:#0A2E5C;background:#F2F6FA}
+.side a[aria-current="page"]{color:#0057A8;background:#E3EEF9}
+.sbt:hover{background:#E3EEF9 !important;color:#0057A8 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #EEF3F7; font-family: 'Atkinson Hyperlegible', sans-serif; color: #0F1E2E; font-size: 15px; line-height: 1.45">
+
+  <aside class="side" style="position: relative; z-index: 3; flex: 1 1 {{ sb.w }}px; background: #FFFFFF; border-right: 1px solid #DDE5EE; padding: 20px {{ sb.px }}px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; justify-content: {{ sb.just }}; min-height: 56px; padding: 0 4px">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><img src="/_blob/fe6e834808d55038aef3b4eef26066a9" alt="Ourinhos Saneamento, GS Inima Traçado" style="height: 50px; width: auto; max-width: 100%; display: block"></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><img src="/_blob/a374aab8668546a40330f45f663763c8" alt="Ourinhos Saneamento" style="width: 38px; height: 38px; display: block"></sc-if>
+    </div>
+    <button type="button" class="sbt" onClick="{{ sb.toggle }}" aria-expanded="{{ sb.open }}" aria-label="{{ sb.label }}" title="{{ sb.label }}" style="position: absolute; top: 16px; right: -14px; z-index: 5; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid #DDE5EE; background: #FFFFFF; color: #52627A; box-shadow: 0 2px 6px rgba(10,46,92,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></sc-if>
+    </button>
+    <nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+      <a href="WebDashboard.dc.html" aria-label="Painel" title="Painel" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Painel</span></sc-if>
+      </a>
+      <a href="WebQuimicos.dc.html" aria-label="Produtos químicos" title="Produtos químicos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Produtos químicos</span></sc-if>
+      </a>
+      <a href="WebColetas.dc.html" aria-label="Coleta de campo" title="Coleta de campo" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M12 6.5s-2.5 2.7-2.5 4.4a2.5 2.5 0 0 0 5 0c0-1.7-2.5-4.4-2.5-4.4z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Coleta de campo</span></sc-if>
+      </a>
+      <a href="WebDescargas.dc.html" aria-label="Descargas de rede" title="Descargas de rede" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M7 21h8"/><path d="M8 21V10h6v11"/><path d="M7 10h8"/><path d="M9 10V7a2 2 0 0 1 4 0v3"/><path d="M14 14h3"/><path d="M19 13c0 0 1.5 1.7 1.5 2.7a1.5 1.5 0 0 1-3 0c0-1 1.5-2.7 1.5-2.7z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Descargas de rede</span></sc-if>
+      </a>
+      <a href="Main.dc.html" aria-label="Lançamentos" title="Lançamentos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Lançamentos</span></sc-if>
+      </a>
+      <a href="WebAdmin.dc.html" aria-current="page" aria-label="Usuários e permissões" title="Usuários e permissões" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.8c1.7.7 3 2.5 3.5 5.2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Usuários e permissões</span></sc-if>
+      </a>
+      <a href="WebDados.dc.html" aria-label="Importar e exportar" title="Importar e exportar" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Importar e exportar</span></sc-if>
+      </a>
+      <span title="Tarefas automáticas (em breve)" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #66778C">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Tarefas automáticas (em breve)</span></sc-if>
+      </span>
+    </nav>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box">
+    <div style="margin: -28px calc(-1 * clamp(16px, 3vw, 40px)) 24px; padding: 0 clamp(16px, 3vw, 40px); height: 60px; background: #FFFFFF; border-bottom: 1px solid #DDE5EE; display: flex; justify-content: flex-end; align-items: center; gap: 10px">
+      <button type="button" aria-label="Avisos" title="Avisos" style="width: 38px; height: 38px; border-radius: 50%; border: 0; background: #EEF3F7; color: #0A2E5C; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+        <span style="position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: #D97706; border: 2px solid #EEF3F7"></span>
+      </button>
+      <span style="width: 1px; height: 26px; background: #DDE5EE"></span>
+      <button type="button" aria-label="Conta de Felipe Rodrigues, Administrador" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; color: #0F1E2E">
+        <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0">F</span>
+        <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15"><span style="font-weight: 700; font-size: 14px; color: #0A2E5C">Felipe Rodrigues</span><span style="font-size: 12px; color: #52627A">Administrador</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; color: #0A2E5C; letter-spacing: -0.3px">Usuários e permissões</h1>
+          <span style="font-size: 15px; color: #52627A">Escolha quais blocos e unidades cada pessoa vê no app, e o que pode fazer no sistema web.</span>
+        </div>
+        <button type="button" style="height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: #0057A8; color: #FFFFFF; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Convidar usuário
+        </button>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+        <section style="flex: 1 1 280px; background: #FFFFFF; border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 4px" aria-label="Usuários">
+          <div style="padding: 8px 10px 10px; display: flex; justify-content: space-between; align-items: baseline">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">Equipe</h2>
+            <span style="font-size: 13px; color: #52627A">{{ activeN }} ativos</span>
+          </div>
+          <sc-for list="{{ users }}" as="u" hint-placeholder-count="6">
+            <button type="button" onClick="{{ u.pick }}" aria-pressed="{{ u.on }}" style="text-align: left; border: 0; border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; background: {{ u.bg }}; color: #0F1E2E">
+              <span style="width: 40px; height: 40px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; background: {{ u.avBg }}; color: {{ u.avFg }}">{{ u.ini }}</span>
+              <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+                <span style="font-weight: 700; color: #0A2E5C">{{ u.name }}</span>
+                <span style="font-size: 13px; color: #52627A">{{ u.roleLabel }}, blocos: {{ u.blocks }}</span>
+              </span>
+              <span style="font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{ u.stBg }}; color: {{ u.stFg }}">{{ u.status }}</span>
+            </button>
+          </sc-for>
+        </section>
+
+        <section style="flex: 999 1 600px; min-width: 0; background: #FFFFFF; border-radius: 22px; padding: clamp(18px, 2.2vw, 28px); display: flex; flex-direction: column; gap: 24px" aria-label="Permissões do usuário">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px; justify-content: space-between">
+            <div style="display: flex; align-items: center; gap: 14px">
+              <span style="width: 56px; height: 56px; border-radius: 18px; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px">{{ cur.ini }}</span>
+              <span style="display: flex; flex-direction: column">
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; color: #0A2E5C">{{ cur.name }}</span>
+                <span style="font-size: 14px; color: #52627A">{{ cur.email }}, último acesso {{ cur.last }}</span>
+              </span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: #0A2E5C; cursor: pointer">
+              <input type="checkbox" checked="{{ cur.active }}" onChange="{{ cur.toggleActive }}" style="width: 22px; height: 22px; accent-color: #0057A8; margin: 0" />
+              Conta ativa
+            </label>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-weight: 700; color: #0A2E5C">Perfil</span>
+            <div role="radiogroup" aria-label="Perfil" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px">
+              <sc-for list="{{ roles }}" as="r" hint-placeholder-count="4">
+                <button type="button" role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="text-align: left; border-radius: 16px; padding: 12px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; border: 2px solid {{ r.bd }}; background: {{ r.bg }}">
+                  <span style="font-weight: 700; color: #0A2E5C">{{ r.label }}</span>
+                  <span style="font-size: 13px; color: #52627A">{{ r.desc }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <span style="font-size: 13px; color: #52627A">O perfil preenche as permissões abaixo. Depois, ajuste caso a caso.</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Blocos do app</span>
+              <span style="font-size: 14px; color: #52627A">Só os blocos liberados aparecem na tela inicial do app desta pessoa.</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px">
+              <sc-for list="{{ blocks }}" as="b" hint-placeholder-count="3">
+                <div style="border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; grid-column: {{ b.span }}; border: 2px solid {{ b.bd }}; background: {{ b.bg }}">
+                  <label style="display: flex; align-items: center; gap: 12px; cursor: pointer">
+                    <input type="checkbox" checked="{{ b.on }}" onChange="{{ b.toggle }}" style="width: 24px; height: 24px; accent-color: #0057A8; margin: 0; flex-shrink: 0" />
+                    <span style="display: flex; flex-direction: column; flex: 1">
+                      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ b.title }}</span>
+                      <span style="font-size: 13px; color: #52627A">{{ b.summary }}</span>
+                    </span>
+                  </label>
+                  <sc-if value="{{ b.on }}" hint-placeholder-val="{{ true }}">
+                    <div style="display: flex; flex-direction: column; gap: 8px">
+                      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+                        <span style="font-size: 14px; font-weight: 700; color: #0A2E5C">{{ b.unitLabel }}</span>
+                        <span style="display: flex; gap: 4px">
+                          <button type="button" onClick="{{ b.all }}" style="border: 0; background: transparent; color: #0057A8; font-weight: 700; font-size: 13px; cursor: pointer; padding: 6px 8px">Marcar todas</button>
+                          <button type="button" onClick="{{ b.none }}" style="border: 0; background: transparent; color: #0057A8; font-weight: 700; font-size: 13px; cursor: pointer; padding: 6px 8px">Limpar</button>
+                        </span>
+                      </div>
+                      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                        <sc-for list="{{ b.units }}" as="x" hint-placeholder-count="6">
+                          <button type="button" onClick="{{ x.toggle }}" aria-pressed="{{ x.on }}" style="min-height: 34px; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 13px; cursor: pointer; border: 1.5px solid {{ x.bd }}; background: {{ x.bg }}; color: {{ x.fg }}">{{ x.name }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 10px; border-top: 1px solid #DDE5EE">
+                      <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer"><input type="checkbox" checked="{{ b.corrigir }}" onChange="{{ b.tCorrigir }}" style="width: 20px; height: 20px; accent-color: #0057A8; margin: 0" />Pode corrigir lançamentos</label>
+                      <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer"><input type="checkbox" checked="{{ b.exportar }}" onChange="{{ b.tExportar }}" style="width: 20px; height: 20px; accent-color: #0057A8; margin: 0" />Pode exportar dados</label>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Sistema web</span>
+              <span style="font-size: 14px; color: #52627A">Acesso pelo navegador do computador.</span>
+            </div>
+            <div style="border: 1px solid #DDE5EE; border-radius: 16px; overflow: hidden">
+              <sc-for list="{{ web }}" as="w" hint-placeholder-count="3">
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 14px 16px; border-top: 1px solid #EEF3F7">
+                  <span style="display: flex; flex-direction: column; flex: 1 1 200px">
+                    <span style="font-weight: 700; color: #0A2E5C">{{ w.label }}</span>
+                    <span style="font-size: 13px; color: #52627A">{{ w.desc }}</span>
+                  </span>
+                  <sc-for list="{{ w.acts }}" as="a" hint-placeholder-count="2">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer"><input type="checkbox" checked="{{ a.on }}" onChange="{{ a.toggle }}" style="width: 20px; height: 20px; accent-color: #0057A8; margin: 0" />{{ a.label }}</label>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid #EEF3F7">
+            <span style="font-size: 13px; color: #52627A; max-width: 52ch">Toda alteração fica registrada no histórico de auditoria, com data e autor.</span>
+            <button type="button" onClick="{{ save }}" style="height: 46px; padding: 0 22px; border: 0; border-radius: 12px; background: #0057A8; color: #FFFFFF; font-weight: 700; font-size: 15px; cursor: pointer">{{ saveLabel }}</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const users = [
+      { id: 'felipe', name: 'Felipe Rodrigues', email: 'felipe@empresa.com.br', role: 'admin', last: 'agora', active: true },
+      { id: 'ana', name: 'Ana', email: 'ana@empresa.com.br', role: 'operador', last: 'hoje, 07:55', active: true },
+      { id: 'rafael', name: 'Rafael', email: 'rafael@empresa.com.br', role: 'operador', last: 'hoje, 07:44', active: true },
+      { id: 'marcos', name: 'Marcos', email: 'marcos@empresa.com.br', role: 'lab', last: 'ontem, 16:40', active: true },
+      { id: 'juliana', name: 'Juliana', email: 'juliana@empresa.com.br', role: 'super', last: 'ontem, 18:02', active: true },
+      { id: 'pedro', name: 'Pedro', email: 'pedro@empresa.com.br', role: 'operador', last: 'há 41 dias', active: false }
+    ];
+    const perms = {};
+    users.forEach((u) => { perms[u.id] = this.preset(u.role); });
+    this.state = { open: true, users, sel: 'ana', perms, saved: false };
+  }
+  unitLists() {
+    return {
+      eta: ['ETA Pardo I', 'ETA Pardo II'],
+      ete: ['ETE Choso Misato', 'ETE Moradas', 'ETE Moradas Clube', 'ETE Pacaembu', 'ETE Ville de France', 'ETE Trianon'],
+      coleta: ['Sistema ETA', 'Sistema São João', 'Sistema Moradas', 'Sistema Pacaembu'],
+      descarga: ['Sistema ETA', 'Sistema São João', 'Sistema Moradas', 'Sistema Pacaembu'],
+      poco: ['REL Paineiras', 'Entrada RAP Paineiras 2', 'Saída RAP Paineiras 2', 'Poço Diamantes', 'RAP Cohab', 'REL Cohab', 'REL São João',
+        'Poço São João', 'Poço Pacaembu', 'RAP Pacaembu - Zona Alta', 'RAP Pacaembu - Zona Baixa', 'Poço Moradas', 'REL Moradas - Condomínio',
+        'REL Moradas - Bairros', 'REL Moradas Clube', 'Poço Ville de France', 'R3 > São Silvestre', 'REL São Silvestre', 'Recalque Vila Margarida',
+        'REL Parque Minas Gerais', 'REL Anchieta', 'Poço Nova Alcântara', 'RAP Nova Alcântara - Zona Baixa', 'RAP Nova Alcântara - Zona Alta']
+    };
+  }
+  preset(role) {
+    const L = this.unitLists();
+    const blk = (on, corrigir, exportar, k) => {
+      const units = {}; L[k].forEach((n) => { units[n] = true; });
+      return { on, corrigir, exportar, units };
+    };
+    const map = {
+      operador: { eta: [false, false, false], ete: [true, false, false], poco: [true, false, false], coleta: [true, false, false], descarga: [true, false, false], web: { painelVer: false, painelExp: false, imp: false, exp: false, admin: false } },
+      lab: { eta: [true, true, false], ete: [false, false, false], poco: [false, false, false], coleta: [true, true, false], descarga: [false, false, false], web: { painelVer: true, painelExp: false, imp: false, exp: false, admin: false } },
+      super: { eta: [true, true, true], ete: [true, true, true], poco: [true, true, true], coleta: [true, true, true], descarga: [true, true, true], web: { painelVer: true, painelExp: true, imp: false, exp: true, admin: false } },
+      admin: { eta: [true, true, true], ete: [true, true, true], poco: [true, true, true], coleta: [true, true, true], descarga: [true, true, true], web: { painelVer: true, painelExp: true, imp: true, exp: true, admin: true } }
+    }[role];
+    return {
+      eta: blk(map.eta[0], map.eta[1], map.eta[2], 'eta'),
+      ete: blk(map.ete[0], map.ete[1], map.ete[2], 'ete'),
+      poco: blk(map.poco[0], map.poco[1], map.poco[2], 'poco'),
+      coleta: blk(map.coleta[0], map.coleta[1], map.coleta[2], 'coleta'),
+      descarga: blk(map.descarga[0], map.descarga[1], map.descarga[2], 'descarga'),
+      web: Object.assign({}, map.web)
+    };
+  }
+  renderVals() {
+    const st = this.state;
+    const L = this.unitLists();
+    const ROLES = [
+      { k: 'operador', label: 'Operador', desc: 'Lança em campo' },
+      { k: 'lab', label: 'Laboratório', desc: 'ETAs e calibrações' },
+      { k: 'super', label: 'Supervisor', desc: 'Corrige e exporta' },
+      { k: 'admin', label: 'Administrador', desc: 'Acesso total' }
+    ];
+    const TITLES = { eta: 'ETAs', ete: 'ETEs', poco: 'Poços', coleta: 'Coleta de campo', descarga: 'Descargas de rede' };
+    const roleLabel = (k) => ROLES.find((r) => r.k === k).label;
+    const u = st.users.find((x) => x.id === st.sel);
+    const perm = st.perms[u.id];
+    const ini = (n) => n.charAt(0);
+    const clone = () => JSON.parse(JSON.stringify(st.perms));
+    const put = (pm) => this.setState({ perms: pm, saved: false });
+
+    const users = st.users.map((x) => {
+      const bl = ['eta', 'ete', 'poco', 'coleta', 'descarga'].filter((k) => st.perms[x.id][k].on).map((k) => TITLES[k]);
+      return {
+        name: x.name, roleLabel: roleLabel(x.role), ini: ini(x.name), on: x.id === st.sel,
+        blocks: bl.length ? bl.join(', ') : 'nenhum',
+        bg: x.id === st.sel ? '#E3EEF9' : 'transparent',
+        avBg: x.active ? '#0091BF' : '#DDE5EE', avFg: x.active ? '#FFFFFF' : '#52627A',
+        status: x.active ? 'Ativo' : 'Inativo',
+        stBg: x.active ? '#E2F4EE' : '#EEF3F7', stFg: x.active ? '#0B6B57' : '#52627A',
+        pick: () => this.setState({ sel: x.id, saved: false })
+      };
+    });
+
+    const roles = ROLES.map((r) => ({
+      label: r.label, desc: r.desc, on: u.role === r.k,
+      bd: u.role === r.k ? '#0057A8' : '#DDE5EE', bg: u.role === r.k ? '#F2F7FD' : '#FFFFFF',
+      pick: () => {
+        const pm = Object.assign({}, st.perms, { [u.id]: this.preset(r.k) });
+        this.setState({ perms: pm, saved: false, users: st.users.map((x) => x.id === u.id ? Object.assign({}, x, { role: r.k }) : x) });
+      }
+    }));
+
+    const blocks = ['eta', 'ete', 'poco', 'coleta', 'descarga'].map((k) => {
+      const b = perm[k];
+      const names = L[k];
+      const nOn = names.filter((n) => b.units[n]).length;
+      const setAll = (v) => () => { const pm = clone(); names.forEach((n) => { pm[u.id][k].units[n] = v; }); put(pm); };
+      return {
+        title: TITLES[k], on: b.on, unitLabel: (k === 'coleta' || k === 'descarga') ? 'Sistemas visíveis' : 'Unidades visíveis',
+        summary: b.on ? nOn + ' de ' + names.length + ((k === 'coleta' || k === 'descarga') ? ' sistemas liberados' : ' unidades liberadas') : 'Bloco oculto no app desta pessoa',
+        span: k === 'poco' ? '1 / -1' : 'auto',
+        bd: b.on ? '#0057A8' : '#DDE5EE', bg: b.on ? '#FFFFFF' : '#F5F8FB',
+        toggle: () => { const pm = clone(); pm[u.id][k].on = !pm[u.id][k].on; put(pm); },
+        all: setAll(true), none: setAll(false),
+        corrigir: b.corrigir, exportar: b.exportar,
+        tCorrigir: () => { const pm = clone(); pm[u.id][k].corrigir = !b.corrigir; put(pm); },
+        tExportar: () => { const pm = clone(); pm[u.id][k].exportar = !b.exportar; put(pm); },
+        units: names.map((n) => ({
+          name: n, on: !!b.units[n],
+          bg: b.units[n] ? '#0A2E5C' : '#FFFFFF', fg: b.units[n] ? '#FFFFFF' : '#52627A', bd: b.units[n] ? '#0A2E5C' : '#C7D4E2',
+          toggle: () => { const pm = clone(); pm[u.id][k].units[n] = !b.units[n]; put(pm); }
+        }))
+      };
+    });
+
+    const act = (key, label) => ({ label, on: !!perm.web[key], toggle: () => { const pm = clone(); pm[u.id].web[key] = !perm.web[key]; put(pm); } });
+    const web = [
+      { label: 'Painel de operação', desc: 'Dashboards e relatórios', acts: [act('painelVer', 'Ver'), act('painelExp', 'Exportar relatórios')] },
+      { label: 'Importar e exportar', desc: 'Planilhas CSV e XLSX', acts: [act('imp', 'Importar'), act('exp', 'Exportar')] },
+      { label: 'Administração', desc: 'Usuários, permissões e unidades', acts: [act('admin', 'Gerenciar')] }
+    ];
+
+    return {
+      sb: {
+        open: st.open, closed: !st.open, w: st.open ? 252 : 84, px: st.open ? 16 : 14,
+        just: st.open ? 'flex-start' : 'center',
+        label: st.open ? 'Recolher menu' : 'Expandir menu',
+        toggle: () => this.setState({ open: !st.open })
+      },
+      users, roles, blocks, web,
+      activeN: st.users.filter((x) => x.active).length,
+      cur: {
+        name: u.name, email: u.email, last: u.last, ini: ini(u.name), active: u.active,
+        toggleActive: () => this.setState({ users: st.users.map((x) => x.id === u.id ? Object.assign({}, x, { active: !u.active }) : x), saved: false })
+      },
+      save: () => this.setState({ saved: true }),
+      saveLabel: st.saved ? 'Alterações salvas' : 'Salvar alterações'
+    };
+  }
+}
+</script>
+</body>
+</html>

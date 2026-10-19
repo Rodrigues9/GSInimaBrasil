@@ -1,0 +1,96 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-19T00:20:00Z"
+  },
+  "title": "Ourinhos Saneamento – App Operacional",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "App do operador (celular)",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "WebDashboard.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 1360,
+      "h": 1000,
+      "title": "Web: painel de operação",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebAdmin.dc.html": {
+      "x": 1910,
+      "y": 0,
+      "w": 1360,
+      "h": 1000,
+      "title": "Web: usuários e permissões",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebDados.dc.html": {
+      "x": 3350,
+      "y": 0,
+      "w": 1360,
+      "h": 1000,
+      "title": "Web: importar e exportar dados",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebQuimicos.dc.html": {
+      "x": 4790,
+      "y": 0,
+      "w": 1360,
+      "h": 1000,
+      "title": "Web: controle de produtos químicos",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebColetas.dc.html": {
+      "x": 6230,
+      "y": 0,
+      "w": 1360,
+      "h": 1000,
+      "title": "Web: coleta de campo",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "WebDescargas.dc.html": {
+      "x": 7670,
+      "y": 0,
+      "w": 1360,
+      "h": 1000,
+      "title": "Web: descargas de rede",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "WebDashboard.dc.html",
+    "WebAdmin.dc.html",
+    "WebDados.dc.html",
+    "WebQuimicos.dc.html",
+    "WebColetas.dc.html",
+    "WebDescargas.dc.html"
+  ],
+  "notes": {
+    "titulo": {
+      "x": 0,
+      "y": -300,
+      "text": "Protótipo: app de campo e sistema web",
+      "kind": "title1",
+      "maxW": 9030
+    }
+  },
+  "designSystems": []
+}

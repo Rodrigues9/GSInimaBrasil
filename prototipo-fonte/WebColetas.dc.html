@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Coleta de campo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#EEF3F7}
+a{color:#0057A8}a:hover{color:#0A2E5C}
+button,input{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #0091BF;outline-offset:2px}
+.side a{color:#3D4E63;text-decoration:none}
+.side a:hover{color:#0A2E5C;background:#F2F6FA}
+.side a[aria-current="page"]{color:#0057A8;background:#E3EEF9}
+.sbt:hover{background:#E3EEF9 !important;color:#0057A8 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #EEF3F7; font-family: 'Atkinson Hyperlegible', sans-serif; color: #0F1E2E; font-size: 15px; line-height: 1.45">
+
+  <aside class="side" style="position: relative; z-index: 3; flex: 1 1 {{ sb.w }}px; background: #FFFFFF; border-right: 1px solid #DDE5EE; padding: 20px {{ sb.px }}px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; justify-content: {{ sb.just }}; min-height: 56px; padding: 0 4px">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><img src="/_blob/fe6e834808d55038aef3b4eef26066a9" alt="Ourinhos Saneamento, GS Inima Traçado" style="height: 50px; width: auto; max-width: 100%; display: block"></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><img src="/_blob/a374aab8668546a40330f45f663763c8" alt="Ourinhos Saneamento" style="width: 38px; height: 38px; display: block"></sc-if>
+    </div>
+    <button type="button" class="sbt" onClick="{{ sb.toggle }}" aria-expanded="{{ sb.open }}" aria-label="{{ sb.label }}" title="{{ sb.label }}" style="position: absolute; top: 16px; right: -14px; z-index: 5; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid #DDE5EE; background: #FFFFFF; color: #52627A; box-shadow: 0 2px 6px rgba(10,46,92,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></sc-if>
+    </button>
+    <nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+      <a href="WebDashboard.dc.html" aria-label="Painel" title="Painel" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Painel</span></sc-if>
+      </a>
+      <a href="WebQuimicos.dc.html" aria-label="Produtos químicos" title="Produtos químicos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Produtos químicos</span></sc-if>
+      </a>
+      <a href="WebColetas.dc.html" aria-current="page" aria-label="Coleta de campo" title="Coleta de campo" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M12 6.5s-2.5 2.7-2.5 4.4a2.5 2.5 0 0 0 5 0c0-1.7-2.5-4.4-2.5-4.4z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Coleta de campo</span></sc-if>
+      </a>
+      <a href="WebDescargas.dc.html" aria-label="Descargas de rede" title="Descargas de rede" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M7 21h8"/><path d="M8 21V10h6v11"/><path d="M7 10h8"/><path d="M9 10V7a2 2 0 0 1 4 0v3"/><path d="M14 14h3"/><path d="M19 13c0 0 1.5 1.7 1.5 2.7a1.5 1.5 0 0 1-3 0c0-1 1.5-2.7 1.5-2.7z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Descargas de rede</span></sc-if>
+      </a>
+      <a href="Main.dc.html" aria-label="Lançamentos" title="Lançamentos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Lançamentos</span></sc-if>
+      </a>
+      <a href="WebAdmin.dc.html" aria-label="Usuários e permissões" title="Usuários e permissões" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.8c1.7.7 3 2.5 3.5 5.2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Usuários e permissões</span></sc-if>
+      </a>
+      <a href="WebDados.dc.html" aria-label="Importar e exportar" title="Importar e exportar" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Importar e exportar</span></sc-if>
+      </a>
+      <span title="Tarefas automáticas (em breve)" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #66778C">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Tarefas automáticas (em breve)</span></sc-if>
+      </span>
+    </nav>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box">
+    <div style="margin: -28px calc(-1 * clamp(16px, 3vw, 40px)) 24px; padding: 0 clamp(16px, 3vw, 40px); height: 60px; background: #FFFFFF; border-bottom: 1px solid #DDE5EE; display: flex; justify-content: flex-end; align-items: center; gap: 10px">
+      <button type="button" aria-label="Avisos" title="Avisos" style="width: 38px; height: 38px; border-radius: 50%; border: 0; background: #EEF3F7; color: #0A2E5C; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+        <span style="position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: #D97706; border: 2px solid #EEF3F7"></span>
+      </button>
+      <span style="width: 1px; height: 26px; background: #DDE5EE"></span>
+      <button type="button" aria-label="Conta de Felipe Rodrigues, Administrador" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; color: #0F1E2E">
+        <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0">F</span>
+        <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15"><span style="font-weight: 700; font-size: 14px; color: #0A2E5C">Felipe Rodrigues</span><span style="font-size: 12px; color: #52627A">Administrador</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div style="max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
+
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 14px; color: #52627A">Outubro de 2026, atualizado às 15:40</span>
+          <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; color: #0A2E5C; letter-spacing: -0.3px">Coleta de campo</h1>
+        </div>
+        <a href="WebDados.dc.html" style="height: 42px; padding: 0 16px; border-radius: 12px; background: #0057A8; color: #FFFFFF; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Exportar coletas
+        </a>
+      </div>
+
+      <p style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(20px, 2vw, 26px); line-height: 1.25; color: #0A2E5C; max-width: 46ch">{{ headline }}</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px" role="group" aria-label="Filtrar por sistema">
+        <sc-for list="{{ cards }}" as="c" hint-placeholder-count="4">
+          <button type="button" onClick="{{ c.pick }}" aria-pressed="{{ c.on }}" style="text-align: left; cursor: pointer; border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF; border: 2px solid {{ c.bd }}; color: #0F1E2E">
+            <span style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">{{ c.name }}</span>
+              <span style="font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: {{ c.stBg }}; color: {{ c.stFg }}">{{ c.pct }}%</span>
+            </span>
+            <span style="display: flex; align-items: baseline; gap: 6px">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 36px; line-height: 1; color: #0A2E5C; font-variant-numeric: tabular-nums">{{ c.done }}</span>
+              <span style="font-size: 15px; color: #52627A">de {{ c.meta }} coletas completas</span>
+            </span>
+            <span style="display: flex; height: 10px; border-radius: 5px; background: #E3ECF4; overflow: hidden" aria-hidden="true"><span style="display: block; height: 100%; width: {{ c.pctD }}%; background: #0057A8"></span><span style="display: block; height: 100%; width: {{ c.pctW }}%; background: #8FC6DE"></span></span>
+            <span style="font-size: 13px; color: #52627A">{{ c.sub }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #52627A; margin-top: -8px">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #0057A8"></span>Completas (todos os parâmetros lançados)</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #8FC6DE"></span>Coletadas, aguardando análises</span>
+        <span>Clique num sistema para filtrar a tabela.</span>
+      </div>
+
+      <section style="background: #FFFFFF; border-radius: 22px; padding: clamp(16px, 2vw, 22px); display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">{{ tableTitle }}</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+            <div role="group" aria-label="Situação" style="display: flex; background: #EEF3F7; border-radius: 12px; padding: 3px">
+              <sc-for list="{{ statusTabs }}" as="t" hint-placeholder-count="3">
+                <button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.on }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ t.bg }}; color: {{ t.fg }}">{{ t.label }}</button>
+              </sc-for>
+            </div>
+            <div style="position: relative">
+              <label for="col-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar ponto de coleta</label>
+              <input id="col-q" type="search" placeholder="Buscar endereço" value="{{ q }}" onChange="{{ setQ }}" style="height: 42px; width: 220px; max-width: 100%; box-sizing: border-box; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px 0 38px; font-size: 14px; background: #F8FAFC" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 12px"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+            </div>
+            <sc-if value="{{ hasSys }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ clearSys }}" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid #0A2E5C; background: #0A2E5C; color: #FFFFFF; font-weight: 700; font-size: 13px; cursor: pointer">{{ sysName }} ✕</button>
+            </sc-if>
+          </div>
+        </div>
+        <div style="overflow-x: auto; border: 1px solid #EEF3F7; border-radius: 14px">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1160px">
+            <thead>
+              <tr style="text-align: left; color: #52627A; background: #F5F8FB">
+                <th style="padding: 10px 12px; font-weight: 700">Ponto de coleta</th>
+                <th style="padding: 10px 8px; font-weight: 700">Coleta</th>
+                <th style="padding: 10px 8px; font-weight: 700; text-align: right">Cloro<br/><span style="font-weight: 400; font-size: 12px">mg/L</span></th>
+                <th style="padding: 10px 8px; font-weight: 700; text-align: right">Flúor<br/><span style="font-weight: 400; font-size: 12px">mg/L</span></th>
+                <th style="padding: 10px 8px; font-weight: 700; text-align: right">pH</th>
+                <th style="padding: 10px 8px; font-weight: 700; text-align: right">Cor<br/><span style="font-weight: 400; font-size: 12px">uH</span></th>
+                <th style="padding: 10px 8px; font-weight: 700; text-align: right">Turbidez<br/><span style="font-weight: 400; font-size: 12px">uT</span></th>
+                <th style="padding: 10px 8px; font-weight: 700">Colif. totais</th>
+                <th style="padding: 10px 8px; font-weight: 700">Colif. termot.</th>
+                <th style="padding: 10px 8px; font-weight: 700">Análises</th>
+                <th style="padding: 10px 12px; font-weight: 700">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+                <tr style="border-top: 1px solid #EEF3F7">
+                  <td style="padding: 10px 12px"><span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">{{ r.addr }}</span><span style="font-size: 12px; color: #52627A">{{ r.where }}</span></span></td>
+                  <td style="padding: 10px 8px; white-space: nowrap"><span style="display: flex; flex-direction: column"><span style="font-variant-numeric: tabular-nums">{{ r.colWhen }}</span><span style="font-size: 12px; color: #52627A">{{ r.colWho }}</span></span></td>
+                  <sc-for list="{{ r.vals }}" as="v" hint-placeholder-count="5">
+                    <td style="padding: 10px 8px; text-align: right; font-variant-numeric: tabular-nums"><span style="padding: 2px 7px; border-radius: 7px; font-weight: 700; background: {{ v.bg }}; color: {{ v.fg }}">{{ v.t }}</span></td>
+                  </sc-for>
+                  <sc-for list="{{ r.cols }}" as="v" hint-placeholder-count="2">
+                    <td style="padding: 10px 8px"><span style="padding: 2px 8px; border-radius: 7px; font-weight: 700; font-size: 13px; background: {{ v.bg }}; color: {{ v.fg }}">{{ v.t }}</span></td>
+                  </sc-for>
+                  <td style="padding: 10px 8px; white-space: nowrap"><span style="display: flex; flex-direction: column"><span style="font-variant-numeric: tabular-nums">{{ r.anWhen }}</span><span style="font-size: 12px; color: #52627A">{{ r.anWho }}</span></span></td>
+                  <td style="padding: 10px 12px"><span style="font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: {{ r.stBg }}; color: {{ r.stFg }}">{{ r.st }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+          <p style="margin: 0; text-align: center; color: #52627A; padding: 12px">Nenhuma coleta com esses filtros.</p>
+        </sc-if>
+        <p style="margin: 0; font-size: 13px; color: #52627A">{{ foot }} Valores fora do padrão aparecem destacados. Padrões de referência: cloro 0,2 a 2,0 mg/L, flúor 0,6 a 0,8 mg/L, pH 6,0 a 9,0, cor até 15 uH, turbidez até 5 uT e ausência de coliformes em 100 mL. O administrador pode ajustar esses limites.</p>
+      </section>
+
+      <p style="margin: 0; font-size: 13px; color: #52627A">Os números e endereços deste protótipo são de exemplo. No sistema, vêm dos pontos cadastrados e das coletas lançadas no app.</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: true, sys: '', status: 'todas', q: '' };
+  }
+  renderVals() {
+    const st = this.state;
+    const SYS = [
+      { k: 'eta', name: 'Sistema ETA', meta: 71, done: 44 },
+      { k: 'sj', name: 'Sistema São João', meta: 10, done: 6 },
+      { k: 'mor', name: 'Sistema Moradas', meta: 10, done: 7 },
+      { k: 'pac', name: 'Sistema Pacaembu', meta: 5, done: 3 }
+    ];
+    const A = [
+      ['Rua São Paulo, 450', 'Centro', 'eta'], ['Rua Rio de Janeiro, 1020', 'Centro', 'eta'],
+      ['Av. Domingos Camerlingo Caló, 2300', 'Vila Margarida', 'eta'], ['Rua Paraná, 315', 'Vila Odilon', 'eta'],
+      ['Rua Minas Gerais, 870', 'Parque Minas Gerais', 'eta'], ['Rua Bahia, 152', 'Jardim Paineiras', 'eta'],
+      ['Rua Espírito Santo, 640', 'Vila Kennedy', 'eta'], ['Rua Goiás, 99', 'Jardim Anchieta', 'eta'],
+      ['Rua das Acácias, 210', 'Jardim São João', 'sj'], ['Rua dos Ipês, 58', 'Jardim São João', 'sj'],
+      ['Rua Flamboyant, 300', 'Vila São João', 'sj'], ['Alameda das Orquídeas, 120', 'Residencial Moradas', 'mor'],
+      ['Rua das Hortênsias, 77', 'Moradas Clube', 'mor'], ['Alameda dos Lírios, 300', 'Residencial Moradas', 'mor'],
+      ['Rua Pernambuco, 510', 'Jardim Pacaembu', 'pac'], ['Rua Alagoas, 88', 'Jardim Pacaembu', 'pac']
+    ];
+    // a: endereço, c: coleta [data hora, quem], v: [cl, fl, ph, cor, tur], ct, cte, an: [data hora, quem] ou null
+    const R = [
+      { a: 8, c: ['19/10 09:05', 'Rafael'], v: ['0,62', '', '', '', ''], ct: '', cte: '', an: null },
+      { a: 5, c: ['19/10 08:40', 'Ana'], v: ['1,10', '0,70', '7,2', '', ''], ct: '', cte: '', an: ['19/10 14:10', 'Marcos (parcial)'] },
+      { a: 4, c: ['19/10 08:12', 'Ana'], v: ['0,85', '', '', '', ''], ct: '', cte: '', an: null },
+      { a: 14, c: ['18/10 16:10', 'Ana'], v: ['0,40', '', '', '', ''], ct: '', cte: '', an: null },
+      { a: 11, c: ['18/10 15:30', 'Rafael'], v: ['0,95', '0,68', '7,0', '5', '0,8'], ct: '', cte: '', an: ['18/10 17:20', 'Marcos (parcial)'] },
+      { a: 0, c: ['18/10 10:20', 'Ana'], v: ['1,20', '0,72', '7,1', '5', '0,6'], ct: '', cte: '', an: ['18/10 14:05', 'Marcos (parcial)'] },
+      { a: 1, c: ['17/10 09:30', 'Felipe'], v: ['1,05', '0,71', '7,3', '5', '0,7'], ct: 'A', cte: 'A', an: ['18/10 09:15', 'Marcos'] },
+      { a: 9, c: ['17/10 08:50', 'Rafael'], v: ['0,78', '0,66', '7,1', '5', '1,1'], ct: 'A', cte: 'A', an: ['18/10 09:20', 'Marcos'] },
+      { a: 2, c: ['16/10 10:05', 'Ana'], v: ['0,90', '0,74', '7,4', '10', '5,8'], ct: 'A', cte: 'A', an: ['17/10 08:40', 'Juliana'] },
+      { a: 12, c: ['16/10 09:40', 'Rafael'], v: ['0,55', '0,69', '6,9', '5', '0,9'], ct: 'P', cte: 'A', an: ['17/10 08:55', 'Juliana'] },
+      { a: 15, c: ['15/10 15:15', 'Ana'], v: ['0,88', '0,70', '7,0', '5', '0,5'], ct: 'A', cte: 'A', an: ['16/10 09:10', 'Marcos'] },
+      { a: 3, c: ['15/10 09:00', 'Felipe'], v: ['1,15', '0,73', '7,2', '5', '0,4'], ct: 'A', cte: 'A', an: ['16/10 08:30', 'Marcos'] },
+      { a: 6, c: ['14/10 10:30', 'Ana'], v: ['0,98', '0,85', '7,5', '5', '0,6'], ct: 'A', cte: 'A', an: ['15/10 09:00', 'Juliana'] },
+      { a: 13, c: ['14/10 09:10', 'Rafael'], v: ['0,70', '0,67', '7,0', '5', '0,7'], ct: 'A', cte: 'A', an: ['15/10 08:45', 'Juliana'] },
+      { a: 7, c: ['13/10 08:55', 'Ana'], v: ['1,25', '0,71', '7,3', '5', '0,5'], ct: 'A', cte: 'A', an: ['14/10 09:30', 'Marcos'] },
+      { a: 10, c: ['13/10 08:20', 'Rafael'], v: ['0,15', '0,68', '7,1', '5', '0,8'], ct: 'A', cte: 'A', an: ['14/10 09:35', 'Marcos'] }
+    ];
+    const sysOf = (k) => SYS.find((s) => s.k === k);
+    const num = (t) => Number(String(t).replace(',', '.'));
+    const LIM = [
+      (x) => x >= 0.2 && x <= 2.0, (x) => x >= 0.6 && x <= 0.8, (x) => x >= 6 && x <= 9, (x) => x <= 15, (x) => x <= 5
+    ];
+    const filled = (r) => r.v.slice(1).filter((x) => x !== '').length + (r.ct ? 1 : 0) + (r.cte ? 1 : 0);
+    const wait = {}; SYS.forEach((s) => { wait[s.k] = 0; });
+    R.forEach((r) => { if (filled(r) < 6) wait[A[r.a][2]] += 1; });
+
+    let tM = 0, tD = 0, tW = 0;
+    const cards = SYS.map((s) => {
+      const w = wait[s.k], falta = Math.max(0, s.meta - s.done);
+      tM += s.meta; tD += s.done; tW += w;
+      const pctD = Math.min(100, s.done / s.meta * 100);
+      const pct = Math.round(pctD);
+      return {
+        name: s.name, done: s.done, meta: s.meta, pct, on: st.sys === s.k,
+        bd: st.sys === s.k ? '#0057A8' : 'transparent',
+        stBg: pct >= 100 ? '#E2F4EE' : '#E3EEF9', stFg: pct >= 100 ? '#0B6B57' : '#0057A8',
+        pctD: pctD.toFixed(1), pctW: Math.min(100 - pctD, w / s.meta * 100).toFixed(1),
+        sub: falta === 0 ? 'Meta do mês concluída' : 'Faltam ' + falta + ' no mês' + (w ? ', ' + w + ' aguardando análises' : ''),
+        pick: () => this.setState({ sys: st.sys === s.k ? '' : s.k })
+      };
+    });
+
+    const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const q = norm(st.q.trim());
+    const ok = { bg: 'transparent', fg: '#0F1E2E' }, bad = { bg: '#FDF0DC', fg: '#8A3C06' }, crit = { bg: '#FCE8E6', fg: '#8C1D18' }, none = { bg: 'transparent', fg: '#7A8797' };
+    const rows = R.filter((r) => {
+      const ad = A[r.a], complete = filled(r) === 6;
+      if (st.sys && ad[2] !== st.sys) return false;
+      if (st.status === 'pend' && complete) return false;
+      if (st.status === 'ok' && !complete) return false;
+      if (q && norm(ad[0] + ' ' + ad[1]).indexOf(q) < 0) return false;
+      return true;
+    }).map((r) => {
+      const ad = A[r.a], n = filled(r), complete = n === 6;
+      const vals = r.v.map((t, i) => t === '' ? Object.assign({ t: '—' }, none) : Object.assign({ t }, LIM[i](num(t)) ? ok : bad));
+      const cb = (x) => x === '' ? Object.assign({ t: '—' }, none) : x === 'A' ? Object.assign({ t: 'Ausente' }, ok) : Object.assign({ t: 'Presente' }, crit);
+      const alert = r.ct === 'P' || r.cte === 'P';
+      return {
+        addr: ad[0], where: ad[1] + ', ' + sysOf(ad[2]).name,
+        colWhen: r.c[0], colWho: r.c[1],
+        vals, cols: [cb(r.ct), cb(r.cte)],
+        anWhen: r.an ? r.an[0] : 'Aguardando', anWho: r.an ? r.an[1] : '—',
+        st: alert ? 'Recoleta' : complete ? 'Completa' : 'Aguardando, ' + n + ' de 6',
+        stBg: alert ? '#FCE8E6' : complete ? '#E2F4EE' : '#FDF0DC',
+        stFg: alert ? '#8C1D18' : complete ? '#0B6B57' : '#8A3C06'
+      };
+    });
+    const tab = (k, label) => ({ label, on: st.status === k, bg: st.status === k ? '#FFFFFF' : 'transparent', fg: st.status === k ? '#0A2E5C' : '#52627A', pick: () => this.setState({ status: k }) });
+    const sel = st.sys ? sysOf(st.sys) : null;
+    return {
+      sb: {
+        open: st.open, closed: !st.open, w: st.open ? 252 : 84, px: st.open ? 16 : 14,
+        just: st.open ? 'flex-start' : 'center',
+        label: st.open ? 'Recolher menu' : 'Expandir menu',
+        toggle: () => this.setState({ open: !st.open })
+      },
+      headline: tD + ' de ' + tM + ' coletas completas em outubro. ' + tW + ' aguardam análises e faltam ' + (tM - tD) + ' para fechar a meta do mês.',
+      cards,
+      statusTabs: [tab('todas', 'Todas'), tab('pend', 'Aguardando análises'), tab('ok', 'Completas')],
+      q: st.q, setQ: (e) => this.setState({ q: e.target.value }),
+      hasSys: !!sel, sysName: sel ? sel.name : '', clearSys: () => this.setState({ sys: '' }),
+      tableTitle: sel ? 'Coletas do ' + sel.name : 'Coletas recentes',
+      rows, empty: rows.length === 0,
+      foot: 'Mostrando ' + rows.length + ' coletas.'
+    };
+  }
+}
+</script>
+</body>
+</html>

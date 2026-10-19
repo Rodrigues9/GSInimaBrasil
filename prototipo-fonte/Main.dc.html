@@ -1,0 +1,1826 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>App do operador</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0057A8}a:hover{color:#0A2E5C}
+.scr{scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.scr > *{flex-shrink:0}
+button{font-family:inherit}
+input,textarea{font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#0091BF !important;box-shadow:0 0 0 3px rgba(0,145,191,.22)}
+button:focus-visible,a:focus-visible{outline:3px solid #0091BF;outline-offset:2px}
+button[disabled]{cursor:not-allowed}
+.lg-ball{animation:lgBall 2.8s ease both}
+.lg-water{animation:lgWater 2.8s ease-in-out both}
+.lg-sym{animation:lgSym 2.8s cubic-bezier(.6,0,.2,1) both}
+.lg-txt{animation:lgTxt 2.8s ease-out both}
+@keyframes lgBall{0%{transform:scale(0);opacity:1}20%{transform:scale(1);opacity:1}52%{transform:scale(1);opacity:1}64%{transform:scale(1.08);opacity:0}100%{transform:scale(1.08);opacity:0}}
+@keyframes lgWater{0%,18%{transform:translateY(100%)}48%,100%{transform:translateY(0)}}
+@keyframes lgSym{0%,50%{opacity:0;transform:translateX(76px) scale(.85)}64%{opacity:1;transform:translateX(76px) scale(1)}72%{opacity:1;transform:translateX(76px) scale(1)}88%,100%{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes lgTxt{0%,80%{clip-path:inset(0 100% 0 0);opacity:0}82%{opacity:1}100%{clip-path:inset(0 0 0 0);opacity:1}}
+@media (prefers-reduced-motion: reduce){.lg-ball{display:none}.lg-sym,.lg-txt{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #EEF3F7; font-family: 'Atkinson Hyperlegible', sans-serif; color: #0F1E2E; font-size: 15px; line-height: 1.4">
+
+<!-- ============ LOGIN ============ -->
+<sc-if value="{{ s.login }}" hint-placeholder-val="{{ true }}">
+<div class="scr" style="position: absolute; inset: 0; display: flex; flex-direction: column; background: #EEF3F7; overflow-y: auto">
+  <div style="padding: 44px 24px 0; display: flex; flex-direction: column; align-items: center; text-align: center">
+    <div role="img" aria-label="Ourinhos Saneamento, GS Inima Traçado" style="position: relative; width: 207px; height: 64px">
+      <div class="lg-ball" style="position: absolute; left: 77px; top: 6px; width: 52px; height: 52px; border-radius: 50%; background: #005880; overflow: hidden">
+        <div class="lg-water" style="position: absolute; left: -10%; right: -10%; bottom: 0; height: 115%; background: #30B0C8; border-radius: 40% 40% 0 0"></div>
+      </div>
+      <img class="lg-sym" src="/_blob/01070b3e22852506e887e747b0c5ddce" alt="" style="position: absolute; left: 0; top: 0; height: 64px; width: auto">
+      <img class="lg-txt" src="/_blob/5eff1c34a1f18882398b3d38ef007502" alt="" style="position: absolute; left: 55px; top: 0; height: 64px; width: auto">
+    </div>
+    <h1 style="margin: 30px 0 6px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; color: #0A2E5C; letter-spacing: -0.4px">Operação em campo</h1>
+    <p style="margin: 0; color: #52627A; font-size: 15px; max-width: 300px">Leituras, análises e estoque de cada unidade, num só lugar.</p>
+  </div>
+  <form style="padding: 22px 24px 0; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="lg-user" style="font-weight: 700; font-size: 14px; color: #0A2E5C">Matrícula</label>
+      <input id="lg-user" type="text" inputmode="numeric" autocomplete="username" placeholder="Ex.: 10482" style="height: 52px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 16px; font-size: 17px; background: #FFFFFF; color: #0F1E2E" />
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="lg-pass" style="font-weight: 700; font-size: 14px; color: #0A2E5C">Senha</label>
+      <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Sua senha" style="height: 52px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 16px; font-size: 17px; background: #FFFFFF; color: #0F1E2E" />
+    </div>
+    <button type="button" onClick="{{ nav.home }}" style="height: 54px; border: 0; border-radius: 16px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 4px">Entrar</button>
+    <a href="#" style="align-self: center; font-size: 14px; padding: 6px 10px">Esqueci minha senha</a>
+  </form>
+  <div style="margin-top: auto; flex-shrink: 0; padding-top: 4px">
+    <svg viewBox="0 0 390 262" width="100%" role="img" aria-label="Ilustração de três operadores da Ourinhos Saneamento trabalhando numa estação de tratamento de água" style="display: block"><polygon points="4.5,110.7 252.2,253.7 252.2,246.0 4.5,103.0" fill="#CCDCE8"/><polygon points="385.6,176.7 252.2,253.7 252.2,246.0 385.6,169.0" fill="#B7CADB"/><polygon points="137.9,26.0 385.6,169.0 252.2,246.0 4.5,103.0" fill="#E4EEF5"/><polygon points="82.6,64.5 318.9,200.9 305.5,208.6 69.3,72.2" fill="#F3F7FA"/><ellipse cx="138.8" cy="39.8" rx="7.9" ry="4.0" fill="#0A2E5C" opacity="0.10"/><rect x="137.3" y="28.8" width="3" height="11.0" fill="#7A5A3A"/><circle cx="138.8" cy="25.2" r="8.8" fill="#608838"/><circle cx="136.2" cy="23.0" r="4.8" fill="#7FA65A"/><polygon points="110.2,69.4 191.2,116.2 191.2,99.7 110.2,52.9" fill="#D9E2EA"/><polygon points="235.0,90.9 191.2,116.2 191.2,99.7 235.0,74.4" fill="#C5D2DE"/><polygon points="154.1,27.6 235.0,74.4 191.2,99.7 110.2,52.9" fill="#F4F7FA"/><polygon points="154.1,32.6 226.5,74.4 226.5,78.2 154.1,36.5" fill="#B9C8D6"/><polygon points="154.1,32.6 118.8,52.9 118.8,56.8 154.1,36.5" fill="#CBD7E2"/><polygon points="154.1,36.5 226.5,78.2 191.2,98.6 118.8,56.8" fill="#30B0C8"/><line x1="156.1" y1="47.8" x2="185.1" y2="64.5" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><line x1="147.3" y1="52.9" x2="176.3" y2="69.6" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><line x1="138.5" y1="58.0" x2="167.4" y2="74.7" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><polygon points="210.3,120.6 248.4,142.6 248.4,120.6 210.3,98.6" fill="#D9E2EA"/><polygon points="286.5,120.6 248.4,142.6 248.4,120.6 286.5,98.6" fill="#C5D2DE"/><polygon points="248.4,76.6 286.5,98.6 248.4,120.6 210.3,98.6" fill="#F4F7FA"/><polygon points="248.4,81.5 277.9,98.6 277.9,102.4 248.4,85.4" fill="#B9C8D6"/><polygon points="248.4,81.5 218.8,98.6 218.8,102.4 248.4,85.4" fill="#CBD7E2"/><polygon points="248.4,85.4 277.9,102.4 248.4,119.5 218.8,102.4" fill="#30B0C8"/><line x1="245.4" y1="92.2" x2="257.2" y2="99.0" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><line x1="238.0" y1="96.5" x2="249.8" y2="103.3" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><line x1="230.7" y1="100.7" x2="242.5" y2="107.6" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><polygon points="256.0,147.0 294.1,169.0 294.1,147.0 256.0,125.0" fill="#D9E2EA"/><polygon points="332.2,147.0 294.1,169.0 294.1,147.0 332.2,125.0" fill="#C5D2DE"/><polygon points="294.1,103.0 332.2,125.0 294.1,147.0 256.0,125.0" fill="#F4F7FA"/><polygon points="294.1,107.9 323.6,125.0 323.6,128.8 294.1,111.8" fill="#B9C8D6"/><polygon points="294.1,107.9 264.6,125.0 264.6,128.8 294.1,111.8" fill="#CBD7E2"/><polygon points="294.1,111.8 323.6,128.8 294.1,145.9 264.6,128.8" fill="#30B0C8"/><line x1="291.1" y1="118.6" x2="303.0" y2="125.4" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><line x1="283.8" y1="122.9" x2="295.6" y2="129.7" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><line x1="276.4" y1="127.1" x2="288.2" y2="134.0" stroke="#8FD6E4" stroke-width="1.2" stroke-linecap="round"/><polygon points="213.6,93.4 226.9,101.1 226.9,96.1 213.6,88.4" fill="#0057A8"/><polygon points="231.2,98.6 226.9,101.1 226.9,96.1 231.2,93.7" fill="#00468A"/><polygon points="217.9,85.9 231.2,93.7 226.9,96.1 213.6,88.4" fill="#3A8FD6"/><polygon points="265.0,119.8 272.7,124.2 272.7,119.2 265.0,114.8" fill="#0057A8"/><polygon points="277.0,121.7 272.7,124.2 272.7,119.2 277.0,116.8" fill="#00468A"/><polygon points="269.3,112.3 277.0,116.8 272.7,119.2 265.0,114.8" fill="#3A8FD6"/><path d="M324.9 128.3 L324.9 165.7 A16.8 9.7 0 0 0 358.6 165.7 L358.6 128.3 Z" fill="#F7FAFC"/><path d="M344.3 137.9 L344.3 175.3 A16.8 9.7 0 0 0 358.6 165.7 L358.6 128.3 Z" fill="#000000" opacity="0.07"/><path d="M324.9 152.6 A16.8 9.7 0 0 0 358.6 152.6 L358.6 147.7 A16.8 9.7 0 0 1 324.9 147.7 Z" fill="#0057A8"/><ellipse cx="341.7" cy="128.3" rx="16.8" ry="9.7" fill="#E3ECF4"/><path d="M299.7 153.6 L299.7 182.2 A13.5 7.8 0 0 0 326.6 182.2 L326.6 153.6 Z" fill="#F7FAFC"/><path d="M315.2 161.3 L315.2 189.9 A13.5 7.8 0 0 0 326.6 182.2 L326.6 153.6 Z" fill="#000000" opacity="0.07"/><path d="M299.7 172.2 A13.5 7.8 0 0 0 326.6 172.2 L326.6 168.5 A13.5 7.8 0 0 1 299.7 168.5 Z" fill="#30B0C8"/><ellipse cx="313.2" cy="153.6" rx="13.5" ry="7.8" fill="#E3ECF4"/><polygon points="313.2,140.4 322.7,145.9 322.7,141.5 313.2,136.0" fill="#0057A8"/><polygon points="326.5,143.7 322.7,145.9 322.7,141.5 326.5,139.3" fill="#00468A"/><polygon points="317.0,133.8 326.5,139.3 322.7,141.5 313.2,136.0" fill="#3A8FD6"/><g><ellipse cx="159.8" cy="114.6" rx="8" ry="3.2" fill="#0A2E5C" opacity="0.16"/><rect x="155.2" y="102.6" width="4.2" height="12" rx="1.5" fill="#123257"/><rect x="160.2" y="102.6" width="4.2" height="12" rx="1.5" fill="#0F2A4A"/><rect x="154.6" y="112.2" width="5.2" height="2.6" rx="1.2" fill="#1B1F24"/><rect x="160.0" y="112.2" width="5.2" height="2.6" rx="1.2" fill="#1B1F24"/><rect x="153.8" y="88.6" width="12" height="15" rx="4" fill="#0A2E5C"/><rect x="153.8" y="97.1" width="12" height="2.2" fill="#30B0C8"/><rect x="156.2" y="88.6" width="2.2" height="9" fill="#30B0C8"/><rect x="161.2" y="88.6" width="2.2" height="9" fill="#30B0C8"/><circle cx="163.0" cy="93.1" r="1.2" fill="#608838"/><line x1="163.8" y1="91.6" x2="167.8" y2="97.6" stroke="#0A2E5C" stroke-width="3.6" stroke-linecap="round"/><line x1="155.8" y1="91.6" x2="163.8" y2="96.6" stroke="#0A2E5C" stroke-width="3.6" stroke-linecap="round"/><rect x="164.8" y="90.6" width="7" height="9" rx="1.2" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.8" transform="rotate(-12 168.3 95.1)"/><rect x="166.0" y="92.6" width="4.6" height="1.4" fill="#30B0C8" transform="rotate(-12 168.3 95.1)"/><circle cx="159.8" cy="84.1" r="4.6" fill="#C68A5E"/><path d="M154.4 83.1 a5.4 5.4 0 0 1 10.8 0 Z" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.8"/><rect x="154.7" y="82.4" width="12.6" height="1.6" rx="0.8" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.6"/></g><polygon points="35.0,107.4 86.4,137.1 86.4,106.3 35.0,76.6" fill="#E8EEF4"/><polygon points="126.4,114.0 86.4,137.1 86.4,106.3 126.4,83.2" fill="#D3DEE8"/><polygon points="75.0,53.5 126.4,83.2 86.4,106.3 35.0,76.6" fill="#FFFFFF"/><polygon points="31.2,76.6 86.4,108.5 86.4,104.7 31.2,72.8" fill="#0A2E5C"/><polygon points="130.2,83.2 86.4,108.5 86.4,104.7 130.2,79.3" fill="#082448"/><polygon points="75.0,47.5 130.2,79.3 86.4,104.7 31.2,72.8" fill="#0A2E5C"/><polygon points="113.1,121.7 102.6,127.8 102.6,106.8 113.1,100.8" fill="#0057A8"/><polygon points="122.6,104.1 116.0,108.0 116.0,98.1 122.6,94.2" fill="#8FD6E4"/><polygon points="42.6,99.7 55.9,107.4 55.9,97.5 42.6,89.8" fill="#8FD6E4"/><polygon points="63.6,111.8 76.9,119.5 76.9,109.6 63.6,101.9" fill="#8FD6E4"/><path d="M122.3 87.2 c0 0 -3 3.4 -3 5.2 a3 3 0 0 0 6 0 c0 -1.8 -3 -5.2 -3 -5.2z" fill="#30B0C8"/><g><ellipse cx="141.7" cy="140.4" rx="8" ry="3.2" fill="#0A2E5C" opacity="0.16"/><rect x="137.1" y="128.4" width="4.2" height="12" rx="1.5" fill="#123257"/><rect x="142.1" y="128.4" width="4.2" height="12" rx="1.5" fill="#0F2A4A"/><rect x="136.5" y="138.0" width="5.2" height="2.6" rx="1.2" fill="#1B1F24"/><rect x="141.9" y="138.0" width="5.2" height="2.6" rx="1.2" fill="#1B1F24"/><rect x="135.7" y="114.4" width="12" height="15" rx="4" fill="#0A2E5C"/><rect x="135.7" y="122.9" width="12" height="2.2" fill="#30B0C8"/><rect x="138.1" y="114.4" width="2.2" height="9" fill="#30B0C8"/><rect x="143.1" y="114.4" width="2.2" height="9" fill="#30B0C8"/><circle cx="138.5" cy="118.9" r="1.2" fill="#608838"/><line x1="137.7" y1="117.4" x2="132.7" y2="112.4" stroke="#0A2E5C" stroke-width="3.6" stroke-linecap="round"/><rect x="131.7" y="104.4" width="3.6" height="7" rx="1.2" fill="#E6F6FA" stroke="#30B0C8" stroke-width="0.9"/><rect x="131.7" y="108.4" width="3.6" height="3" fill="#30B0C8"/><line x1="145.7" y1="117.4" x2="146.7" y2="126.4" stroke="#0A2E5C" stroke-width="3.6" stroke-linecap="round"/><circle cx="141.7" cy="109.9" r="4.6" fill="#8D5A3B"/><path d="M136.3 108.9 a5.4 5.4 0 0 1 10.8 0 Z" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.8"/><rect x="134.2" y="108.2" width="12.6" height="1.6" rx="0.8" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.6"/></g><polygon points="245.5,172.8 250.3,175.6 250.3,160.2 245.5,157.4" fill="#0057A8"/><polygon points="255.0,172.8 250.3,175.6 250.3,160.2 255.0,157.4" fill="#00468A"/><polygon points="250.3,154.7 255.0,157.4 250.3,160.2 245.5,157.4" fill="#3A8FD6"/><circle cx="250.3" cy="155.8" r="4" fill="none" stroke="#D97706" stroke-width="1.8"/><g><ellipse cx="221.7" cy="175.6" rx="8" ry="3.2" fill="#0A2E5C" opacity="0.16"/><rect x="217.1" y="163.6" width="4.2" height="12" rx="1.5" fill="#123257"/><rect x="222.1" y="163.6" width="4.2" height="12" rx="1.5" fill="#0F2A4A"/><rect x="216.5" y="173.2" width="5.2" height="2.6" rx="1.2" fill="#1B1F24"/><rect x="221.9" y="173.2" width="5.2" height="2.6" rx="1.2" fill="#1B1F24"/><line x1="217.7" y1="152.6" x2="230.7" y2="149.6" stroke="#0A2E5C" stroke-width="3.6" stroke-linecap="round"/><rect x="215.7" y="149.6" width="12" height="15" rx="4" fill="#0A2E5C"/><rect x="215.7" y="158.1" width="12" height="2.2" fill="#30B0C8"/><rect x="218.1" y="149.6" width="2.2" height="9" fill="#30B0C8"/><rect x="223.1" y="149.6" width="2.2" height="9" fill="#30B0C8"/><circle cx="224.9" cy="154.1" r="1.2" fill="#608838"/><line x1="225.7" y1="152.6" x2="231.7" y2="154.6" stroke="#0A2E5C" stroke-width="3.6" stroke-linecap="round"/><circle cx="221.7" cy="145.1" r="4.6" fill="#E0B08A"/><path d="M216.3 144.1 a5.4 5.4 0 0 1 10.8 0 Z" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.8"/><rect x="216.6" y="143.4" width="12.6" height="1.6" rx="0.8" fill="#FFFFFF" stroke="#C7D4E2" stroke-width="0.6"/></g><ellipse cx="261.7" cy="225.1" rx="9.4" ry="4.7" fill="#0A2E5C" opacity="0.10"/><rect x="260.2" y="211.9" width="3" height="13.2" fill="#7A5A3A"/><circle cx="261.7" cy="207.7" r="10.4" fill="#608838"/><circle cx="258.6" cy="205.1" r="5.7" fill="#7FA65A"/><ellipse cx="158.8" cy="176.7" rx="7.4" ry="3.7" fill="#0A2E5C" opacity="0.10"/><rect x="157.3" y="165.7" width="3" height="11.0" fill="#7A5A3A"/><circle cx="158.8" cy="162.4" r="8.2" fill="#608838"/><circle cx="156.4" cy="160.3" r="4.5" fill="#7FA65A"/></svg>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ HOME ============ -->
+<sc-if value="{{ s.home }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position: absolute; inset: 0; overflow-y: auto; padding-bottom: 100px">
+  <div style="padding: 26px 16px 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; color: #0A2E5C; letter-spacing: -0.4px">Olá, Felipe</h1>
+    <button type="button" aria-label="Avisos" style="width: 46px; height: 46px; border-radius: 50%; border: 1px solid #DDE5EE; background: #FFFFFF; color: #0A2E5C; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; flex-shrink: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+      <span style="position: absolute; top: 11px; right: 12px; width: 9px; height: 9px; border-radius: 50%; background: #D97706; border: 2px solid #FFFFFF"></span>
+    </button>
+  </div>
+
+  <div style="margin: 0 16px; position: relative; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 24px rgba(10,46,92,0.08)">
+    <div style="position: relative; width: 76px; height: 76px; flex-shrink: 0">
+      <svg width="76" height="76" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="30" fill="none" stroke="#E3ECF4" stroke-width="8"/><circle cx="38" cy="38" r="30" fill="none" stroke="#0091BF" stroke-width="8" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="{{ ringOff }}" transform="rotate(-90 38 38)"/></svg>
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 19px; color: #0A2E5C">{{ allPct }}%</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+      <span style="font-weight: 700; font-size: 16px; color: #0A2E5C">Lançamentos de hoje</span>
+      <span style="font-size: 14px; color: #52627A">{{ allDone }} de {{ allTotal }} unidades lançadas</span>
+      <span style="font-size: 14px; color: #52627A">{{ allPend }} aguardando</span>
+    </div>
+  </div>
+
+  <h2 style="margin: 28px 20px 12px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Seus blocos</h2>
+  <div style="display: flex; flex-direction: column; gap: 12px; padding: 0 16px">
+    <sc-if value="{{ acc.eta }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ nav.listEta }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; color: #0F1E2E">
+      <span style="width: 52px; height: 52px; border-radius: 16px; background: #E0F1F8; color: #00759C; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0">
+        <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">ETAs</span><span style="font-size: 13px; font-weight: 700; color: #52627A">{{ bk.eta.done }} de {{ bk.eta.total }}</span></span>
+        <span style="display: block; height: 6px; border-radius: 4px; background: #E3ECF4; overflow: hidden"><span style="display: block; height: 100%; width: {{ bk.eta.pct }}%; background: #0091BF"></span></span>
+        <span style="font-size: 13px; color: #52627A">Calibrações, macros e produtos químicos</span>
+      </span>
+    </button>
+    </sc-if>
+    <sc-if value="{{ acc.ete }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ nav.listEte }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; color: #0F1E2E">
+      <span style="width: 52px; height: 52px; border-radius: 16px; background: #E6F0DD; color: #3F6B22; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0">
+        <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">ETEs</span><span style="font-size: 13px; font-weight: 700; color: #52627A">{{ bk.ete.done }} de {{ bk.ete.total }}</span></span>
+        <span style="display: block; height: 6px; border-radius: 4px; background: #E3ECF4; overflow: hidden"><span style="display: block; height: 100%; width: {{ bk.ete.pct }}%; background: #5B8C3A"></span></span>
+        <span style="font-size: 13px; color: #52627A">Vazão, checklist e análises semanais</span>
+      </span>
+    </button>
+    </sc-if>
+    <sc-if value="{{ acc.poco }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ nav.listPoco }}" style="text-align: left; border: 0; background: #0057A8; border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; color: #FFFFFF">
+      <span style="width: 52px; height: 52px; border-radius: 16px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><path d="M7 20h10"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0">
+        <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px">Poços</span><span style="font-size: 13px; font-weight: 700; color: #D3E3F5">{{ bk.poco.done }} de {{ bk.poco.total }}</span></span>
+        <span style="display: block; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.22); overflow: hidden"><span style="display: block; height: 100%; width: {{ bk.poco.pct }}%; background: #FFFFFF"></span></span>
+        <span style="font-size: 13px; color: #D3E3F5">Poços, reservatórios e recalque</span>
+      </span>
+    </button>
+    </sc-if>
+    <sc-if value="{{ acc.coleta }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ nav.coleta }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; color: #0F1E2E">
+      <span style="width: 52px; height: 52px; border-radius: 16px; background: #E3EEF9; color: #0057A8; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M12 6.5s-2.5 2.7-2.5 4.4a2.5 2.5 0 0 0 5 0c0-1.7-2.5-4.4-2.5-4.4z"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0">
+        <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Coleta de campo</span><span style="font-size: 13px; font-weight: 700; color: #52627A">{{ col.tDone }} de {{ col.tMeta }}</span></span>
+        <span style="display: flex; height: 6px; border-radius: 4px; background: #E3ECF4; overflow: hidden"><span style="display: block; height: 100%; width: {{ col.tPctD }}%; background: #0057A8"></span><span style="display: block; height: 100%; width: {{ col.tPctW }}%; background: #8FC6DE"></span></span>
+        <span style="font-size: 13px; color: #52627A">{{ col.homeSub }}</span>
+      </span>
+    </button>
+    </sc-if>
+    <sc-if value="{{ acc.descarga }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ nav.descarga }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; color: #0F1E2E">
+      <span style="width: 52px; height: 52px; border-radius: 16px; background: #E0F1F8; color: #00759C; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21h8"/><path d="M8 21V10h6v11"/><path d="M7 10h8"/><path d="M9 10V7a2 2 0 0 1 4 0v3"/><path d="M14 14h3"/><path d="M19 13c0 0 1.5 1.7 1.5 2.7a1.5 1.5 0 0 1-3 0c0-1 1.5-2.7 1.5-2.7z"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0">
+        <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Descargas de rede</span><span style="font-size: 13px; font-weight: 700; color: #52627A; white-space: nowrap">{{ ds.mN }} no mês</span></span>
+        <span style="font-size: 13px; color: #52627A">{{ ds.homeSub }}</span>
+      </span>
+    </button>
+    </sc-if>
+  </div>
+
+  <h2 style="margin: 28px 20px 12px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Precisa de atenção</h2>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding: 0 16px">
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 14px; display: flex; gap: 12px; align-items: flex-start">
+      <span style="width: 36px; height: 36px; border-radius: 50%; background: #FDF0DC; color: #9A4508; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4"/><path d="M12 17.5v.5"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column"><span style="font-weight: 700">Flúor acima da faixa no Poço São João</span><span style="font-size: 14px; color: #52627A">0,92 mg/L na leitura das 07:31</span></span>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 14px; display: flex; gap: 12px; align-items: flex-start">
+      <span style="width: 36px; height: 36px; border-radius: 50%; background: #FDF0DC; color: #9A4508; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 15h12"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column"><span style="font-weight: 700">Ácido fluossilícico baixo no Poço Pacaembu</span><span style="font-size: 14px; color: #52627A">18% do reservatório, cerca de 4 dias</span></span>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ LISTA DE UNIDADES DO BLOCO ============ -->
+<sc-if value="{{ s.lista }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.home }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">{{ cb.title }}</span>
+      <span style="font-size: 13px; color: #52627A">{{ cb.sub }}</span>
+    </div>
+  </div>
+  <div style="padding: 14px 16px 6px; display: flex; flex-direction: column; gap: 12px">
+    <div style="position: relative">
+      <label for="busca" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar unidade</label>
+      <input id="busca" type="search" placeholder="Buscar pelo nome" value="{{ q }}" onChange="{{ on.q }}" style="width: 100%; box-sizing: border-box; height: 48px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 16px 0 44px; font-size: 16px; background: #FFFFFF" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 14px; top: 14px"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+    </div>
+    <div style="display: flex; gap: 8px" role="group" aria-label="Filtrar">
+      <button type="button" onClick="{{ f.todos }}" aria-pressed="{{ f.todosOn }}" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 1.5px solid {{ f.todosBd }}; background: {{ f.todosBg }}; color: {{ f.todosFg }}; font-weight: 700; font-size: 14px; cursor: pointer">Todos</button>
+      <button type="button" onClick="{{ f.pend }}" aria-pressed="{{ f.pendOn }}" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 1.5px solid {{ f.pendBd }}; background: {{ f.pendBg }}; color: {{ f.pendFg }}; font-weight: 700; font-size: 14px; cursor: pointer">Pendentes ({{ cb.pend }})</button>
+      <button type="button" onClick="{{ f.ok }}" aria-pressed="{{ f.okOn }}" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 1.5px solid {{ f.okBd }}; background: {{ f.okBg }}; color: {{ f.okFg }}; font-weight: 700; font-size: 14px; cursor: pointer">Lançados</button>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 8px 16px 100px; display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{ shown }}" as="p" hint-placeholder-count="6">
+      <button type="button" onClick="{{ p.pick }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 18px; padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #0F1E2E">
+        <span style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0">
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">{{ p.name }}</span>
+          <span style="font-size: 14px; color: #52627A">{{ p.sub }}</span>
+          <span style="align-self: flex-start; margin-top: 4px; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: {{ p.chipBg }}; color: {{ p.chipFg }}">{{ p.status }}</span>
+        </span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </sc-for>
+    <sc-if value="{{ emptyList }}" hint-placeholder-val="{{ false }}">
+      <p style="text-align: center; color: #52627A; padding: 32px 12px">Nenhuma unidade neste filtro.</p>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ FORMULÁRIO DE MACROMEDIDOR ============ -->
+<sc-if value="{{ s.poco }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 12px 8px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #DDE5EE">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <button type="button" aria-label="Voltar" onClick="{{ nav.formBack }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div style="display: flex; flex-direction: column; min-width: 0">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">{{ p.name }}</span>
+        <span style="font-size: 13px; color: #52627A">{{ p.sub }}</span>
+      </div>
+    </div>
+    <sc-if value="{{ isPoco }}" hint-placeholder-val="{{ true }}">
+    <div role="tablist" style="margin-left: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #EEF3F7; padding: 4px; border-radius: 14px">
+      <button type="button" role="tab" aria-selected="{{ t.lOn }}" onClick="{{ t.leit }}" style="height: 40px; border: 0; border-radius: 11px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ t.lBg }}; color: {{ t.lFg }}">Leitura diária</button>
+      <button type="button" role="tab" aria-selected="{{ t.eOn }}" onClick="{{ t.est }}" style="height: 40px; border: 0; border-radius: 11px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ t.eBg }}; color: {{ t.eFg }}">Estoque de insumos</button>
+    </div>
+    </sc-if>
+  </div>
+
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 14px">
+    <sc-if value="{{ showLeitura }}" hint-placeholder-val="{{ true }}">
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+            <label for="vaz" style="font-weight: 700; font-size: 15px; color: #0A2E5C">Vazão instantânea</label>
+            <span style="font-size: 13px; color: #52627A">ontem: {{ p.vazPrevTxt }} m³/h</span>
+          </div>
+          <div style="position: relative">
+            <input id="vaz" type="text" inputmode="decimal" placeholder="0,0" value="{{ vaz }}" onChange="{{ on.vaz }}" style="width: 100%; box-sizing: border-box; height: 62px; border: 2px solid #C7D4E2; border-radius: 16px; padding: 0 78px 0 18px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 28px; color: #0F1E2E; background: #F8FAFC; font-variant-numeric: tabular-nums" />
+            <span style="position: absolute; right: 18px; top: 19px; font-weight: 700; font-size: 17px; color: #52627A">m³/h</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+            <label for="tot" style="font-weight: 700; font-size: 15px; color: #0A2E5C">Totalizador</label>
+            <span style="font-size: 13px; color: #52627A">ontem 07:42, {{ p.who }}</span>
+          </div>
+          <span style="font-size: 14px; color: #52627A; margin-top: -2px">Leitura anterior: <strong style="color: #0A2E5C; font-variant-numeric: tabular-nums">{{ p.prevTxt }} m³</strong></span>
+          <div style="position: relative">
+            <input id="tot" type="text" inputmode="numeric" placeholder="0" value="{{ tot }}" onChange="{{ on.tot }}" style="width: 100%; box-sizing: border-box; height: 70px; border: 2px solid #C7D4E2; border-radius: 18px; padding: 0 64px 0 18px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: 0.5px; color: #0F1E2E; background: #F8FAFC; font-variant-numeric: tabular-nums" />
+            <span style="position: absolute; right: 18px; top: 22px; font-weight: 700; font-size: 18px; color: #52627A">m³</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #0A2E5C; border-radius: 22px; padding: 18px; color: #FFFFFF; position: relative; overflow: hidden">
+        <svg viewBox="0 0 360 60" preserveAspectRatio="none" style="position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 60px" aria-hidden="true"><path d="M0 30 C 60 10, 120 50, 180 30 S 300 10, 360 30 V60 H0z" fill="#3FB3D1" opacity="0.28"/><path d="M0 40 C 70 24, 140 56, 210 40 S 320 26, 360 38 V60 H0z" fill="#3FB3D1" opacity="0.4"/></svg>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 14px; color: #C9D8EA">Volume no intervalo</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: -0.5px; font-variant-numeric: tabular-nums">{{ volTxt }} <span style="font-size: 22px; font-weight: 700">m³</span></span>
+          <div style="display: flex; gap: 22px; margin-top: 10px">
+            <span style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #C9D8EA">Intervalo</span><span style="font-weight: 700; font-size: 16px">{{ hrsTxt }}</span></span>
+            <span style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #C9D8EA">Vazão média</span><span style="font-weight: 700; font-size: 16px">{{ vazMedTxt }} m³/h</span></span>
+          </div>
+        </div>
+      </div>
+      <sc-if value="{{ neg }}" hint-placeholder-val="{{ false }}">
+        <div role="alert" style="background: #FDF0DC; color: #7A3606; border-radius: 16px; padding: 12px 14px; display: flex; gap: 10px; font-size: 14px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4"/><path d="M12 17.5v.5"/></svg>
+          <span>A leitura atual é menor que a anterior. Confira o número no totalizador ou registre a troca do medidor nas observações.</span>
+        </div>
+      </sc-if>
+
+      <button type="button" onClick="{{ on.foto }}" aria-pressed="{{ foto }}" style="height: 56px; border: 1.5px {{ fotoBdStyle }} {{ fotoBd }}; border-radius: 16px; background: {{ fotoBg }}; color: {{ fotoFg }}; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        {{ fotoTxt }}
+      </button>
+
+      <sc-if value="{{ isPoco }}" hint-placeholder-val="{{ true }}">
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Residuais após o tratamento</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="cl" style="font-weight: 700; font-size: 14px">Cloro livre (mg/L)</label>
+            <input id="cl" type="text" inputmode="decimal" placeholder="0,00" value="{{ cl }}" onChange="{{ on.cl }}" style="height: 54px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 14px; font-size: 22px; font-weight: 700; background: #F8FAFC; min-width: 0" />
+            <span style="font-size: 13px; font-weight: 700; padding: 4px 8px; border-radius: 8px; background: {{ clS.bg }}; color: {{ clS.fg }}">{{ clS.txt }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="fl" style="font-weight: 700; font-size: 14px">Flúor (mg/L)</label>
+            <input id="fl" type="text" inputmode="decimal" placeholder="0,00" value="{{ fl }}" onChange="{{ on.fl }}" style="height: 54px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 14px; font-size: 22px; font-weight: 700; background: #F8FAFC; min-width: 0" />
+            <span style="font-size: 13px; font-weight: 700; padding: 4px 8px; border-radius: 8px; background: {{ flS.bg }}; color: {{ flS.fg }}">{{ flS.txt }}</span>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="obs" style="font-weight: 700; font-size: 14px; color: #0A2E5C">Observações (opcional)</label>
+        <textarea id="obs" rows="3" placeholder="Ex.: medidor com vazamento na flange" style="border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 12px 14px; font-size: 16px; background: #FFFFFF; resize: none"></textarea>
+      </div>
+
+      <p style="margin: 2px 4px 0; font-size: 13px; color: #52627A">{{ saveHint }}</p>
+      <button type="button" onClick="{{ on.saveLeitura }}" disabled="{{ saveOff }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ saveOp }}">Registrar leitura</button>
+    </sc-if>
+
+    <sc-if value="{{ showEstoque }}" hint-placeholder-val="{{ false }}">
+      <p style="margin: 0 4px; font-size: 15px; color: #52627A">Lançamento às segundas e quintas. Informe o volume atual de cada reservatório de insumo.</p>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+          <div style="height: 150px; border-radius: 16px; background: #E3ECF4; position: relative; overflow: hidden" aria-hidden="true">
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ hipPct }}%; background: {{ hipCol }}"></div>
+            <span style="position: absolute; left: 0; right: 0; top: 12px; text-align: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; color: #0A2E5C">{{ hipPct }}%</span>
+          </div>
+          <span style="font-weight: 700; font-size: 15px; color: #0A2E5C">Hipoclorito de sódio</span>
+          <label for="hip" style="font-size: 13px; color: #52627A; margin-bottom: -6px">Volume atual (L), de 1.000 L</label>
+          <input id="hip" type="text" inputmode="numeric" value="{{ hip }}" onChange="{{ on.hip }}" style="height: 48px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 20px; font-weight: 700; background: #F8FAFC; min-width: 0" />
+          <span style="font-size: 13px; color: #52627A">Cerca de {{ hipDias }} dias de uso</span>
+        </div>
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+          <div style="height: 150px; border-radius: 16px; background: #E3ECF4; position: relative; overflow: hidden" aria-hidden="true">
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ aciPct }}%; background: {{ aciCol }}"></div>
+            <span style="position: absolute; left: 0; right: 0; top: 12px; text-align: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; color: #0A2E5C">{{ aciPct }}%</span>
+          </div>
+          <span style="font-weight: 700; font-size: 15px; color: #0A2E5C">Ácido fluossilícico</span>
+          <label for="aci" style="font-size: 13px; color: #52627A; margin-bottom: -6px">Volume atual (L), de 500 L</label>
+          <input id="aci" type="text" inputmode="numeric" value="{{ aci }}" onChange="{{ on.aci }}" style="height: 48px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 20px; font-weight: 700; background: #F8FAFC; min-width: 0" />
+          <span style="font-size: 13px; color: #52627A">Cerca de {{ aciDias }} dias de uso</span>
+        </div>
+      </div>
+      <p style="margin: 0 4px; font-size: 13px; color: #52627A">Dias de uso estimados pelo consumo médio das últimas quatro semanas.</p>
+      <button type="button" onClick="{{ on.saveEstoque }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer">Registrar estoque</button>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ CONFIRMAÇÃO ============ -->
+<sc-if value="{{ s.ok }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; padding: 64px 24px 28px; box-sizing: border-box; background: #FFFFFF">
+  <div style="width: 96px; height: 96px; border-radius: 50%; background: #E2F4EE; color: #0B6B57; display: flex; align-items: center; justify-content: center; align-self: center">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+  </div>
+  <h1 style="margin: 22px 0 6px; text-align: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; color: #0A2E5C">{{ last.title }}</h1>
+  <p style="margin: 0 0 24px; text-align: center; color: #52627A">{{ last.sub }}</p>
+  <div style="background: #EEF3F7; border-radius: 20px; padding: 6px 16px">
+    <sc-for list="{{ last.rows }}" as="r" hint-placeholder-count="3">
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #DDE5EE">
+        <span style="color: #52627A">{{ r.k }}</span>
+        <span style="font-weight: 700; color: #0A2E5C; text-align: right">{{ r.v }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+    <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ true }}">
+      <button type="button" onClick="{{ on.next }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; padding: 0 16px">Próximo: {{ nextName }}</button>
+    </sc-if>
+    <button type="button" onClick="{{ on.backList }}" style="height: 54px; border: 1.5px solid #C7D4E2; border-radius: 18px; background: #FFFFFF; color: #0A2E5C; font-size: 16px; font-weight: 700; cursor: pointer">{{ backLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ETA ============ -->
+<sc-if value="{{ s.eta }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.listEta }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">{{ etaTitle }}</span>
+      <span style="font-size: 13px; color: #52627A">ETAs</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 12px">
+
+    <sc-if value="{{ em.cal }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ calEquip }}" as="q" hint-placeholder-count="3">
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ q.name }}</span>
+            <span style="font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: {{ q.chipBg }}; color: {{ q.chipFg }}">{{ q.chip }}</span>
+          </div>
+          <sc-for list="{{ q.fields }}" as="f" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-top: 1px solid #EEF3F7">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <label for="{{ f.id }}" style="flex: 1; display: flex; flex-direction: column">
+                  <span style="font-weight: 700; font-size: 15px; color: #0F1E2E">{{ f.lab }}</span>
+                  <span style="font-size: 12px; color: #52627A">{{ f.tag }}</span>
+                </label>
+                <input id="{{ f.id }}" type="text" inputmode="decimal" placeholder="Leitura" value="{{ f.val }}" onChange="{{ f.set }}" style="width: 118px; height: 48px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 18px; font-weight: 700; background: #F8FAFC; text-align: right; font-variant-numeric: tabular-nums" />
+              </div>
+              <sc-if value="{{ f.opt }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; color: #8A3C06; background: #FDF0DC; border-radius: 8px; padding: 6px 10px">{{ f.hint }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <p style="margin: 0 4px; font-size: 13px; color: #52627A">{{ calHint }}</p>
+      <button type="button" onClick="{{ on.saveCal }}" disabled="{{ calOff }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ calOp }}">Registrar calibrações</button>
+    </sc-if>
+
+    <sc-if value="{{ em.mac }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px">
+        <span style="font-weight: 700; color: #0A2E5C">Vazão e totalizador</span>
+        <span style="font-size: 14px; color: #52627A">{{ emStat.done }} de {{ emStat.total }} lançados</span>
+      </div>
+      <sc-for list="{{ etaMacItems }}" as="p" hint-placeholder-count="6">
+        <button type="button" onClick="{{ p.pick }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 18px; padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #0F1E2E">
+          <span style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">{{ p.name }}</span>
+            <span style="align-self: flex-start; margin-top: 2px; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: {{ p.chipBg }}; color: {{ p.chipFg }}">{{ p.status }}</span>
+          </span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ em.est }}" hint-placeholder-val="{{ false }}">
+      <p style="margin: 0 4px; font-size: 15px; color: #52627A">Lançamento por turno. Informe o volume atual de cada reservatório, em litros.</p>
+      <sc-for list="{{ stockGroups }}" as="g" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ g.name }}</span>
+            <span style="font-size: 13px; font-weight: 700; color: {{ g.totC }}">{{ g.totTxt }}</span>
+          </div>
+          <sc-for list="{{ g.res }}" as="r" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-top: 1px solid #EEF3F7">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <label for="{{ r.id }}" style="flex: 1; display: flex; flex-direction: column; min-width: 0">
+                  <span style="font-weight: 700; font-size: 15px; color: #0F1E2E">Reservatório {{ r.name }}</span>
+                  <span style="font-size: 12px; color: #52627A">Capacidade {{ r.capTxt }} L, ontem {{ r.prevTxt }} L</span>
+                </label>
+                <div style="position: relative; flex-shrink: 0">
+                  <input id="{{ r.id }}" type="text" inputmode="numeric" placeholder="0" value="{{ r.val }}" onChange="{{ r.set }}" style="width: 124px; box-sizing: border-box; height: 48px; border: 1.5px solid {{ r.bd }}; border-radius: 12px; padding: 0 30px 0 10px; font-size: 18px; font-weight: 700; background: #F8FAFC; text-align: right; font-variant-numeric: tabular-nums" />
+                  <span style="position: absolute; right: 10px; top: 14px; font-weight: 700; color: #52627A">L</span>
+                </div>
+              </div>
+              <span style="display: block; height: 8px; border-radius: 4px; background: #E3ECF4; overflow: hidden" aria-hidden="true"><span style="display: block; height: 100%; width: {{ r.pct }}%; background: {{ r.col }}; border-radius: 4px"></span></span>
+              <sc-if value="{{ r.over }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; color: #8A3C06">O valor passa da capacidade do reservatório. Confira a leitura.</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 12px">
+        <label for="sal-uso" style="flex: 1; display: flex; flex-direction: column">
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">Sal</span>
+          <span style="font-size: 13px; color: #52627A">Sacos utilizados no turno</span>
+        </label>
+        <input id="sal-uso" type="text" inputmode="numeric" placeholder="0" value="{{ salUsed }}" onChange="{{ on.salUsed }}" style="width: 96px; height: 52px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 12px; font-size: 22px; font-weight: 700; background: #F8FAFC; text-align: right" />
+      </div>
+      <button type="button" onClick="{{ on.saveEtaStock }}" style="margin-top: 4px; height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer">Registrar estoque</button>
+    </sc-if>
+
+    <sc-if value="{{ em.desc }}" hint-placeholder-val="{{ false }}">
+      <span style="font-weight: 700; color: #0A2E5C; padding: 0 4px">Qual produto chegou?</span>
+      <div role="radiogroup" aria-label="Produto recebido" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{ prods }}" as="d" hint-placeholder-count="3">
+          <button type="button" role="radio" aria-checked="{{ d.on }}" onClick="{{ d.pick }}" style="height: 96px; border-radius: 18px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 16px; border: 2px solid {{ d.bd }}; background: {{ d.bg }}; color: {{ d.fg }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>
+            {{ d.name }}
+          </button>
+        </sc-for>
+      </div>
+      <span style="font-weight: 700; color: #0A2E5C; padding: 0 4px; margin-top: 4px">Descarregado em qual ETA?</span>
+      <div role="radiogroup" aria-label="ETA de destino" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{ descEtas }}" as="d" hint-placeholder-count="2">
+          <button type="button" role="radio" aria-checked="{{ d.on }}" onClick="{{ d.pick }}" style="height: 54px; border-radius: 16px; cursor: pointer; font-weight: 700; font-size: 16px; border: 2px solid {{ d.bd }}; background: {{ d.bg }}; color: {{ d.fg }}">{{ d.name }}</button>
+        </sc-for>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <label for="desc-kg" style="font-weight: 700; font-size: 15px; color: #0A2E5C">Quantidade recebida</label>
+        <div style="position: relative">
+          <input id="desc-kg" type="text" inputmode="numeric" placeholder="0" value="{{ descKg }}" onChange="{{ on.descKg }}" style="width: 100%; box-sizing: border-box; height: 66px; border: 2px solid #C7D4E2; border-radius: 16px; padding: 0 56px 0 16px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; background: #F8FAFC; font-variant-numeric: tabular-nums" />
+          <span style="position: absolute; right: 16px; top: 21px; font-weight: 700; font-size: 18px; color: #52627A">kg</span>
+        </div>
+        <sc-if value="{{ descConv }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 14px; font-weight: 700; color: #0A2E5C; background: #E3EEF9; border-radius: 10px; padding: 8px 12px">{{ descConv }}</span>
+        </sc-if>
+        <span style="font-size: 13px; color: #52627A">Data, hora e operador são registrados ao salvar.</span>
+      </div>
+      <button type="button" onClick="{{ on.saveDesc }}" disabled="{{ descOff }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ descOp }}">Registrar descarregamento</button>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ETE ============ -->
+<sc-if value="{{ s.ete }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.listEte }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">{{ selEte }}</span>
+      <span style="font-size: 13px; color: #52627A">Checklist e análises</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <label for="ete-vaz" style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Vazão da ETE</label>
+      <div style="position: relative">
+        <input id="ete-vaz" type="text" inputmode="decimal" placeholder="0,0" value="{{ eteVaz }}" onChange="{{ on.eteVaz }}" style="width: 100%; box-sizing: border-box; height: 60px; border: 2px solid #C7D4E2; border-radius: 16px; padding: 0 72px 0 16px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; background: #F8FAFC; font-variant-numeric: tabular-nums" />
+        <span style="position: absolute; right: 16px; top: 19px; font-weight: 700; font-size: 17px; color: #52627A">m³/h</span>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Checklist</span>
+        <span style="font-size: 14px; color: #52627A">{{ chkDone }} de {{ chkTotal }} marcados</span>
+      </div>
+      <sc-for list="{{ chkItems }}" as="c" hint-placeholder-count="6">
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-top: 1px solid #EEF3F7">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="flex: 1; font-size: 16px; font-weight: 700; color: #0F1E2E">{{ c.name }}</span>
+            <div role="radiogroup" aria-label="{{ c.name }}" style="display: flex; gap: 6px">
+              <button type="button" role="radio" aria-checked="{{ c.isOk }}" onClick="{{ c.setOk }}" style="width: 56px; height: 44px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; border: 1.5px solid {{ c.okBd }}; background: {{ c.okBg }}; color: {{ c.okFg }}">OK</button>
+              <button type="button" role="radio" aria-checked="{{ c.isNc }}" onClick="{{ c.setNc }}" style="width: 56px; height: 44px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; border: 1.5px solid {{ c.ncBd }}; background: {{ c.ncBg }}; color: {{ c.ncFg }}">NC</button>
+            </div>
+          </div>
+          <sc-if value="{{ c.isNc }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="{{ c.obsId }}" style="font-size: 14px; font-weight: 700; color: #8A3C06">Por que não está conforme?</label>
+              <textarea id="{{ c.obsId }}" rows="2" placeholder="Descreva a não conformidade" value="{{ c.obs }}" onChange="{{ c.setObs }}" style="border: 1.5px solid #E8B77A; border-radius: 12px; padding: 10px 12px; font-size: 15px; background: #FFFBF5; resize: none"></textarea>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Lançar análises nesta visita?</span>
+        <div role="radiogroup" aria-label="Lançar análises nesta visita" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button type="button" role="radio" aria-checked="{{ an.yes }}" onClick="{{ an.setYes }}" style="height: 50px; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; border: 2px solid {{ an.yBd }}; background: {{ an.yBg }}; color: {{ an.yFg }}">Sim</button>
+          <button type="button" role="radio" aria-checked="{{ an.no }}" onClick="{{ an.setNo }}" style="height: 50px; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; border: 2px solid {{ an.nBd }}; background: {{ an.nBg }}; color: {{ an.nFg }}">Não</button>
+        </div>
+        <span style="font-size: 13px; color: #52627A">{{ an.note }}</span>
+      </div>
+      <sc-if value="{{ an.yes }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ eteAn }}" as="g" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid #EEF3F7">
+            <span style="font-weight: 700; font-size: 14px; color: #0A2E5C">{{ g.name }}</span>
+            <div style="display: grid; gap: 8px; grid-template-columns: {{ g.cols }}">
+              <sc-for list="{{ g.fields }}" as="f" hint-placeholder-count="2">
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <label for="{{ f.id }}" style="font-size: 13px; color: #52627A">{{ f.lab }}</label>
+                  <input id="{{ f.id }}" type="text" inputmode="decimal" placeholder="0,0" style="height: 48px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 18px; font-weight: 700; background: #F8FAFC; min-width: 0" />
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+    </div>
+    <p style="margin: 0 4px; font-size: 13px; color: #52627A">{{ eteHint }}</p>
+    <button type="button" onClick="{{ on.saveEte }}" disabled="{{ eteOff }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ eteOp }}">Registrar visita</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ COLETA DE CAMPO ============ -->
+<sc-if value="{{ s.coleta }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 12px 8px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #DDE5EE">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <button type="button" aria-label="Voltar" onClick="{{ nav.home }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">Coleta de campo</span>
+        <span style="font-size: 13px; color: #52627A">Outubro de 2026</span>
+      </div>
+    </div>
+    <div role="tablist" style="margin-left: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #EEF3F7; padding: 4px; border-radius: 14px">
+      <button type="button" role="tab" aria-selected="{{ col.tabPend }}" onClick="{{ col.toPend }}" style="height: 40px; border: 0; border-radius: 11px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ col.tpBg }}; color: {{ col.tpFg }}">Pendentes ({{ col.pendN }})</button>
+      <button type="button" role="tab" aria-selected="{{ col.tabMetas }}" onClick="{{ col.toMetas }}" style="height: 40px; border: 0; border-radius: 11px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ col.tmBg }}; color: {{ col.tmFg }}">Metas do mês</button>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 12px">
+    <sc-if value="{{ col.hasMsg }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="background: #E2F4EE; color: #0B6B57; border-radius: 14px; padding: 12px 14px; font-size: 14px; font-weight: 700">{{ col.msg }}</div>
+    </sc-if>
+    <div style="background: #0A2E5C; color: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 13px; color: #C9D8EA">Coletas completas no mês</span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums">{{ col.tDone }} <span style="font-size: 18px; font-weight: 700; color: #C9D8EA">de {{ col.tMeta }}</span></span>
+      <span style="display: flex; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.18); overflow: hidden"><span style="display: block; height: 100%; width: {{ col.tPctD }}%; background: #FFFFFF"></span><span style="display: block; height: 100%; width: {{ col.tPctW }}%; background: #3FB3D1"></span></span>
+      <span style="font-size: 13px; color: #C9D8EA">{{ col.tWait }} aguardando análises. Faltam {{ col.tFalta }} para a meta.</span>
+    </div>
+    <button type="button" onClick="{{ nav.coletaNova }}" style="height: 56px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Nova coleta
+    </button>
+
+    <sc-if value="{{ col.tabPend }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 0">
+        <span style="font-weight: 700; color: #0A2E5C">Aguardando análises</span>
+        <span style="font-size: 13px; color: #52627A">Mais antigas primeiro</span>
+      </div>
+      <sc-for list="{{ col.pend }}" as="c" hint-placeholder-count="4">
+        <button type="button" onClick="{{ c.open }}" style="text-align: left; border: 1px solid #DDE5EE; background: #FFFFFF; border-radius: 18px; padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #0F1E2E">
+          <span style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 16px; color: #0A2E5C">{{ c.addr }}</span>
+            <span style="font-size: 13px; color: #52627A">{{ c.where }}</span>
+            <span style="font-size: 13px; color: #52627A">{{ c.when }}</span>
+            <span style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px">
+              <span style="font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: {{ c.chipBg }}; color: {{ c.chipFg }}">{{ c.prog }}</span>
+              <span style="font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #EEF3F7; color: #0A2E5C">Cloro {{ c.cl }} mg/L</span>
+            </span>
+          </span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </sc-for>
+      <sc-if value="{{ col.pendEmpty }}" hint-placeholder-val="{{ false }}">
+        <p style="text-align: center; color: #52627A; padding: 24px 12px; margin: 0">Nenhuma coleta aguardando análises. Toque em Nova coleta para registrar a próxima.</p>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ col.tabMetas }}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{ col.metas }}" as="m" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">{{ m.name }}</span>
+            <span style="font-weight: 700; color: #0A2E5C; font-variant-numeric: tabular-nums">{{ m.txt }}</span>
+          </div>
+          <span style="display: flex; height: 10px; border-radius: 5px; background: #E3ECF4; overflow: hidden"><span style="display: block; height: 100%; width: {{ m.pctD }}%; background: #0057A8"></span><span style="display: block; height: 100%; width: {{ m.pctW }}%; background: #8FC6DE"></span></span>
+          <span style="font-size: 13px; color: {{ m.subC }}">{{ m.sub }}</span>
+        </div>
+      </sc-for>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; padding: 0 4px; font-size: 13px; color: #52627A">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #0057A8"></span>Completas</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #8FC6DE"></span>Aguardando análises</span>
+      </div>
+      <p style="margin: 0 4px; font-size: 13px; color: #52627A">Uma coleta conta como completa quando os sete parâmetros estão lançados.</p>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ NOVA COLETA ============ -->
+<sc-if value="{{ s.coletaNova }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.coleta }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">Nova coleta</span>
+      <span style="font-size: 13px; color: #52627A">Ponto de coleta e cloro residual</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Ponto de coleta</span>
+      <sc-if value="{{ col.cn.noSel }}" hint-placeholder-val="{{ true }}">
+        <button type="button" onClick="{{ col.cn.useGps }}" disabled="{{ col.cn.busy }}" style="height: 54px; border: 1.5px solid #0057A8; border-radius: 16px; background: #F2F7FD; color: #0057A8; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>
+          {{ col.cn.gpsTxt }}
+        </button>
+        <div style="display: flex; align-items: center; gap: 10px; color: #52627A; font-size: 13px"><span style="flex: 1; height: 1px; background: #DDE5EE"></span>ou digite o endereço<span style="flex: 1; height: 1px; background: #DDE5EE"></span></div>
+        <div style="position: relative">
+          <label for="col-busca" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Endereço do ponto de coleta</label>
+          <input id="col-busca" type="search" autocomplete="off" placeholder="Ex.: Rua Paraná" value="{{ col.cn.q }}" onChange="{{ col.cn.setQ }}" style="width: 100%; box-sizing: border-box; height: 50px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 16px 0 44px; font-size: 16px; background: #F8FAFC" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 14px; top: 15px"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; border: {{ col.cn.listBd }}">
+          <sc-for list="{{ col.cn.results }}" as="r" hint-placeholder-count="3">
+            <button type="button" onClick="{{ r.pick }}" style="text-align: left; border: 0; border-bottom: 1px solid #EEF3F7; background: #FFFFFF; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #0F1E2E">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0057A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+              <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700; color: #0A2E5C">{{ r.addr }}</span><span style="font-size: 13px; color: #52627A">{{ r.sub }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ col.cn.noRes }}" hint-placeholder-val="{{ false }}">
+          <p style="margin: 0; font-size: 14px; color: #8A3C06">Nenhum ponto cadastrado com esse endereço. Confira a grafia ou peça ao administrador para cadastrar o ponto.</p>
+        </sc-if>
+        <sc-if value="{{ col.cn.hint }}" hint-placeholder-val="{{ true }}">
+          <p style="margin: 0; font-size: 13px; color: #52627A">Digite pelo menos duas letras para ver os pontos cadastrados.</p>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ col.cn.hasSel }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: #F2F7FD; border: 1.5px solid #0057A8; border-radius: 16px; padding: 14px">
+          <span style="width: 40px; height: 40px; border-radius: 12px; background: #0057A8; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+          <span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+            <span style="font-weight: 700; color: #0A2E5C">{{ col.cn.addr }}</span>
+            <span style="font-size: 13px; color: #52627A">{{ col.cn.sub }}</span>
+            <sc-if value="{{ col.cn.hasDist }}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: #0B6B57; font-weight: 700">Você está a {{ col.cn.dist }} m deste ponto</span></sc-if>
+          </span>
+          <button type="button" onClick="{{ col.cn.clear }}" style="border: 0; background: transparent; color: #0057A8; font-weight: 700; font-size: 14px; cursor: pointer; padding: 6px">Trocar</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <label for="col-cl" style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Cloro residual livre</label>
+      <span style="font-size: 13px; color: #52627A; margin-top: -4px">Análise feita no momento da coleta.</span>
+      <div style="position: relative">
+        <input id="col-cl" type="text" inputmode="decimal" placeholder="0,00" value="{{ col.cn.cl }}" onChange="{{ col.cn.setCl }}" style="width: 100%; box-sizing: border-box; height: 62px; border: 2px solid #C7D4E2; border-radius: 16px; padding: 0 70px 0 16px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 28px; background: #F8FAFC; font-variant-numeric: tabular-nums" />
+        <span style="position: absolute; right: 16px; top: 20px; font-weight: 700; font-size: 17px; color: #52627A">mg/L</span>
+      </div>
+      <span style="align-self: flex-start; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: {{ col.cn.band.bg }}; color: {{ col.cn.band.fg }}">{{ col.cn.band.txt }}</span>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font-weight: 700; color: #0A2E5C">Ficam em Pendentes para lançar depois</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+        <span style="font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #EEF3F7; color: #3D4E63">Flúor</span>
+        <span style="font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #EEF3F7; color: #3D4E63">pH</span>
+        <span style="font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #EEF3F7; color: #3D4E63">Cor</span>
+        <span style="font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #EEF3F7; color: #3D4E63">Turbidez</span>
+        <span style="font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #EEF3F7; color: #3D4E63">Coliformes totais</span>
+        <span style="font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #EEF3F7; color: #3D4E63">Coliformes termotolerantes</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="col-obs" style="font-weight: 700; font-size: 14px; color: #0A2E5C">Observações (opcional)</label>
+      <textarea id="col-obs" rows="2" placeholder="Ex.: torneira com vazamento" value="{{ col.cn.obs }}" onChange="{{ col.cn.setObs }}" style="border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 12px 14px; font-size: 16px; background: #FFFFFF; resize: none"></textarea>
+    </div>
+    <p style="margin: 0 4px; font-size: 13px; color: #52627A">{{ col.cn.saveHint }}</p>
+    <button type="button" onClick="{{ col.cn.save }}" disabled="{{ col.cn.off }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ col.cn.op }}">Registrar coleta</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ANÁLISES DA COLETA ============ -->
+<sc-if value="{{ s.coletaAn }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.coleta }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ col.an.addr }}</span>
+      <span style="font-size: 13px; color: #52627A">{{ col.an.where }}</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px">
+      <span style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52627A">{{ col.an.when }}</span><span style="font-weight: 700; color: #0A2E5C">Cloro livre na coleta</span></span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; color: #0A2E5C; white-space: nowrap">{{ col.an.cl }} <span style="font-size: 14px; font-weight: 700; color: #52627A">mg/L</span></span>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Análises</span>
+        <span style="font-size: 14px; color: #52627A">{{ col.an.n }} de 6 lançadas</span>
+      </div>
+      <sc-for list="{{ col.an.nums }}" as="f" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-top: 1px solid #EEF3F7">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <label for="{{ f.id }}" style="flex: 1; display: flex; flex-direction: column">
+              <span style="font-weight: 700; font-size: 16px; color: #0F1E2E">{{ f.lab }}</span>
+              <span style="font-size: 12px; color: #52627A">{{ f.unit }}</span>
+            </label>
+            <input id="{{ f.id }}" type="text" inputmode="decimal" placeholder="{{ f.ph }}" value="{{ f.val }}" onChange="{{ f.set }}" style="width: 118px; height: 48px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 18px; font-weight: 700; background: #F8FAFC; text-align: right; font-variant-numeric: tabular-nums" />
+          </div>
+          <span style="align-self: flex-start; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 8px; background: {{ f.chip.bg }}; color: {{ f.chip.fg }}">{{ f.chip.txt }}</span>
+        </div>
+      </sc-for>
+      <sc-for list="{{ col.an.bools }}" as="b" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-top: 1px solid #EEF3F7">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 700; font-size: 16px; color: #0F1E2E">{{ b.lab }}</span><span style="font-size: 12px; color: #52627A">em 100 mL</span></span>
+            <div role="radiogroup" aria-label="{{ b.lab }}" style="display: flex; gap: 6px">
+              <button type="button" role="radio" aria-checked="{{ b.isA }}" onClick="{{ b.setA }}" style="height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: 1.5px solid {{ b.aBd }}; background: {{ b.aBg }}; color: {{ b.aFg }}">Ausente</button>
+              <button type="button" role="radio" aria-checked="{{ b.isP }}" onClick="{{ b.setP }}" style="height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: 1.5px solid {{ b.pBd }}; background: {{ b.pBg }}; color: {{ b.pFg }}">Presente</button>
+            </div>
+          </div>
+          <sc-if value="{{ b.isP }}" hint-placeholder-val="{{ false }}">
+            <span role="alert" style="font-size: 13px; color: #8C1D18; background: #FCE8E6; border-radius: 8px; padding: 8px 10px">Fora do padrão de potabilidade. Ao concluir, a supervisão é avisada para recoleta.</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin: 0 4px; font-size: 13px; color: #52627A">{{ col.an.hint }}</p>
+    <button type="button" onClick="{{ col.an.conclude }}" disabled="{{ col.an.off }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ col.an.op }}">Concluir análises</button>
+    <button type="button" onClick="{{ col.an.savePartial }}" style="height: 52px; border: 1.5px solid #C7D4E2; border-radius: 18px; background: #FFFFFF; color: #0A2E5C; font-size: 16px; font-weight: 700; cursor: pointer">Salvar e terminar depois</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ DESCARGAS DE REDE ============ -->
+<sc-if value="{{ s.descarga }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.home }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">Descargas de rede</span>
+      <span style="font-size: 13px; color: #52627A">Outubro de 2026</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #0A2E5C; color: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #C9D8EA">Descargas no mês</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.05; font-variant-numeric: tabular-nums">{{ ds.mN }}</span></span>
+      <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #C9D8EA">Volume estimado</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.05; font-variant-numeric: tabular-nums">{{ ds.mVol }} <span style="font-size: 16px; font-weight: 700; color: #C9D8EA">m³</span></span></span>
+    </div>
+    <button type="button" onClick="{{ nav.descargaNova }}" style="height: 56px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Nova descarga
+    </button>
+
+    <sc-if value="{{ ds.hasRun }}" hint-placeholder-val="{{ true }}">
+      <span style="font-weight: 700; color: #0A2E5C; padding: 4px 4px 0">Em andamento</span>
+      <sc-for list="{{ ds.run }}" as="r" hint-placeholder-count="1">
+        <button type="button" onClick="{{ r.open }}" style="text-align: left; border: 1.5px solid #E8B77A; background: #FFFBF5; border-radius: 18px; padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #0F1E2E">
+          <span style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 16px; color: #0A2E5C">{{ r.addr }}</span>
+            <span style="font-size: 13px; color: #52627A">{{ r.where }}</span>
+            <span style="font-size: 13px; color: #52627A">{{ r.when }}</span>
+            <span style="align-self: flex-start; margin-top: 4px; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #FDF0DC; color: #8A3C06">Aberta há {{ r.since }}. Toque para encerrar</span>
+          </span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A3C06" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </sc-for>
+    </sc-if>
+
+    <span style="font-weight: 700; color: #0A2E5C; padding: 4px 4px 0">Encerradas hoje</span>
+    <sc-for list="{{ ds.today }}" as="d" hint-placeholder-count="2">
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+        <span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <span style="font-weight: 700; color: #0A2E5C">{{ d.addr }}</span>
+          <span style="font-size: 13px; color: #52627A">{{ d.span }}, por {{ d.who }}</span>
+        </span>
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; color: #0A2E5C; white-space: nowrap; font-variant-numeric: tabular-nums">≈ {{ d.vol }} m³</span>
+      </div>
+    </sc-for>
+    <sc-if value="{{ ds.todayEmpty }}" hint-placeholder-val="{{ false }}">
+      <p style="margin: 0; color: #52627A; padding: 4px">Nenhuma descarga encerrada hoje.</p>
+    </sc-if>
+    <p style="margin: 4px 4px 0; font-size: 13px; color: #52627A">O volume é estimado pela vazão cadastrada de cada ponto multiplicada pela duração da descarga.</p>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ NOVA DESCARGA ============ -->
+<sc-if value="{{ s.descargaNova }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.descarga }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">Nova descarga</span>
+      <span style="font-size: 13px; color: #52627A">Ponto de descarga e horários</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Ponto de descarga</span>
+      <sc-if value="{{ ds.cn.noSel }}" hint-placeholder-val="{{ true }}">
+        <button type="button" onClick="{{ ds.cn.useGps }}" disabled="{{ ds.cn.busy }}" style="height: 54px; border: 1.5px solid #0057A8; border-radius: 16px; background: #F2F7FD; color: #0057A8; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>
+          {{ ds.cn.gpsTxt }}
+        </button>
+        <div style="display: flex; align-items: center; gap: 10px; color: #52627A; font-size: 13px"><span style="flex: 1; height: 1px; background: #DDE5EE"></span>ou digite o endereço<span style="flex: 1; height: 1px; background: #DDE5EE"></span></div>
+        <div style="position: relative">
+          <label for="ds-busca" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Endereço do ponto de descarga</label>
+          <input id="ds-busca" type="search" autocomplete="off" placeholder="Ex.: Rua Goiás" value="{{ ds.cn.q }}" onChange="{{ ds.cn.setQ }}" style="width: 100%; box-sizing: border-box; height: 50px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 16px 0 44px; font-size: 16px; background: #F8FAFC" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 14px; top: 15px"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; border: {{ ds.cn.listBd }}">
+          <sc-for list="{{ ds.cn.results }}" as="r" hint-placeholder-count="3">
+            <button type="button" onClick="{{ r.pick }}" style="text-align: left; border: 0; border-bottom: 1px solid #EEF3F7; background: #FFFFFF; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #0F1E2E">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0057A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+              <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700; color: #0A2E5C">{{ r.addr }}</span><span style="font-size: 13px; color: #52627A">{{ r.sub }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ ds.cn.noRes }}" hint-placeholder-val="{{ false }}">
+          <p style="margin: 0; font-size: 14px; color: #8A3C06">Nenhum ponto de descarga cadastrado com esse endereço. Confira a grafia ou peça ao administrador para cadastrar o ponto.</p>
+        </sc-if>
+        <sc-if value="{{ ds.cn.hint }}" hint-placeholder-val="{{ true }}">
+          <p style="margin: 0; font-size: 13px; color: #52627A">Digite pelo menos duas letras para ver os pontos cadastrados.</p>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ ds.cn.hasSel }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: #F2F7FD; border: 1.5px solid #0057A8; border-radius: 16px; padding: 14px">
+          <span style="width: 40px; height: 40px; border-radius: 12px; background: #0057A8; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+          <span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+            <span style="font-weight: 700; color: #0A2E5C">{{ ds.cn.addr }}</span>
+            <span style="font-size: 13px; color: #52627A">{{ ds.cn.sub }}</span>
+            <sc-if value="{{ ds.cn.hasDist }}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: #0B6B57; font-weight: 700">Você está a {{ ds.cn.dist }} m deste ponto</span></sc-if>
+          </span>
+          <button type="button" onClick="{{ ds.cn.clear }}" style="border: 0; background: transparent; color: #0057A8; font-weight: 700; font-size: 14px; cursor: pointer; padding: 6px">Trocar</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Horários</span>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ds-ini" style="font-weight: 700; font-size: 14px; color: #0F1E2E">Início</label>
+          <input id="ds-ini" type="time" value="{{ ds.cn.ini }}" onChange="{{ ds.cn.setIni }}" style="height: 54px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 12px; font-size: 20px; font-weight: 700; background: #F8FAFC; min-width: 0; font-variant-numeric: tabular-nums" />
+          <button type="button" onClick="{{ ds.cn.iniNow }}" style="height: 38px; border: 1.5px solid #C7D4E2; border-radius: 12px; background: #FFFFFF; color: #0057A8; font-weight: 700; font-size: 14px; cursor: pointer">Usar hora atual</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ds-fim" style="font-weight: 700; font-size: 14px; color: #0F1E2E">Fim</label>
+          <input id="ds-fim" type="time" value="{{ ds.cn.fim }}" onChange="{{ ds.cn.setFim }}" style="height: 54px; border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 0 12px; font-size: 20px; font-weight: 700; background: #F8FAFC; min-width: 0; font-variant-numeric: tabular-nums" />
+          <button type="button" onClick="{{ ds.cn.fimNow }}" style="height: 38px; border: 1.5px solid #C7D4E2; border-radius: 12px; background: #FFFFFF; color: #0057A8; font-weight: 700; font-size: 14px; cursor: pointer">Usar hora atual</button>
+        </div>
+      </div>
+      <sc-if value="{{ ds.cn.hasDur }}" hint-placeholder-val="{{ false }}">
+        <div style="background: #0A2E5C; color: #FFFFFF; border-radius: 16px; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-end">
+          <span style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #C9D8EA">Duração</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">{{ ds.cn.dur }}</span></span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 13px; color: #C9D8EA">Volume estimado</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">≈ {{ ds.cn.vol }} m³</span></span>
+        </div>
+        <span style="font-size: 13px; color: #52627A; margin-top: -4px">{{ ds.cn.flowTxt }}</span>
+      </sc-if>
+      <sc-if value="{{ ds.cn.err }}" hint-placeholder-val="{{ false }}">
+        <span role="alert" style="font-size: 14px; color: #8A3C06; background: #FDF0DC; border-radius: 10px; padding: 10px 12px">O fim precisa ser depois do início. Confira os horários.</span>
+      </sc-if>
+      <sc-if value="{{ ds.cn.longWarn }}" hint-placeholder-val="{{ false }}">
+        <span style="font-size: 14px; color: #8A3C06; background: #FDF0DC; border-radius: 10px; padding: 10px 12px">Descarga acima de 60 minutos. Ela vai aparecer nos pontos de atenção do painel.</span>
+      </sc-if>
+      <span style="font-size: 13px; color: #52627A">Se a descarga ainda estiver aberta, deixe o fim em branco. Ela fica em Em andamento para você encerrar depois.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="ds-obs" style="font-weight: 700; font-size: 14px; color: #0A2E5C">Observações (opcional)</label>
+      <textarea id="ds-obs" rows="2" placeholder="Ex.: água saiu turva nos primeiros 10 minutos" value="{{ ds.cn.obs }}" onChange="{{ ds.cn.setObs }}" style="border: 1.5px solid #C7D4E2; border-radius: 14px; padding: 12px 14px; font-size: 16px; background: #FFFFFF; resize: none"></textarea>
+    </div>
+    <p style="margin: 0 4px; font-size: 13px; color: #52627A">{{ ds.cn.saveHint }}</p>
+    <button type="button" onClick="{{ ds.cn.save }}" disabled="{{ ds.cn.off }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ ds.cn.op }}">{{ ds.cn.btn }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ENCERRAR DESCARGA ============ -->
+<sc-if value="{{ s.descargaFim }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 14px 16px 14px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #DDE5EE">
+    <button type="button" aria-label="Voltar" onClick="{{ nav.descarga }}" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0A2E5C; cursor: pointer; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ ds.ef.addr }}</span>
+      <span style="font-size: 13px; color: #52627A">{{ ds.ef.where }}</span>
+    </div>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px">
+      <span style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52627A">Iniciada por {{ ds.ef.who }}</span><span style="font-weight: 700; color: #0A2E5C">Início da descarga</span></span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; color: #0A2E5C; font-variant-numeric: tabular-nums">{{ ds.ef.ini }}</span>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <label for="ds-ef-fim" style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; color: #0A2E5C">Fim da descarga</label>
+      <div style="display: flex; gap: 10px">
+        <input id="ds-ef-fim" type="time" value="{{ ds.ef.fim }}" onChange="{{ ds.ef.setFim }}" style="flex: 1; min-width: 0; height: 58px; border: 2px solid #C7D4E2; border-radius: 16px; padding: 0 14px; font-size: 24px; font-weight: 700; background: #F8FAFC; font-variant-numeric: tabular-nums" />
+        <button type="button" onClick="{{ ds.ef.now }}" style="height: 58px; padding: 0 16px; border: 1.5px solid #0057A8; border-radius: 16px; background: #F2F7FD; color: #0057A8; font-weight: 700; font-size: 15px; cursor: pointer">Agora</button>
+      </div>
+      <sc-if value="{{ ds.ef.hasDur }}" hint-placeholder-val="{{ false }}">
+        <div style="background: #0A2E5C; color: #FFFFFF; border-radius: 16px; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-end">
+          <span style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #C9D8EA">Duração</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">{{ ds.ef.dur }}</span></span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 13px; color: #C9D8EA">Volume estimado</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">≈ {{ ds.ef.vol }} m³</span></span>
+        </div>
+        <span style="font-size: 13px; color: #52627A">{{ ds.ef.flowTxt }}</span>
+      </sc-if>
+      <sc-if value="{{ ds.ef.err }}" hint-placeholder-val="{{ false }}">
+        <span role="alert" style="font-size: 14px; color: #8A3C06; background: #FDF0DC; border-radius: 10px; padding: 10px 12px">O fim precisa ser depois do início ({{ ds.ef.ini }}).</span>
+      </sc-if>
+    </div>
+    <button type="button" onClick="{{ ds.ef.save }}" disabled="{{ ds.ef.off }}" style="height: 58px; border: 0; border-radius: 18px; background: #0057A8; color: #FFFFFF; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{ ds.ef.op }}">Encerrar descarga</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ HISTÓRICO ============ -->
+<sc-if value="{{ s.hist }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+  <div style="background: #FFFFFF; padding: 20px 20px 14px; border-bottom: 1px solid #DDE5EE">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px; color: #0A2E5C">Meus lançamentos</span>
+    <p style="margin: 2px 0 0; font-size: 14px; color: #52627A">Você pode corrigir um lançamento em até 2 horas.</p>
+  </div>
+  <div class="scr" style="flex: 1; overflow-y: auto; padding: 14px 16px 100px; display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{ hist }}" as="h" hint-placeholder-count="5">
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+        <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+          <span style="font-weight: 700; color: #0A2E5C">{{ h.title }}</span>
+          <span style="font-size: 14px; color: #52627A">{{ h.sub }}</span>
+        </span>
+        <span style="font-size: 13px; color: #52627A; text-align: right">{{ h.time }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PERFIL ============ -->
+<sc-if value="{{ s.perfil }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position: absolute; inset: 0; overflow-y: auto; padding: 28px 20px 100px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+  <div style="display: flex; align-items: center; gap: 14px">
+    <span style="width: 64px; height: 64px; border-radius: 22px; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px">F</span>
+    <span style="display: flex; flex-direction: column">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px; color: #0A2E5C">Felipe Rodrigues</span>
+      <span style="font-size: 14px; color: #52627A">Administrador, Turno A</span>
+    </span>
+  </div>
+  <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+    <span style="font-weight: 700; color: #0A2E5C">Blocos liberados para você</span>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <sc-for list="{{ accChips }}" as="a" hint-placeholder-count="3">
+        <span style="padding: 6px 12px; border-radius: 999px; background: #E3EEF9; color: #0A2E5C; font-size: 14px; font-weight: 700">{{ a }}</span>
+      </sc-for>
+    </div>
+    <span style="font-size: 13px; color: #52627A">Definido pelo administrador em Usuários e permissões, no sistema web.</span>
+  </div>
+  <button type="button" onClick="{{ nav.login }}" style="height: 54px; border: 1.5px solid #C7D4E2; border-radius: 18px; background: #FFFFFF; color: #0A2E5C; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></svg>
+    Sair da conta
+  </button>
+</div>
+</sc-if>
+
+<!-- ============ NAVEGAÇÃO INFERIOR ============ -->
+<sc-if value="{{ s.nav }}" hint-placeholder-val="{{ false }}">
+<nav aria-label="Navegação principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; background: #FFFFFF; border-top: 1px solid #DDE5EE; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 6px 8px 10px; box-sizing: border-box">
+  <button type="button" onClick="{{ nav.home }}" style="border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: {{ nv.homeC }}; font-size: 12px; font-weight: 700">
+    <span style="width: 52px; height: 30px; border-radius: 999px; background: {{ nv.homeB }}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg></span>Início
+  </button>
+  <button type="button" onClick="{{ nav.hist }}" style="border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: {{ nv.histC }}; font-size: 12px; font-weight: 700">
+    <span style="width: 52px; height: 30px; border-radius: 999px; background: {{ nv.histB }}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Histórico
+  </button>
+  <button type="button" onClick="{{ nav.perfil }}" style="border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: {{ nv.perC }}; font-size: 12px; font-weight: 700">
+    <span style="width: 52px; height: 30px; border-radius: 999px; background: {{ nv.perB }}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>Perfil
+  </button>
+</nav>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      screen: 'login', block: 'poco', sel: 'm7', etaMode: 'cal', selEte: 'ETE Trianon', okCtx: 'poco',
+      tab: 'leitura', filt: 'todos', q: '',
+      tot: '', vaz: '', cl: '', fl: '', foto: false, hip: '620', aci: '90',
+      done: { m0: '06:52', m1: '06:58', m2: '07:01', m3: '07:12', m4: '07:20', m5: '07:24', m6: '07:27', e0: '06:40', e1: '06:44', e2: '06:47' },
+      etaDone: { cal: '07:05' },
+      eteDone: { 'ETE Trianon': '07:40' },
+      acc: { eta: true, ete: true, poco: true, coleta: true, descarga: true },
+      last: { title: '', sub: '', rows: [] },
+      calv: {},
+      lev: {}, salUsed: '',
+      prod: '', descEta: '', descKg: '', descLast: null,
+      chk: {}, chkObs: {}, eteVaz: '', anal: null
+    };
+    Object.assign(this.state, this.coletaInit(), this.descInit());
+  }
+
+  colAddrs() {
+    return [
+      { addr: 'Rua São Paulo, 450', bairro: 'Centro', sys: 'eta' },
+      { addr: 'Rua Rio de Janeiro, 1020', bairro: 'Centro', sys: 'eta' },
+      { addr: 'Av. Domingos Camerlingo Caló, 2300', bairro: 'Vila Margarida', sys: 'eta' },
+      { addr: 'Rua Paraná, 315', bairro: 'Vila Odilon', sys: 'eta' },
+      { addr: 'Rua Minas Gerais, 870', bairro: 'Parque Minas Gerais', sys: 'eta' },
+      { addr: 'Rua Bahia, 152', bairro: 'Jardim Paineiras', sys: 'eta' },
+      { addr: 'Rua Espírito Santo, 640', bairro: 'Vila Kennedy', sys: 'eta' },
+      { addr: 'Rua Goiás, 99', bairro: 'Jardim Anchieta', sys: 'eta' },
+      { addr: 'Rua das Acácias, 210', bairro: 'Jardim São João', sys: 'sj' },
+      { addr: 'Rua dos Ipês, 58', bairro: 'Jardim São João', sys: 'sj' },
+      { addr: 'Rua Flamboyant, 300', bairro: 'Vila São João', sys: 'sj' },
+      { addr: 'Alameda das Orquídeas, 120', bairro: 'Residencial Moradas', sys: 'mor' },
+      { addr: 'Rua das Hortênsias, 77', bairro: 'Moradas Clube', sys: 'mor' },
+      { addr: 'Alameda dos Lírios, 300', bairro: 'Residencial Moradas', sys: 'mor' },
+      { addr: 'Rua Pernambuco, 510', bairro: 'Jardim Pacaembu', sys: 'pac' },
+      { addr: 'Rua Alagoas, 88', bairro: 'Jardim Pacaembu', sys: 'pac' }
+    ];
+  }
+
+  colSys() {
+    return [
+      { k: 'eta', name: 'Sistema ETA', meta: 71 },
+      { k: 'sj', name: 'Sistema São João', meta: 10 },
+      { k: 'mor', name: 'Sistema Moradas', meta: 10 },
+      { k: 'pac', name: 'Sistema Pacaembu', meta: 5 }
+    ];
+  }
+
+  coletaInit() {
+    const e = { fl: '', ph: '', cor: '', tur: '', ct: '', cte: '' };
+    const mk = (id, a, date, time, who, cl, rest) => Object.assign({ id, a, date, time, who, cl }, e, rest || {});
+    return {
+      colTab: 'pend', colMsg: '', colSeq: 10,
+      colDone: { eta: 44, sj: 6, mor: 7, pac: 3 },
+      colPend: [
+        mk('c1', 0, '18/10', '10:20', 'Ana', '1,20', { fl: '0,72', ph: '7,1', cor: '5', tur: '0,6' }),
+        mk('c2', 11, '18/10', '15:30', 'Rafael', '0,95', { fl: '0,68', ph: '7,0', cor: '5', tur: '0,8' }),
+        mk('c3', 14, '18/10', '16:10', 'Ana', '0,40'),
+        mk('c4', 4, '19/10', '08:12', 'Ana', '0,85'),
+        mk('c5', 5, '19/10', '08:40', 'Ana', '1,10', { fl: '0,70', ph: '7,2' }),
+        mk('c6', 8, '19/10', '09:05', 'Rafael', '0,62')
+      ],
+      colHist: [],
+      cn: { loc: -1, gps: 'idle', q: '', cl: '', obs: '', dist: 0 },
+      anId: null, an: {}
+    };
+  }
+
+  coletaVals(st, base, now) {
+    const A = this.colAddrs(), SYS = this.colSys();
+    const sysOf = (k) => SYS.find((x) => x.k === k);
+    const filled = (v) => String(v == null ? '' : v).trim() !== '';
+    const dec = (s) => { const t = String(s || '').trim(); if (!t) return NaN; return Number(t.replace(',', '.')); };
+    const FIELDS = ['fl', 'ph', 'cor', 'tur', 'ct', 'cte'];
+    const nFilled = (c) => FIELDS.filter((f) => filled(c[f])).length;
+    const scr = st.screen;
+    const set = (o) => () => this.setState(o);
+    const cnReset = { loc: -1, gps: 'idle', q: '', cl: '', obs: '', dist: 0 };
+
+    // ---- metas
+    const wait = {}; SYS.forEach((s) => { wait[s.k] = 0; });
+    st.colPend.forEach((c) => { wait[A[c.a].sys] += 1; });
+    let tMeta = 0, tDone = 0, tWait = 0;
+    const metas = SYS.map((s) => {
+      const d = st.colDone[s.k], w = wait[s.k], falta = Math.max(0, s.meta - d);
+      tMeta += s.meta; tDone += d; tWait += w;
+      const pctD = Math.min(100, d / s.meta * 100);
+      return {
+        name: s.name, txt: d + ' de ' + s.meta,
+        pctD: pctD.toFixed(1), pctW: Math.min(100 - pctD, w / s.meta * 100).toFixed(1),
+        sub: falta === 0 ? 'Meta do mês concluída' : 'Faltam ' + falta + (w ? ', ' + w + (w === 1 ? ' aguardando análises' : ' aguardando análises') : ''),
+        subC: falta === 0 ? '#0B6B57' : '#52627A'
+      };
+    });
+    const tPctD = Math.min(100, tDone / tMeta * 100);
+
+    // ---- pendentes
+    const pend = st.colPend.map((c) => {
+      const ad = A[c.a], n = nFilled(c);
+      return {
+        addr: ad.addr, where: ad.bairro + ', ' + sysOf(ad.sys).name,
+        when: 'Coletada em ' + c.date + ' às ' + c.time + ', por ' + c.who,
+        cl: c.cl, prog: n === 0 ? 'Faltam as 6 análises' : n + ' de 6 lançadas',
+        chipBg: n === 0 ? '#FDF0DC' : '#E3EEF9', chipFg: n === 0 ? '#8A3C06' : '#0057A8',
+        open: () => this.setState({ screen: 'coletaAn', anId: c.id, an: Object.assign({}, c), colMsg: '' })
+      };
+    });
+
+    // ---- nova coleta
+    const cn = st.cn;
+    const putCn = (o) => this.setState({ cn: Object.assign({}, this.state.cn, o) });
+    const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const q = norm(cn.q.trim());
+    const searching = cn.loc < 0 && q.length >= 2;
+    const results = !searching ? [] : A.map((x, i) => ({ x, i }))
+      .filter((o) => norm(o.x.addr + ' ' + o.x.bairro).indexOf(q) >= 0).slice(0, 5)
+      .map((o) => ({ addr: o.x.addr, sub: o.x.bairro + ', ' + sysOf(o.x.sys).name, pick: () => putCn({ loc: o.i, q: '', gps: 'idle', dist: 0 }) }));
+    const sel = cn.loc >= 0 ? A[cn.loc] : null;
+    const clV = dec(cn.cl);
+    const band = !isFinite(clV) ? { txt: 'Faixa: 0,2 a 2,0 mg/L', bg: '#EEF3F7', fg: '#52627A' }
+      : clV < 0.2 ? { txt: 'Abaixo da faixa', bg: '#FDF0DC', fg: '#8A3C06' }
+      : clV > 2.0 ? { txt: 'Acima da faixa', bg: '#FDF0DC', fg: '#8A3C06' }
+      : { txt: 'Dentro da faixa', bg: '#E2F4EE', fg: '#0B6B57' };
+    const canSave = !!sel && isFinite(clV);
+
+    // ---- análises da coleta
+    const an = st.an || {};
+    const putAn = (o) => this.setState({ an: Object.assign({}, this.state.an, o) });
+    const anAd = an.a != null ? A[an.a] : A[0];
+    const rng = (v, lo, hi, txt) => !isFinite(v) ? { txt: 'Faixa: ' + txt, bg: '#EEF3F7', fg: '#52627A' }
+      : (v < lo || v > hi) ? { txt: 'Fora da faixa (' + txt + ')', bg: '#FDF0DC', fg: '#8A3C06' }
+      : { txt: 'Dentro da faixa', bg: '#E2F4EE', fg: '#0B6B57' };
+    const mx = (v, max, txt) => !isFinite(v) ? { txt: 'Máximo ' + txt, bg: '#EEF3F7', fg: '#52627A' }
+      : v > max ? { txt: 'Acima do máximo (' + txt + ')', bg: '#FDF0DC', fg: '#8A3C06' }
+      : { txt: 'Dentro do padrão', bg: '#E2F4EE', fg: '#0B6B57' };
+    const NUMS = [
+      { k: 'fl', lab: 'Flúor', unit: 'mg/L', ph: '0,00', chip: (v) => rng(v, 0.6, 0.8, '0,6 a 0,8 mg/L') },
+      { k: 'ph', lab: 'pH', unit: 'unidades de pH', ph: '0,0', chip: (v) => rng(v, 6, 9, '6,0 a 9,0') },
+      { k: 'cor', lab: 'Cor aparente', unit: 'uH', ph: '0', chip: (v) => mx(v, 15, '15 uH') },
+      { k: 'tur', lab: 'Turbidez', unit: 'uT', ph: '0,0', chip: (v) => mx(v, 5, '5 uT') }
+    ];
+    const nums = NUMS.map((f) => ({
+      id: 'an-' + f.k, lab: f.lab, unit: f.unit, ph: f.ph, val: an[f.k] || '',
+      chip: f.chip(dec(an[f.k])),
+      set: (ev) => putAn({ [f.k]: ev.target.value })
+    }));
+    const bools = [{ k: 'ct', lab: 'Coliformes totais' }, { k: 'cte', lab: 'Coliformes termotolerantes' }].map((b) => {
+      const v = an[b.k];
+      return {
+        lab: b.lab, isA: v === 'A', isP: v === 'P',
+        aBd: v === 'A' ? '#0B6B57' : '#B9D9CE', aBg: v === 'A' ? '#0B6B57' : '#FFFFFF', aFg: v === 'A' ? '#FFFFFF' : '#0B6B57',
+        pBd: v === 'P' ? '#B42318' : '#E8B7B2', pBg: v === 'P' ? '#B42318' : '#FFFFFF', pFg: v === 'P' ? '#FFFFFF' : '#8C1D18',
+        setA: () => putAn({ [b.k]: 'A' }), setP: () => putAn({ [b.k]: 'P' })
+      };
+    });
+    const anN = nFilled(an);
+    const txtCol = (v) => (v === 'A' ? 'Ausente' : v === 'P' ? 'Presente' : '—');
+
+    // ---- integração com o resto do app
+    base.s.coleta = scr === 'coleta';
+    base.s.coletaNova = scr === 'coletaNova';
+    base.s.coletaAn = scr === 'coletaAn';
+    base.s.nav = base.s.nav || scr === 'coleta';
+    base.nav.coleta = () => this.setState({ screen: 'coleta', colMsg: '' });
+    base.nav.coletaNova = () => this.setState({ screen: 'coletaNova', cn: Object.assign({}, cnReset), colMsg: '' });
+    base.acc = st.acc;
+    if (st.acc.coleta) base.accChips = base.accChips.concat(['Coleta de campo']);
+    base.hist = st.colHist.concat(base.hist);
+    if (st.okCtx === 'coleta') {
+      base.hasNext = false;
+      base.backLabel = 'Voltar para Coleta de campo';
+      base.on.backList = () => this.setState({ screen: 'coleta' });
+    }
+    const seg = (on) => ({ bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#0A2E5C' : '#52627A' });
+    const tp = seg(st.colTab === 'pend'), tm = seg(st.colTab === 'metas');
+
+    return {
+      col: {
+        tMeta, tDone, tWait, tFalta: Math.max(0, tMeta - tDone),
+        tPctD: tPctD.toFixed(1), tPctW: Math.min(100 - tPctD, tWait / tMeta * 100).toFixed(1),
+        homeSub: (tMeta - tDone) + ' faltam no mês, ' + tWait + ' aguardando análises',
+        tabPend: st.colTab === 'pend', tabMetas: st.colTab === 'metas',
+        toPend: set({ colTab: 'pend' }), toMetas: set({ colTab: 'metas' }),
+        tpBg: tp.bg, tpFg: tp.fg, tmBg: tm.bg, tmFg: tm.fg,
+        hasMsg: !!st.colMsg, msg: st.colMsg,
+        metas, pend, pendN: pend.length, pendEmpty: pend.length === 0,
+        cn: {
+          noSel: !sel, hasSel: !!sel, busy: cn.gps === 'busy',
+          gpsTxt: cn.gps === 'busy' ? 'Buscando sua localização…' : 'Usar minha localização',
+          useGps: () => {
+            putCn({ gps: 'busy' });
+            setTimeout(() => { this.setState({ cn: Object.assign({}, this.state.cn, { gps: 'ok', loc: 3, dist: 28, q: '' }) }); }, 1100);
+          },
+          q: cn.q, setQ: (ev) => putCn({ q: ev.target.value }),
+          results, listBd: results.length ? '1px solid #DDE5EE' : '0',
+          noRes: searching && results.length === 0,
+          hint: cn.loc < 0 && q.length < 2,
+          addr: sel ? sel.addr : '', sub: sel ? sel.bairro + ', ' + sysOf(sel.sys).name : '',
+          hasDist: !!sel && cn.gps === 'ok', dist: cn.dist,
+          clear: () => putCn({ loc: -1, gps: 'idle', dist: 0 }),
+          cl: cn.cl, setCl: (ev) => putCn({ cl: ev.target.value }), band,
+          obs: cn.obs, setObs: (ev) => putCn({ obs: ev.target.value }),
+          off: !canSave, op: canSave ? 1 : 0.45,
+          saveHint: !sel ? 'Escolha o ponto de coleta.' : !isFinite(clV) ? 'Informe o cloro residual livre.' : 'Data, hora e coletor são registrados ao salvar.',
+          save: () => {
+            if (!canSave) return;
+            const id = 'c' + st.colSeq;
+            const item = { id, a: cn.loc, date: '19/10', time: now, who: 'Felipe', cl: cn.cl, fl: '', ph: '', cor: '', tur: '', ct: '', cte: '' };
+            this.setState({
+              colPend: st.colPend.concat([item]), colSeq: st.colSeq + 1, cn: Object.assign({}, cnReset),
+              colHist: [{ title: sel.addr, sub: 'Coleta de campo', time: 'Hoje, ' + now, t: now }].concat(st.colHist),
+              screen: 'ok', okCtx: 'coleta',
+              last: { title: 'Coleta registrada', sub: sel.addr + ', hoje às ' + now, rows: [
+                { k: 'Sistema', v: sysOf(sel.sys).name },
+                { k: 'Cloro livre', v: cn.cl + ' mg/L' },
+                { k: 'Demais análises', v: 'Em Pendentes' }
+              ] }
+            });
+          }
+        },
+        an: {
+          addr: anAd.addr, where: anAd.bairro + ', ' + sysOf(anAd.sys).name,
+          when: 'Coletada em ' + (an.date || '') + ' às ' + (an.time || '') + ', por ' + (an.who || ''),
+          cl: an.cl || '', n: anN, nums, bools,
+          off: anN < 6, op: anN < 6 ? 0.45 : 1,
+          hint: anN < 6 ? 'Lance os 6 parâmetros para concluir, ou salve e termine depois.' : 'Analista, data e hora são registrados ao concluir.',
+          savePartial: () => {
+            this.setState({
+              colPend: st.colPend.map((c) => (c.id === an.id ? Object.assign({}, an) : c)),
+              screen: 'coleta', colTab: 'pend', colMsg: 'Análises salvas. A coleta continua em Pendentes.'
+            });
+          },
+          conclude: () => {
+            if (anN < 6) return;
+            const done = Object.assign({}, st.colDone); done[anAd.sys] += 1;
+            const alert = an.ct === 'P' || an.cte === 'P';
+            const rows = [
+              { k: 'Cloro livre', v: an.cl + ' mg/L' }, { k: 'Flúor', v: an.fl + ' mg/L' }, { k: 'pH', v: an.ph },
+              { k: 'Cor aparente', v: an.cor + ' uH' }, { k: 'Turbidez', v: an.tur + ' uT' },
+              { k: 'Coliformes totais', v: txtCol(an.ct) }, { k: 'Coliformes termotolerantes', v: txtCol(an.cte) }
+            ];
+            if (alert) rows.push({ k: 'Atenção', v: 'Supervisão avisada para recoleta' });
+            this.setState({
+              colPend: st.colPend.filter((c) => c.id !== an.id), colDone: done,
+              colHist: [{ title: anAd.addr, sub: 'Análises da coleta concluídas', time: 'Hoje, ' + now, t: now }].concat(st.colHist),
+              screen: 'ok', okCtx: 'coleta',
+              last: { title: 'Análises concluídas', sub: anAd.addr + ', ' + sysOf(anAd.sys).name, rows }
+            });
+          }
+        }
+      }
+    };
+  }
+
+  dscPoints() {
+    // [endereço, bairro, sistema, DN em mm]
+    return [
+      ['Rua Tibiriçá, 1100', 'Vila Moraes', 'eta', 100],
+      ['Rua Bahia, 300', 'Jardim Paineiras', 'eta', 75],
+      ['Rua Goiás, 410', 'Jardim Anchieta', 'eta', 100],
+      ['Av. Domingos Camerlingo Caló, 3100', 'Vila Margarida', 'eta', 150],
+      ['Rua Espírito Santo, 900', 'Vila Kennedy', 'eta', 75],
+      ['Rua Minas Gerais, 1500', 'Parque Minas Gerais', 'eta', 100],
+      ['Rua dos Ipês, 400', 'Jardim São João', 'sj', 75],
+      ['Rua Flamboyant, 620', 'Vila São João', 'sj', 50],
+      ['Alameda dos Lírios, 520', 'Residencial Moradas', 'mor', 75],
+      ['Rua das Hortênsias, 210', 'Moradas Clube', 'mor', 50],
+      ['Rua Alagoas, 300', 'Jardim Pacaembu', 'pac', 75],
+      ['Rua Sergipe, 45', 'Jardim Pacaembu', 'pac', 50]
+    ];
+  }
+
+  dscClock(offsetMin) {
+    const d = new Date(Date.now() + (offsetMin || 0) * 60000);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  descInit() {
+    return {
+      dscMonthN: 38, dscMonthVol: 1880, dscSeq: 10,
+      dscRun: [{ id: 'd1', p: 2, ini: this.dscClock(-25), who: 'Rafael' }],
+      dscToday: [
+        { p: 9, ini: '07:05', fim: '07:25', who: 'Rafael' },
+        { p: 7, ini: '06:30', fim: '06:50', who: 'Ana' }
+      ],
+      dn: { loc: -1, gps: 'idle', q: '', ini: '', fim: '', obs: '', dist: 0 },
+      dfId: null, dfFim: ''
+    };
+  }
+
+  descVals(st, base) {
+    const PTS = this.dscPoints();
+    const SYSN = { eta: 'Sistema ETA', sj: 'Sistema São João', mor: 'Sistema Moradas', pac: 'Sistema Pacaembu' };
+    const FLOW = { 50: 18, 75: 36, 100: 60, 150: 130 };
+    const fmt = (n) => Math.round(n).toLocaleString('pt-BR');
+    const toMin = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? Number(m[1]) * 60 + Number(m[2]) : NaN; };
+    const durTxt = (m) => (m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min' : m + ' min');
+    const where = (p) => PTS[p][1] + ', ' + SYSN[PTS[p][2]];
+    const volOf = (p, min) => FLOW[PTS[p][3]] * min / 60;
+    const flowTxt = (p) => 'Vazão estimada do ponto: ' + FLOW[PTS[p][3]] + ' m³/h (rede DN ' + PTS[p][3] + ').';
+    const scr = st.screen;
+    const dnReset = { loc: -1, gps: 'idle', q: '', ini: '', fim: '', obs: '', dist: 0 };
+    const putDn = (o) => this.setState({ dn: Object.assign({}, this.state.dn, o) });
+    const nowM = toMin(this.dscClock(0));
+
+    // ---- hub
+    const run = st.dscRun.map((r) => {
+      let since = nowM - toMin(r.ini); if (since < 0) since += 1440;
+      return {
+        addr: PTS[r.p][0], where: where(r.p), when: 'Iniciada às ' + r.ini + ' por ' + r.who, since: durTxt(since),
+        open: () => this.setState({ screen: 'descargaFim', dfId: r.id, dfFim: '' })
+      };
+    });
+    const today = st.dscToday.map((d) => {
+      const m = toMin(d.fim) - toMin(d.ini);
+      return { addr: PTS[d.p][0], span: d.ini + ' às ' + d.fim + ', ' + durTxt(m), who: d.who, vol: fmt(volOf(d.p, m)) };
+    });
+
+    // ---- nova descarga
+    const dn = st.dn;
+    const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const q = norm(dn.q.trim());
+    const searching = dn.loc < 0 && q.length >= 2;
+    const results = !searching ? [] : PTS.map((x, i) => ({ x, i }))
+      .filter((o) => norm(o.x[0] + ' ' + o.x[1]).indexOf(q) >= 0).slice(0, 5)
+      .map((o) => ({ addr: o.x[0], sub: where(o.i) + ', DN ' + o.x[3], pick: () => putDn({ loc: o.i, q: '', gps: 'idle', dist: 0 }) }));
+    const sel = dn.loc >= 0 ? PTS[dn.loc] : null;
+    const iM = toMin(dn.ini), fM = toMin(dn.fim);
+    const hasIni = isFinite(iM), hasFim = isFinite(fM);
+    const err = hasIni && hasFim && fM <= iM;
+    const dur = hasIni && hasFim && !err ? fM - iM : NaN;
+    const okNew = !!sel && hasIni && !err;
+    const finished = okNew && hasFim;
+
+    // ---- encerrar
+    const rr = st.dscRun.find((r) => r.id === st.dfId) || st.dscRun[0] || { p: 0, ini: '', who: '' };
+    const efI = toMin(rr.ini), efF = toMin(st.dfFim);
+    const efErr = isFinite(efF) && efF <= efI;
+    const efDur = isFinite(efF) && !efErr ? efF - efI : NaN;
+    const efOk = isFinite(efDur);
+
+    // ---- integração
+    base.s.descarga = scr === 'descarga';
+    base.s.descargaNova = scr === 'descargaNova';
+    base.s.descargaFim = scr === 'descargaFim';
+    base.s.nav = base.s.nav || scr === 'descarga';
+    base.nav.descarga = () => this.setState({ screen: 'descarga' });
+    base.nav.descargaNova = () => this.setState({ screen: 'descargaNova', dn: Object.assign({}, dnReset) });
+    if (st.acc.descarga) base.accChips = base.accChips.concat(['Descargas de rede']);
+    if (st.okCtx === 'descarga') {
+      base.hasNext = false;
+      base.backLabel = 'Voltar para Descargas de rede';
+      base.on.backList = () => this.setState({ screen: 'descarga' });
+    }
+    const pushHist = (title, sub, t) => [{ title, sub, time: 'Hoje, ' + t, t }].concat(st.colHist);
+
+    return {
+      ds: {
+        mN: st.dscMonthN, mVol: fmt(st.dscMonthVol),
+        homeSub: '≈ ' + fmt(st.dscMonthVol) + ' m³ no mês' + (st.dscRun.length ? ', ' + st.dscRun.length + ' em andamento' : ''),
+        run, hasRun: run.length > 0, today, todayEmpty: today.length === 0,
+        cn: {
+          noSel: !sel, hasSel: !!sel, busy: dn.gps === 'busy',
+          gpsTxt: dn.gps === 'busy' ? 'Buscando sua localização…' : 'Usar minha localização',
+          useGps: () => {
+            putDn({ gps: 'busy' });
+            setTimeout(() => { this.setState({ dn: Object.assign({}, this.state.dn, { gps: 'ok', loc: 1, dist: 35, q: '' }) }); }, 1100);
+          },
+          q: dn.q, setQ: (ev) => putDn({ q: ev.target.value }),
+          results, listBd: results.length ? '1px solid #DDE5EE' : '0',
+          noRes: searching && results.length === 0, hint: dn.loc < 0 && q.length < 2,
+          addr: sel ? sel[0] : '', sub: sel ? where(dn.loc) + ', DN ' + sel[3] : '',
+          hasDist: !!sel && dn.gps === 'ok', dist: dn.dist,
+          clear: () => putDn({ loc: -1, gps: 'idle', dist: 0 }),
+          ini: dn.ini, fim: dn.fim,
+          setIni: (ev) => putDn({ ini: ev.target.value }), setFim: (ev) => putDn({ fim: ev.target.value }),
+          iniNow: () => putDn({ ini: this.dscClock(0) }), fimNow: () => putDn({ fim: this.dscClock(0) }),
+          hasDur: isFinite(dur) && !!sel, dur: isFinite(dur) ? durTxt(dur) : '', vol: isFinite(dur) && sel ? fmt(volOf(dn.loc, dur)) : '',
+          flowTxt: sel ? flowTxt(dn.loc) : '', err, longWarn: isFinite(dur) && dur > 60,
+          obs: dn.obs, setObs: (ev) => putDn({ obs: ev.target.value }),
+          off: !okNew, op: okNew ? 1 : 0.45,
+          btn: finished ? 'Registrar descarga' : 'Registrar início da descarga',
+          saveHint: !sel ? 'Escolha o ponto de descarga.' : !hasIni ? 'Informe o horário de início.' : err ? 'Corrija os horários.' : finished ? 'Operador, data e horários são registrados ao salvar.' : 'Sem horário de fim, a descarga fica em andamento.',
+          save: () => {
+            if (!okNew) return;
+            const a = sel[0];
+            if (finished) {
+              const v = volOf(dn.loc, dur);
+              this.setState({
+                dscToday: [{ p: dn.loc, ini: dn.ini, fim: dn.fim, who: 'Felipe' }].concat(st.dscToday),
+                dscMonthN: st.dscMonthN + 1, dscMonthVol: st.dscMonthVol + v, dn: Object.assign({}, dnReset),
+                colHist: pushHist(a, 'Descarga de rede', dn.fim),
+                screen: 'ok', okCtx: 'descarga',
+                last: { title: 'Descarga registrada', sub: a, rows: [
+                  { k: 'Início e fim', v: dn.ini + ' às ' + dn.fim }, { k: 'Duração', v: durTxt(dur) },
+                  { k: 'Volume estimado', v: '≈ ' + fmt(v) + ' m³' }, { k: 'Sistema', v: SYSN[sel[2]] }
+                ] }
+              });
+            } else {
+              this.setState({
+                dscRun: st.dscRun.concat([{ id: 'd' + st.dscSeq, p: dn.loc, ini: dn.ini, who: 'Felipe' }]), dscSeq: st.dscSeq + 1,
+                dn: Object.assign({}, dnReset), colHist: pushHist(a, 'Início de descarga', dn.ini),
+                screen: 'ok', okCtx: 'descarga',
+                last: { title: 'Descarga em andamento', sub: a, rows: [
+                  { k: 'Início', v: dn.ini }, { k: 'Fim', v: 'Encerre em Descargas de rede' }, { k: 'Sistema', v: SYSN[sel[2]] }
+                ] }
+              });
+            }
+          }
+        },
+        ef: {
+          addr: PTS[rr.p][0], where: where(rr.p) + ', DN ' + PTS[rr.p][3], who: rr.who, ini: rr.ini,
+          fim: st.dfFim, setFim: (ev) => this.setState({ dfFim: ev.target.value }), now: () => this.setState({ dfFim: this.dscClock(0) }),
+          hasDur: efOk, dur: efOk ? durTxt(efDur) : '', vol: efOk ? fmt(volOf(rr.p, efDur)) : '', flowTxt: flowTxt(rr.p),
+          err: efErr, off: !efOk, op: efOk ? 1 : 0.45,
+          save: () => {
+            if (!efOk) return;
+            const v = volOf(rr.p, efDur);
+            this.setState({
+              dscRun: st.dscRun.filter((r) => r.id !== rr.id),
+              dscToday: [{ p: rr.p, ini: rr.ini, fim: st.dfFim, who: rr.who }].concat(st.dscToday),
+              dscMonthN: st.dscMonthN + 1, dscMonthVol: st.dscMonthVol + v,
+              colHist: pushHist(PTS[rr.p][0], 'Descarga de rede encerrada', st.dfFim),
+              screen: 'ok', okCtx: 'descarga',
+              last: { title: 'Descarga encerrada', sub: PTS[rr.p][0], rows: [
+                { k: 'Início e fim', v: rr.ini + ' às ' + st.dfFim }, { k: 'Duração', v: durTxt(efDur) },
+                { k: 'Volume estimado', v: '≈ ' + fmt(v) + ' m³' }
+              ] }
+            });
+          }
+        }
+      }
+    };
+  }
+
+  renderVals() {
+    const st = this.state;
+    const set = (o) => () => this.setState(o);
+    const fmt = (n) => Math.round(n).toLocaleString('pt-BR');
+    const fmt1 = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const num = (s) => { const t = String(s || '').trim(); if (!t) return NaN; return Number(t.replace(/\./g, '').replace(',', '.')); };
+    const dec = (s) => { const t = String(s || '').trim(); if (!t) return NaN; return Number(t.replace(',', '.')); };
+    const filled = (s) => String(s || '').trim() !== '';
+    const now = '07:47';
+
+    const MAC = [
+      'REL Paineiras', 'Entrada RAP Paineiras 2', 'Saída RAP Paineiras 2', 'Poço Diamantes',
+      'RAP Cohab', 'REL Cohab', 'REL São João', 'Poço São João', 'Poço Pacaembu',
+      'RAP Pacaembu - Zona Alta', 'RAP Pacaembu - Zona Baixa', 'Poço Moradas',
+      'REL Moradas - Condomínio', 'REL Moradas - Bairros', 'REL Moradas Clube', 'Poço Ville de France',
+      'R3 > São Silvestre', 'REL São Silvestre', 'Recalque Vila Margarida', 'REL Parque Minas Gerais',
+      'REL Anchieta', 'Poço Nova Alcântara', 'RAP Nova Alcântara - Zona Baixa', 'RAP Nova Alcântara - Zona Alta'
+    ];
+    const EMAC = [
+      'Poço Esmeralda', 'Retrolavagem ETA 1', 'R2 > Centro', 'R2 > Parque Minas Gerais', 'Captação ETA 2',
+      'Retrolavagem ETA 2', 'Saída ETA 2', 'R2 > Paineiras', 'R2 > Anchieta', 'Captação ETA 1'
+    ];
+    const mk = (name, i, grp) => {
+      const poco = grp === 'poco' && name.indexOf('Poço') === 0;
+      const sub = grp === 'eta' ? 'Macromedidor da ETA: vazão e totalizador'
+        : poco ? 'Poço: vazão, totalizador, residuais e estoque'
+        : (name.indexOf('Recalque') === 0 ? 'Recalque: vazão e totalizador' : 'Reservatório: vazão e totalizador');
+      const j = grp === 'eta' ? i + 40 : i;
+      return {
+        id: (grp === 'eta' ? 'e' : 'm') + i, name, poco, grp, sub,
+        prev: 180000 + ((j * 7919 * 131) % 3900000),
+        vazPrev: 25 + ((j * 37) % 50) + 0.4,
+        who: j % 2 ? 'Rafael' : 'Ana',
+        h: 23.8 + (j % 6) * 0.08
+      };
+    };
+    const PTS = MAC.map((n, i) => mk(n, i, 'poco'));
+    const EPTS = EMAC.map((n, i) => mk(n, i, 'eta'));
+    const ALL = PTS.concat(EPTS);
+    const ETES = ['ETE Choso Misato', 'ETE Moradas', 'ETE Moradas Clube', 'ETE Pacaembu', 'ETE Ville de France', 'ETE Trianon'];
+    const ETA_OPTS = [
+      { k: 'cal', name: 'Calibrações/Aferições de Equipamentos', sub: 'Turbidímetro, colorímetro e pHmetro' },
+      { k: 'mac', name: 'Leitura de Macromedidores', sub: '10 macromedidores: vazão e totalizador' },
+      { k: 'est', name: 'Estoque de Produtos Químicos', sub: 'PAC, flúor e sal, por turno' },
+      { k: 'desc', name: 'Descarregamento de Produtos Químicos', sub: 'Registre cada carga recebida' }
+    ];
+
+    const chipOf = (t) => ({ status: t ? 'Lançado às ' + t : 'Pendente', chipBg: t ? '#E2F4EE' : '#FDF0DC', chipFg: t ? '#0B6B57' : '#8A3C06' });
+    const reset = { tot: '', vaz: '', cl: '', fl: '', foto: false };
+    const openPoint = (id) => this.setState(Object.assign({ screen: 'poco', sel: id, tab: 'leitura' }, reset));
+    const openEta = (k) => this.setState({ screen: 'eta', block: 'eta', etaMode: k });
+    const openEte = (n) => this.setState({ screen: 'ete', block: 'ete', selEte: n, chk: {}, chkObs: {}, eteVaz: '', anal: null });
+
+    const etaMacItems = EPTS.map((p) => Object.assign({ id: p.id, name: p.name, t: st.done[p.id], pick: () => openPoint(p.id) }, chipOf(st.done[p.id])));
+    const emDone = etaMacItems.filter((x) => x.t).length;
+    const etaItems = ETA_OPTS.map((o) => {
+      const base = { id: o.k, name: o.name, sub: o.sub, pick: () => openEta(o.k) };
+      if (o.k === 'mac') {
+        const all = emDone === EPTS.length;
+        return Object.assign(base, { t: all ? now : undefined, status: emDone + ' de ' + EPTS.length + ' lançados', chipBg: all ? '#E2F4EE' : '#FDF0DC', chipFg: all ? '#0B6B57' : '#8A3C06' });
+      }
+      if (o.k === 'desc') {
+        return Object.assign(base, { noCount: true, t: undefined, status: st.descLast ? 'Último: ' + st.descLast : 'Quando chegar produto', chipBg: '#EEF3F7', chipFg: '#52627A' });
+      }
+      return Object.assign(base, { t: st.etaDone[o.k] }, chipOf(st.etaDone[o.k]));
+    });
+
+    const B = {
+      poco: { title: 'Poços', sub: 'Poços, reservatórios e recalque', items: PTS.map((p) => Object.assign({ id: p.id, name: p.name, sub: p.sub, t: st.done[p.id], pick: () => { this.setState({ block: 'poco' }); openPoint(p.id); } }, chipOf(st.done[p.id]))) },
+      eta: { title: 'ETAs', sub: 'Escolha o tipo de lançamento', items: etaItems },
+      ete: { title: 'ETEs', sub: 'Checklist e análises', items: ETES.map((n) => Object.assign({ id: n, name: n, sub: 'Checklist e análises', t: st.eteDone[n], pick: () => openEte(n) }, chipOf(st.eteDone[n]))) }
+    };
+    const stat = (k) => { const it = B[k].items.filter((x) => !x.noCount); const d = it.filter((x) => x.t).length; return { done: d, total: it.length, pend: it.length - d, pct: Math.round(d / it.length * 100) }; };
+    const bk = { poco: stat('poco'), eta: stat('eta'), ete: stat('ete') };
+    const keys = ['eta', 'ete', 'poco'].filter((k) => st.acc[k]);
+    const allDone = keys.reduce((s, k) => s + bk[k].done, 0);
+    const allTotal = keys.reduce((s, k) => s + bk[k].total, 0);
+
+    const cbk = B[st.block];
+    const q = st.q.trim().toLowerCase();
+    const shown = cbk.items.filter((x) => (st.filt === 'todos' ? true : st.filt === 'pend' ? (!x.t && !x.noCount) : !!x.t) && (!q || x.name.toLowerCase().indexOf(q) >= 0));
+
+    // ---- formulário de macromedidor
+    const p = ALL.find((x) => x.id === st.sel) || PTS[0];
+    const cur = num(st.tot);
+    const hasCur = isFinite(cur) && cur > 0;
+    const vazV = dec(st.vaz);
+    const hasVaz = isFinite(vazV) && vazV >= 0;
+    const vol = cur - p.prev;
+    const neg = hasCur && vol < 0;
+    const hh = Math.floor(p.h);
+    const mm = Math.round((p.h - hh) * 60);
+    const band = (v, lo, hi, loTxt, hiTxt) => {
+      if (!isFinite(v)) return { txt: 'Faixa: ' + loTxt + ' a ' + hiTxt + ' mg/L', bg: '#EEF3F7', fg: '#52627A' };
+      if (v < lo) return { txt: 'Abaixo da faixa', bg: '#FDF0DC', fg: '#8A3C06' };
+      if (v > hi) return { txt: 'Acima da faixa', bg: '#FDF0DC', fg: '#8A3C06' };
+      return { txt: 'Dentro da faixa', bg: '#E2F4EE', fg: '#0B6B57' };
+    };
+    const clS = band(dec(st.cl), 0.2, 2.0, '0,2', '2,0');
+    const flS = band(dec(st.fl), 0.6, 0.8, '0,6', '0,8');
+    const tank = (v, cap, perDay) => {
+      const n = dec(v);
+      const pct = isFinite(n) ? Math.max(0, Math.min(100, Math.round(n / cap * 100))) : 0;
+      return { pct, col: pct < 20 ? '#D97706' : '#0091BF', dias: isFinite(n) ? Math.floor(n / perDay) : 0 };
+    };
+    const hipT = tank(st.hip, 1000, 58);
+    const aciT = tank(st.aci, 500, 21);
+    const canSave = hasCur && hasVaz;
+
+    // ---- calibrações da ETA
+    const EQUIP = [
+      { name: 'Turbidímetro', fields: [
+        { k: 't20', lab: '20 NTU' }, { k: 't100', lab: '100 NTU' },
+        { k: 't800', lab: '800 NTU', opt: true, hint: 'Use só se a turbidez da água bruta estiver acima de 100 NTU.' },
+        { k: 't10', lab: '10 NTU' }] },
+      { name: 'Colorímetro', fields: [
+        { k: 'c500', lab: '500 Pt-Co', opt: true, hint: 'Use só se a cor da água bruta estiver acima de 100 Pt-Co.' },
+        { k: 'c100', lab: '100 Pt-Co' }, { k: 'c10', lab: '10 Pt-Co' }, { k: 'c0', lab: '0 Pt-Co' }] },
+      { name: 'pHmetro', fields: [
+        { k: 'p4', lab: 'pH 4' }, { k: 'p7', lab: 'pH 7' }, { k: 'p10', lab: 'pH 10' },
+        { k: 'slope', lab: 'Average slope (%)' }] }
+    ];
+    let calReqTotal = 0, calReqDone = 0;
+    const calEquip = EQUIP.map((e) => {
+      const req = e.fields.filter((f) => !f.opt);
+      const rd = req.filter((f) => filled(st.calv[f.k])).length;
+      calReqTotal += req.length; calReqDone += rd;
+      const complete = rd === req.length;
+      return {
+        name: e.name,
+        chip: complete ? 'Completo' : rd + ' de ' + req.length,
+        chipBg: complete ? '#E2F4EE' : '#EEF3F7', chipFg: complete ? '#0B6B57' : '#52627A',
+        fields: e.fields.map((f) => ({
+          id: 'cal-' + f.k, lab: f.lab, opt: !!f.opt, hint: f.hint || '',
+          tag: f.opt ? 'Opcional' : 'Padrão de leitura',
+          val: st.calv[f.k] || '',
+          set: (ev) => this.setState({ calv: Object.assign({}, st.calv, { [f.k]: ev.target.value }) })
+        }))
+      };
+    });
+    const calOk = calReqDone === calReqTotal;
+
+    // ---- estoque de produtos químicos (litros por reservatório)
+    const GROUPS = [
+      { k: 'pac1', name: 'PAC ETA 1', res: [['R1', 22000, 14200], ['R2', 22000, 9800], ['R3', 30000, 21500]] },
+      { k: 'pac2', name: 'PAC ETA 2', res: [['R1', 10000, 6100], ['R2', 10000, 3900]] },
+      { k: 'flu1', name: 'Flúor ETA 1', res: [['R1', 1000, 640], ['R2', 1000, 520], ['R3', 1000, 410], ['R4', 1000, 180]] },
+      { k: 'flu2', name: 'Flúor ETA 2', res: [['R1', 2000, 950]] }
+    ];
+    const stockGroups = GROUPS.map((g) => {
+      let sum = 0, cap = 0, any = false;
+      const res = g.res.map((r) => {
+        const key = g.k + '-' + r[0];
+        const v = num(st.lev[key]);
+        const has = isFinite(v);
+        const shownV = has ? v : r[2];
+        if (has) any = true;
+        sum += shownV; cap += r[1];
+        const pct = Math.max(0, Math.min(100, Math.round(shownV / r[1] * 100)));
+        const over = has && v > r[1];
+        return {
+          id: 'st-' + key, name: r[0], capTxt: fmt(r[1]), prevTxt: fmt(r[2]), val: st.lev[key] || '',
+          pct, col: !has ? '#C7D4E2' : pct < 20 ? '#D97706' : '#0091BF', over, bd: over ? '#D97706' : '#C7D4E2',
+          set: (ev) => this.setState({ lev: Object.assign({}, st.lev, { [key]: ev.target.value }) })
+        };
+      });
+      const gp = Math.round(sum / cap * 100);
+      return { name: g.name, res, totTxt: fmt(sum) + ' de ' + fmt(cap) + ' L (' + gp + '%)' + (any ? '' : ', ontem'), totC: gp < 20 ? '#8A3C06' : '#52627A', sum };
+    });
+
+    // ---- descarregamento
+    const prods = ['PAC', 'Flúor', 'Sal'].map((n) => ({
+      name: n, on: st.prod === n,
+      bd: st.prod === n ? '#0057A8' : '#DDE5EE', bg: st.prod === n ? '#E3EEF9' : '#FFFFFF', fg: st.prod === n ? '#0057A8' : '#0A2E5C',
+      pick: () => this.setState({ prod: n })
+    }));
+    const descEtas = ['ETA 1', 'ETA 2'].map((n) => ({
+      name: n, on: st.descEta === n,
+      bd: st.descEta === n ? '#0057A8' : '#DDE5EE', bg: st.descEta === n ? '#E3EEF9' : '#FFFFFF', fg: st.descEta === n ? '#0057A8' : '#0A2E5C',
+      pick: () => this.setState({ descEta: n })
+    }));
+    const kg = num(st.descKg);
+    const hasKg = isFinite(kg) && kg > 0;
+    const DENS = { PAC: 1.25, 'Flúor': 1.20 };
+    const descConv = !st.prod || !hasKg ? '' : st.prod === 'Sal' ? 'Equivale a ' + fmt(kg / 25) + ' sacos de 25 kg' : 'Equivale a cerca de ' + fmt(kg / DENS[st.prod]) + ' L (densidade ' + String(DENS[st.prod]).replace('.', ',') + ')';
+    const descOk = !!st.prod && !!st.descEta && hasKg;
+
+    // ---- ETE
+    const CHK = [
+      { k: 'grades', name: 'Limpeza das grades' },
+      { k: 'elev', name: 'Elevatória' },
+      { k: 'sopr', name: 'Sopradores' },
+      { k: 'reciclo', name: 'Reciclo de lodo' },
+      { k: 'areia', name: 'Limpeza da caixa de areia' },
+      { k: 'dist', name: 'Limpeza da caixa de distribuição' }
+    ];
+    const chkItems = CHK.map((c) => {
+      const v = st.chk[c.k];
+      return {
+        name: c.name, isOk: v === 'ok', isNc: v === 'nc',
+        okBg: v === 'ok' ? '#0B6B57' : '#FFFFFF', okFg: v === 'ok' ? '#FFFFFF' : '#0B6B57', okBd: v === 'ok' ? '#0B6B57' : '#B9D9CE',
+        ncBg: v === 'nc' ? '#B45309' : '#FFFFFF', ncFg: v === 'nc' ? '#FFFFFF' : '#9A4508', ncBd: v === 'nc' ? '#B45309' : '#E8C9A5',
+        setOk: () => this.setState({ chk: Object.assign({}, st.chk, { [c.k]: 'ok' }) }),
+        setNc: () => this.setState({ chk: Object.assign({}, st.chk, { [c.k]: 'nc' }) }),
+        obsId: 'nc-' + c.k, obs: st.chkObs[c.k] || '',
+        setObs: (ev) => this.setState({ chkObs: Object.assign({}, st.chkObs, { [c.k]: ev.target.value }) })
+      };
+    });
+    const chkDone = CHK.filter((c) => st.chk[c.k]).length;
+    const ncMissing = CHK.filter((c) => st.chk[c.k] === 'nc' && !filled(st.chkObs[c.k])).length;
+    const ncN = CHK.filter((c) => st.chk[c.k] === 'nc').length;
+    const vazMissing = !filled(st.eteVaz);
+    const eteOk = !vazMissing && chkDone === CHK.length && ncMissing === 0 && st.anal !== null;
+    const eteHint = vazMissing ? 'Anote a vazão da ETE em m³/h.'
+      : chkDone < CHK.length ? 'Marque OK ou NC em todos os itens do checklist.'
+      : ncMissing ? 'Explique cada item marcado como NC.'
+      : st.anal === null ? 'Responda se vai lançar as análises nesta visita.'
+      : 'Data, hora e operador são registrados ao salvar.';
+    const yn = (on) => ({ bd: on ? '#0057A8' : '#DDE5EE', bg: on ? '#E3EEF9' : '#FFFFFF', fg: on ? '#0057A8' : '#0A2E5C' });
+    const aY = yn(st.anal === true), aN = yn(st.anal === false);
+    const an = {
+      yes: st.anal === true, no: st.anal === false,
+      setYes: set({ anal: true }), setNo: set({ anal: false }),
+      yBd: aY.bd, yBg: aY.bg, yFg: aY.fg, nBd: aN.bd, nBg: aN.bg, nFg: aN.fg,
+      note: st.anal === true ? 'Preencha as análises completas abaixo.' : st.anal === false ? 'A visita será registrada só com vazão e checklist.' : 'As análises completas são feitas uma vez por semana em cada ETE.'
+    };
+    const two = 'repeat(2, minmax(0, 1fr))', three = 'repeat(3, minmax(0, 1fr))';
+    const pair = (id, name) => ({ name, cols: two, fields: [{ id: id + '-b', lab: 'Bruto' }, { id: id + '-t', lab: 'Tratado' }] });
+    const eteAn = [
+      pair('an-ph', 'pH'),
+      pair('an-temp', 'Temperatura (°C)'),
+      pair('an-od', 'OD (mg/L)'),
+      pair('an-sol', 'Sólidos sedimentáveis (mL/L)'),
+      { name: 'DQO (mg/L)', cols: three, fields: [{ id: 'an-dqo-p', lab: 'Padrão' }, { id: 'an-dqo-b', lab: 'Bruto' }, { id: 'an-dqo-t', lab: 'Tratado' }] }
+    ];
+
+    // ---- histórico
+    const hist = [];
+    Object.keys(st.done).forEach((id) => { const pt = ALL.find((x) => x.id === id); hist.push({ title: pt.name, sub: pt.grp === 'eta' ? 'Macromedidor da ETA' : 'Leitura de macromedidor', time: 'Hoje, ' + st.done[id], t: st.done[id] }); });
+    Object.keys(st.etaDone).forEach((k) => { const o = ETA_OPTS.find((x) => x.k === k); hist.push({ title: o.name, sub: 'ETAs', time: 'Hoje, ' + st.etaDone[k], t: st.etaDone[k] }); });
+    Object.keys(st.eteDone).forEach((n) => hist.push({ title: n, sub: 'Checklist e análises', time: 'Hoje, ' + st.eteDone[n], t: st.eteDone[n] }));
+    hist.sort((a, b) => (a.t < b.t ? 1 : -1));
+
+    // ---- navegação
+    const isEtaMac = st.okCtx === 'etamac';
+    const nextItem = isEtaMac ? etaMacItems.find((x) => !x.t) : cbk.items.find((x) => !x.t && !x.noCount);
+    const scr = st.screen;
+    const navOn = ['home', 'hist', 'perfil', 'lista'].indexOf(scr) >= 0;
+    const nvc = (on) => (on ? '#0057A8' : '#5B6B82');
+    const nvb = (on) => (on ? '#E3EEF9' : 'transparent');
+    const seg = (on) => ({ bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#0A2E5C' : '#52627A' });
+    const chip = (on) => ({ bg: on ? '#0A2E5C' : '#FFFFFF', fg: on ? '#FFFFFF' : '#0A2E5C', bd: on ? '#0A2E5C' : '#C7D4E2' });
+    const fT = chip(st.filt === 'todos'), fP = chip(st.filt === 'pend'), fO = chip(st.filt === 'ok');
+    const tL = seg(st.tab === 'leitura'), tE = seg(st.tab === 'estoque');
+    const openList = (k) => () => this.setState({ screen: 'lista', block: k, filt: 'todos', q: '' });
+    const toEtaMac = () => this.setState({ screen: 'eta', block: 'eta', etaMode: 'mac' });
+    const etaOpt = ETA_OPTS.find((o) => o.k === st.etaMode);
+
+    const __base = {
+      s: { login: scr === 'login', home: scr === 'home', lista: scr === 'lista', poco: scr === 'poco', ok: scr === 'ok', eta: scr === 'eta', ete: scr === 'ete', hist: scr === 'hist', perfil: scr === 'perfil', nav: navOn },
+      nav: {
+        login: set({ screen: 'login' }), home: set({ screen: 'home' }), hist: set({ screen: 'hist' }), perfil: set({ screen: 'perfil' }),
+        listEta: openList('eta'), listEte: openList('ete'), listPoco: openList('poco'),
+        formBack: p.grp === 'eta' ? toEtaMac : openList('poco')
+      },
+      nv: { homeC: nvc(scr === 'home' || scr === 'lista'), homeB: nvb(scr === 'home' || scr === 'lista'), histC: nvc(scr === 'hist'), histB: nvb(scr === 'hist'), perC: nvc(scr === 'perfil'), perB: nvb(scr === 'perfil') },
+      acc: st.acc,
+      accChips: keys.map((k) => B[k].title),
+      bk,
+      allDone, allTotal, allPend: allTotal - allDone,
+      allPct: allTotal ? Math.round(allDone / allTotal * 100) : 0,
+      ringOff: 188.5 * (1 - (allTotal ? allDone / allTotal : 0)),
+      cb: { title: cbk.title, sub: cbk.sub, pend: bk[st.block].pend },
+      q: st.q,
+      f: {
+        todos: set({ filt: 'todos' }), pend: set({ filt: 'pend' }), ok: set({ filt: 'ok' }),
+        todosOn: st.filt === 'todos', pendOn: st.filt === 'pend', okOn: st.filt === 'ok',
+        todosBg: fT.bg, todosFg: fT.fg, todosBd: fT.bd, pendBg: fP.bg, pendFg: fP.fg, pendBd: fP.bd, okBg: fO.bg, okFg: fO.fg, okBd: fO.bd
+      },
+      shown, emptyList: shown.length === 0,
+      p: Object.assign({}, p, { prevTxt: fmt(p.prev), vazPrevTxt: fmt1(p.vazPrev) }),
+      isPoco: p.poco,
+      showLeitura: !p.poco || st.tab === 'leitura',
+      showEstoque: p.poco && st.tab === 'estoque',
+      t: { leit: set({ tab: 'leitura' }), est: set({ tab: 'estoque' }), lOn: st.tab === 'leitura', eOn: st.tab === 'estoque', lBg: tL.bg, lFg: tL.fg, eBg: tE.bg, eFg: tE.fg },
+      tot: st.tot, vaz: st.vaz, cl: st.cl, fl: st.fl, hip: st.hip, aci: st.aci,
+      volTxt: hasCur && !neg ? fmt(vol) : '—',
+      vazMedTxt: hasCur && !neg ? fmt1(vol / p.h) : '—',
+      hrsTxt: hh + ' h ' + String(mm).padStart(2, '0') + ' min',
+      neg, clS, flS,
+      foto: st.foto,
+      fotoTxt: st.foto ? 'Foto do macromedidor anexada' : 'Tirar foto do macromedidor',
+      fotoBdStyle: st.foto ? 'solid' : 'dashed', fotoBd: st.foto ? '#0B6B57' : '#9FB3C8',
+      fotoBg: st.foto ? '#E2F4EE' : 'transparent', fotoFg: st.foto ? '#0B6B57' : '#0057A8',
+      saveHint: canSave ? 'Data, hora e operador são registrados ao salvar.' : 'Preencha a vazão instantânea e o totalizador para registrar.',
+      saveOff: !canSave, saveOp: canSave ? 1 : 0.45,
+      hipPct: hipT.pct, hipCol: hipT.col, hipDias: hipT.dias,
+      aciPct: aciT.pct, aciCol: aciT.col, aciDias: aciT.dias,
+      last: st.last,
+      hasNext: !!nextItem, nextName: nextItem ? nextItem.name : '',
+      backLabel: isEtaMac ? 'Voltar para Leitura de Macromedidores' : 'Voltar para ' + cbk.title,
+      selEte: st.selEte,
+      etaTitle: etaOpt ? etaOpt.name : 'ETAs',
+      em: { cal: st.etaMode === 'cal', mac: st.etaMode === 'mac', est: st.etaMode === 'est', desc: st.etaMode === 'desc' },
+      calEquip, calOff: !calOk, calOp: calOk ? 1 : 0.45,
+      calHint: calOk ? 'Os campos opcionais podem ficar em branco.' : 'Preencha todas as leituras obrigatórias para registrar.',
+      emStat: { done: emDone, total: EPTS.length }, etaMacItems,
+      stockGroups, salUsed: st.salUsed,
+      prods, descEtas, descConv, descKg: st.descKg, descOff: !descOk, descOp: descOk ? 1 : 0.45,
+      chkItems, chkDone, chkTotal: CHK.length, eteVaz: st.eteVaz, eteAn, an,
+      eteHint, eteOff: !eteOk, eteOp: eteOk ? 1 : 0.45,
+      hist,
+      on: {
+        q: (e) => this.setState({ q: e.target.value }),
+        tot: (e) => this.setState({ tot: e.target.value }),
+        vaz: (e) => this.setState({ vaz: e.target.value }),
+        cl: (e) => this.setState({ cl: e.target.value }),
+        fl: (e) => this.setState({ fl: e.target.value }),
+        hip: (e) => this.setState({ hip: e.target.value }),
+        aci: (e) => this.setState({ aci: e.target.value }),
+        salUsed: (e) => this.setState({ salUsed: e.target.value }),
+        descKg: (e) => this.setState({ descKg: e.target.value }),
+        eteVaz: (e) => this.setState({ eteVaz: e.target.value }),
+        foto: () => this.setState({ foto: !st.foto }),
+        saveLeitura: () => {
+          if (!canSave) return;
+          const rows = [
+            { k: 'Vazão instantânea', v: st.vaz + ' m³/h' },
+            { k: 'Totalizador', v: fmt(cur) + ' m³' },
+            { k: 'Volume no intervalo', v: neg ? 'Conferir leitura' : fmt(vol) + ' m³' },
+            { k: 'Foto do macromedidor', v: st.foto ? 'Anexada' : 'Sem foto' }
+          ];
+          if (p.poco) {
+            rows.push({ k: 'Cloro livre', v: st.cl ? st.cl + ' mg/L' : 'Não informado' });
+            rows.push({ k: 'Flúor', v: st.fl ? st.fl + ' mg/L' : 'Não informado' });
+          }
+          this.setState({ done: Object.assign({}, st.done, { [p.id]: now }), screen: 'ok', okCtx: p.grp === 'eta' ? 'etamac' : 'poco', last: { title: 'Leitura registrada', sub: p.name + ', hoje às ' + now, rows } });
+        },
+        saveEstoque: () => this.setState({ screen: 'ok', okCtx: 'poco', last: { title: 'Estoque registrado', sub: p.name + ', hoje às ' + now, rows: [
+          { k: 'Hipoclorito de sódio', v: st.hip + ' L (' + hipT.pct + '%)' },
+          { k: 'Ácido fluossilícico', v: st.aci + ' L (' + aciT.pct + '%)' }
+        ] } }),
+        saveCal: () => { if (!calOk) return; this.setState({ etaDone: Object.assign({}, st.etaDone, { cal: now }), screen: 'ok', okCtx: 'eta', last: { title: 'Calibrações registradas', sub: 'Hoje às ' + now, rows: [
+          { k: 'Turbidímetro', v: 'Registrado' }, { k: 'Colorímetro', v: 'Registrado' }, { k: 'pHmetro', v: 'Slope ' + (st.calv.slope || '—') + '%' }
+        ] } }); },
+        saveEtaStock: () => this.setState({ etaDone: Object.assign({}, st.etaDone, { est: now }), screen: 'ok', okCtx: 'eta', last: { title: 'Estoque registrado', sub: 'Hoje às ' + now, rows: stockGroups.map((g) => ({ k: g.name, v: fmt(g.sum) + ' L' })).concat([{ k: 'Sal usado no turno', v: (st.salUsed || '0') + ' sacos' }]) } }),
+        saveDesc: () => { if (!descOk) return; this.setState({ descLast: st.prod + ' na ' + st.descEta + ', ' + fmt(kg) + ' kg', prod: '', descEta: '', descKg: '', screen: 'ok', okCtx: 'eta', last: { title: 'Descarregamento registrado', sub: 'Hoje às ' + now, rows: [
+          { k: 'Produto', v: st.prod }, { k: 'Destino', v: st.descEta }, { k: 'Quantidade recebida', v: fmt(kg) + ' kg' }, { k: 'Conversão', v: descConv.replace('Equivale a ', '') }
+        ] } }); },
+        saveEte: () => { if (!eteOk) return; this.setState({ eteDone: Object.assign({}, st.eteDone, { [st.selEte]: now }), screen: 'ok', okCtx: 'ete', last: { title: 'Visita registrada', sub: st.selEte + ', hoje às ' + now, rows: [
+          { k: 'Vazão da ETE', v: st.eteVaz + ' m³/h' },
+          { k: 'Itens conformes', v: (CHK.length - ncN) + ' de ' + CHK.length },
+          { k: 'Não conformidades', v: String(ncN) },
+          { k: 'Análises', v: st.anal ? 'Lançadas' : 'Não nesta visita' }
+        ] } }); },
+        next: () => { if (nextItem) nextItem.pick(); },
+        backList: isEtaMac ? toEtaMac : openList(st.block)
+      }
+    };
+    const __col = this.coletaVals(st, __base, now);
+    return Object.assign(__base, __col, this.descVals(st, __base));
+  }
+}
+</script>
+</body>
+</html>

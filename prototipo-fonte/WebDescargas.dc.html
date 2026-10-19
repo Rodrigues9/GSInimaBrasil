@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Descargas de rede</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#EEF3F7}
+a{color:#0057A8}a:hover{color:#0A2E5C}
+button,input{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #0091BF;outline-offset:2px}
+.side a{color:#3D4E63;text-decoration:none}
+.side a:hover{color:#0A2E5C;background:#F2F6FA}
+.side a[aria-current="page"]{color:#0057A8;background:#E3EEF9}
+.sbt:hover{background:#E3EEF9 !important;color:#0057A8 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #EEF3F7; font-family: 'Atkinson Hyperlegible', sans-serif; color: #0F1E2E; font-size: 15px; line-height: 1.45">
+
+  <aside class="side" style="position: relative; z-index: 3; flex: 1 1 {{ sb.w }}px; background: #FFFFFF; border-right: 1px solid #DDE5EE; padding: 20px {{ sb.px }}px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; justify-content: {{ sb.just }}; min-height: 56px; padding: 0 4px">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><img src="/_blob/fe6e834808d55038aef3b4eef26066a9" alt="Ourinhos Saneamento, GS Inima Traçado" style="height: 50px; width: auto; max-width: 100%; display: block"></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><img src="/_blob/a374aab8668546a40330f45f663763c8" alt="Ourinhos Saneamento" style="width: 38px; height: 38px; display: block"></sc-if>
+    </div>
+    <button type="button" class="sbt" onClick="{{ sb.toggle }}" aria-expanded="{{ sb.open }}" aria-label="{{ sb.label }}" title="{{ sb.label }}" style="position: absolute; top: 16px; right: -14px; z-index: 5; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid #DDE5EE; background: #FFFFFF; color: #52627A; box-shadow: 0 2px 6px rgba(10,46,92,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></sc-if>
+    </button>
+    <nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+      <a href="WebDashboard.dc.html" aria-label="Painel" title="Painel" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Painel</span></sc-if>
+      </a>
+      <a href="WebQuimicos.dc.html" aria-label="Produtos químicos" title="Produtos químicos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Produtos químicos</span></sc-if>
+      </a>
+      <a href="WebColetas.dc.html" aria-label="Coleta de campo" title="Coleta de campo" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M12 6.5s-2.5 2.7-2.5 4.4a2.5 2.5 0 0 0 5 0c0-1.7-2.5-4.4-2.5-4.4z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Coleta de campo</span></sc-if>
+      </a>
+      <a href="WebDescargas.dc.html" aria-current="page" aria-label="Descargas de rede" title="Descargas de rede" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M7 21h8"/><path d="M8 21V10h6v11"/><path d="M7 10h8"/><path d="M9 10V7a2 2 0 0 1 4 0v3"/><path d="M14 14h3"/><path d="M19 13c0 0 1.5 1.7 1.5 2.7a1.5 1.5 0 0 1-3 0c0-1 1.5-2.7 1.5-2.7z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Descargas de rede</span></sc-if>
+      </a>
+      <a href="Main.dc.html" aria-label="Lançamentos" title="Lançamentos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Lançamentos</span></sc-if>
+      </a>
+      <a href="WebAdmin.dc.html" aria-label="Usuários e permissões" title="Usuários e permissões" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.8c1.7.7 3 2.5 3.5 5.2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Usuários e permissões</span></sc-if>
+      </a>
+      <a href="WebDados.dc.html" aria-label="Importar e exportar" title="Importar e exportar" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Importar e exportar</span></sc-if>
+      </a>
+      <span title="Tarefas automáticas (em breve)" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #66778C">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Tarefas automáticas (em breve)</span></sc-if>
+      </span>
+    </nav>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box">
+    <div style="margin: -28px calc(-1 * clamp(16px, 3vw, 40px)) 24px; padding: 0 clamp(16px, 3vw, 40px); height: 60px; background: #FFFFFF; border-bottom: 1px solid #DDE5EE; display: flex; justify-content: flex-end; align-items: center; gap: 10px">
+      <button type="button" aria-label="Avisos" title="Avisos" style="width: 38px; height: 38px; border-radius: 50%; border: 0; background: #EEF3F7; color: #0A2E5C; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+        <span style="position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: #D97706; border: 2px solid #EEF3F7"></span>
+      </button>
+      <span style="width: 1px; height: 26px; background: #DDE5EE"></span>
+      <button type="button" aria-label="Conta de Felipe Rodrigues, Administrador" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; color: #0F1E2E">
+        <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0">F</span>
+        <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15"><span style="font-weight: 700; font-size: 14px; color: #0A2E5C">Felipe Rodrigues</span><span style="font-size: 12px; color: #52627A">Administrador</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div style="max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
+
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 14px; color: #52627A">Dados até 19/10/2026, 15:40</span>
+          <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; color: #0A2E5C; letter-spacing: -0.3px">Descargas de rede</h1>
+        </div>
+        <div role="group" aria-label="Período" style="display: flex; background: #FFFFFF; border: 1px solid #DDE5EE; border-radius: 12px; padding: 3px">
+          <sc-for list="{{ periods }}" as="p" hint-placeholder-count="2">
+            <button type="button" onClick="{{ p.pick }}" aria-pressed="{{ p.on }}" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ p.bg }}; color: {{ p.fg }}">{{ p.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+          <div style="background: #FFFFFF; border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 14px; color: #52627A">{{ k.label }}</span>
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.1; color: #0A2E5C; font-variant-numeric: tabular-nums">{{ k.value }} <span style="font-size: 16px; font-weight: 700; color: #52627A">{{ k.unit }}</span></span>
+            <span style="font-size: 13px; color: #52627A">{{ k.sub }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <section style="background: #FFFFFF; border-radius: 22px; padding: clamp(18px, 2.2vw, 26px); display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; color: #0A2E5C">Volume descarregado por mês em 2026</h2>
+            <span style="font-size: 14px; color: #52627A">Em m³, estimado pela vazão de cada ponto. Linha tracejada: média mensal de janeiro a setembro, {{ avgTxt }} m³.</span>
+          </div>
+          <span style="font-size: 14px; font-weight: 700; color: #0A2E5C; font-variant-numeric: tabular-nums" aria-live="polite">{{ readout }}</span>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 12px; color: #52627A; text-align: right; padding-bottom: 26px; min-width: 40px; font-variant-numeric: tabular-nums">
+            <span>{{ yTop }}</span><span>{{ yMid }}</span><span>0</span>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+            <div style="position: relative; height: 230px; border-bottom: 1px solid #C7D4E2; display: flex; align-items: flex-end; gap: 2px">
+              <div style="position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #EEF3F7; pointer-events: none"></div>
+              <div style="position: absolute; left: 0; right: 0; bottom: {{ avgPos }}%; border-top: 2px dashed #0A2E5C; z-index: 1; pointer-events: none"></div>
+              <sc-for list="{{ months }}" as="m" hint-placeholder-count="10">
+                <button type="button" aria-label="{{ m.aria }}" onMouseEnter="{{ m.hover }}" onFocus="{{ m.hover }}" onClick="{{ m.hover }}" style="flex: 1; min-width: 0; height: 100%; border: 0; padding: 0 clamp(2px, 1vw, 12px); background: transparent; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; cursor: pointer">
+                  <span style="font-size: 12px; font-weight: 700; color: #0A2E5C; text-align: center; margin-bottom: 4px; font-variant-numeric: tabular-nums">{{ m.lab }}</span>
+                  <span style="display: block; height: {{ m.h }}%; border-radius: 4px 4px 0 0; background: {{ m.col }}"></span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 2px">
+              <sc-for list="{{ months }}" as="m" hint-placeholder-count="10">
+                <span style="flex: 1; min-width: 0; text-align: center; font-size: 13px; color: #52627A; font-weight: {{ m.fw }}">{{ m.name }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <span style="font-size: 13px; color: #52627A">Outubro em azul escuro, parcial até o dia 19.</span>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 18px">
+        <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Pontos mais utilizados</h2>
+            <span style="font-size: 13px; color: #52627A">{{ perLabel }}, por número de descargas</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{ points }}" as="p" hint-placeholder-count="8">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px">
+                  <span style="font-weight: 700; color: #0A2E5C; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ p.name }}</span>
+                  <span style="color: #52627A; white-space: nowrap; font-variant-numeric: tabular-nums"><strong style="color: #0A2E5C">{{ p.n }}</strong> descargas, {{ p.vol }} m³</span>
+                </div>
+                <span style="display: block; height: 10px; border-radius: 5px; background: #EEF3F7; overflow: hidden"><span style="display: block; height: 100%; width: {{ p.w }}%; background: {{ p.col }}; border-radius: 5px"></span></span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Volume por sistema</h2>
+            <span style="font-size: 13px; color: #52627A">{{ perLabel }}, em m³ e participação no total</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <sc-for list="{{ systems }}" as="y" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px">
+                  <span style="font-weight: 700; color: #0A2E5C">{{ y.name }}</span>
+                  <span style="color: #52627A; font-variant-numeric: tabular-nums"><strong style="color: #0A2E5C">{{ y.vol }} m³</strong> ({{ y.pct }}%)</span>
+                </div>
+                <span style="display: block; height: 14px; border-radius: 7px; background: #EEF3F7; overflow: hidden"><span style="display: block; height: 100%; width: {{ y.w }}%; background: #0091BF; border-radius: 7px"></span></span>
+                <span style="font-size: 12px; color: #52627A">{{ y.n }} descargas</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0 0 6px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Pontos de atenção</h2>
+        <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+          <div style="display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-top: 1px solid #EEF3F7">
+            <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; min-width: 64px; text-align: center; background: {{ a.bg }}; color: {{ a.fg }}">{{ a.level }}</span>
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+              <span style="font-weight: 700; color: #0A2E5C">{{ a.title }}</span>
+              <span style="font-size: 14px; color: #3D4E63; max-width: 80ch">{{ a.text }}</span>
+            </span>
+          </div>
+        </sc-for>
+        <span style="font-size: 13px; color: #52627A; margin-top: 4px">Regras: mais de 3 descargas no mesmo ponto em 30 dias, descarga acima de 60 minutos, descarga sem horário de fim após 2 horas e ponto sem descarga há mais de 90 dias. O administrador pode ajustar esses limites.</span>
+      </section>
+
+      <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Últimas descargas</h2>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 820px">
+            <thead><tr style="text-align: left; color: #52627A">
+              <th style="padding: 8px 6px">Data</th><th style="padding: 8px 6px">Ponto de descarga</th><th style="padding: 8px 6px">Início e fim</th>
+              <th style="padding: 8px 6px; text-align: right">Duração</th><th style="padding: 8px 6px; text-align: right">Volume estimado</th><th style="padding: 8px 6px">Operador</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ recent }}" as="r" hint-placeholder-count="8">
+                <tr style="border-top: 1px solid #EEF3F7">
+                  <td style="padding: 10px 6px; color: #52627A; font-variant-numeric: tabular-nums">{{ r.date }}</td>
+                  <td style="padding: 10px 6px"><span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">{{ r.addr }}</span><span style="font-size: 12px; color: #52627A">{{ r.where }}</span></span></td>
+                  <td style="padding: 10px 6px; font-variant-numeric: tabular-nums">{{ r.span }}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums"><span style="padding: 2px 7px; border-radius: 7px; font-weight: 700; background: {{ r.dBg }}; color: {{ r.dFg }}">{{ r.dur }}</span></td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{ r.vol }}</td>
+                  <td style="padding: 10px 6px">{{ r.who }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <p style="margin: 0; font-size: 13px; color: #52627A">Os números e endereços deste protótipo são de exemplo. No sistema, vêm das descargas lançadas no app. O volume usa a vazão estimada por diâmetro de rede: DN 50 com 18 m³/h, DN 75 com 36 m³/h, DN 100 com 60 m³/h e DN 150 com 130 m³/h.</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: true, per: 'mes', hover: -1 };
+  }
+  renderVals() {
+    const st = this.state;
+    const fmt = (n) => Math.round(n).toLocaleString('pt-BR');
+    const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out'];
+    const FULL = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro (até dia 19)'];
+    const VOL = [1650, 1420, 2380, 1980, 1760, 1540, 1490, 1610, 2240, 1880];
+    const NUM = [34, 30, 49, 41, 36, 31, 30, 33, 45, 38];
+    const SYSN = { eta: 'Sistema ETA', sj: 'Sistema São João', mor: 'Sistema Moradas', pac: 'Sistema Pacaembu' };
+    // [ponto, bairro, sistema, descargas no ano, m³ no ano, descargas no mês, m³ no mês]
+    const P = [
+      ['Rua Goiás, 410', 'Jardim Anchieta', 'eta', 58, 3480, 7, 420],
+      ['Av. Domingos Camerlingo Caló, 3100', 'Vila Margarida', 'eta', 41, 4510, 4, 450],
+      ['Rua Tibiriçá, 1100', 'Vila Moraes', 'eta', 39, 2340, 4, 240],
+      ['Rua Bahia, 300', 'Jardim Paineiras', 'eta', 36, 1300, 4, 140],
+      ['Rua Minas Gerais, 1500', 'Parque Minas Gerais', 'eta', 33, 1250, 3, 110],
+      ['Rua Espírito Santo, 900', 'Vila Kennedy', 'eta', 27, 990, 3, 105],
+      ['Rua dos Ipês, 400', 'Jardim São João', 'sj', 30, 920, 3, 95],
+      ['Rua Flamboyant, 620', 'Vila São João', 'sj', 22, 530, 2, 45],
+      ['Alameda dos Lírios, 520', 'Residencial Moradas', 'mor', 31, 1120, 3, 115],
+      ['Rua das Hortênsias, 210', 'Moradas Clube', 'mor', 25, 570, 2, 50],
+      ['Rua Alagoas, 300', 'Jardim Pacaembu', 'pac', 21, 790, 3, 110],
+      ['Rua Sergipe, 45', 'Jardim Pacaembu', 'pac', 4, 150, 0, 0]
+    ];
+    const isM = st.per === 'mes';
+    const nI = isM ? 5 : 3, vI = isM ? 6 : 4;
+    const yearVol = VOL.reduce((a, b) => a + b, 0), yearN = NUM.reduce((a, b) => a + b, 0);
+    const avg9 = VOL.slice(0, 9).reduce((a, b) => a + b, 0) / 9;
+
+    const kpis = isM ? [
+      { label: 'Volume em outubro', value: fmt(VOL[9]), unit: 'm³', sub: 'Até o dia 19. Média mensal do ano: ' + fmt(avg9) + ' m³' },
+      { label: 'Descargas em outubro', value: String(NUM[9]), unit: '', sub: 'Em ' + P.filter((p) => p[5] > 0).length + ' pontos diferentes' },
+      { label: 'Duração média', value: '31', unit: 'min', sub: '2 descargas acima de 60 min' },
+      { label: 'Volume em 2026', value: fmt(yearVol), unit: 'm³', sub: yearN + ' descargas no ano' }
+    ] : [
+      { label: 'Volume em 2026', value: fmt(yearVol), unit: 'm³', sub: 'De janeiro a 19 de outubro' },
+      { label: 'Descargas em 2026', value: String(yearN), unit: '', sub: 'Média de ' + Math.round(yearN / 9.6) + ' por mês' },
+      { label: 'Duração média', value: '34', unit: 'min', sub: '11 descargas acima de 60 min' },
+      { label: 'Mês com mais volume', value: 'Março', unit: '', sub: fmt(VOL[2]) + ' m³ em ' + NUM[2] + ' descargas' }
+    ];
+
+    const top = 2600;
+    const months = VOL.map((v, i) => ({
+      name: MONTHS[i], lab: (i === 9 || i === 2) ? fmt(v) : '', h: (v / top * 100).toFixed(1),
+      col: i === 9 ? '#0057A8' : st.hover === i ? '#0A6F99' : '#8FC6DE',
+      fw: i === 9 ? 700 : 400,
+      aria: FULL[i] + ': ' + fmt(v) + ' metros cúbicos em ' + NUM[i] + ' descargas',
+      hover: () => this.setState({ hover: i })
+    }));
+    const readout = st.hover >= 0 ? 'Em ' + FULL[st.hover] + ': ' + fmt(VOL[st.hover]) + ' m³ em ' + NUM[st.hover] + ' descargas' : 'Passe o mouse ou toque num mês para ver o detalhe';
+
+    const sorted = P.slice().sort((a, b) => b[nI] - a[nI] || b[vI] - a[vI]).slice(0, 8);
+    const maxN = sorted[0][nI];
+    const points = sorted.map((p, i) => ({
+      name: p[0], n: p[nI], vol: fmt(p[vI]), w: (p[nI] / maxN * 100).toFixed(1), col: i === 0 ? '#0057A8' : '#0091BF'
+    }));
+    const sysAgg = {};
+    P.forEach((p) => { sysAgg[p[2]] = sysAgg[p[2]] || { n: 0, v: 0 }; sysAgg[p[2]].n += p[nI]; sysAgg[p[2]].v += p[vI]; });
+    const tot = Object.keys(sysAgg).reduce((a, k) => a + sysAgg[k].v, 0);
+    const maxV = Math.max.apply(null, Object.keys(sysAgg).map((k) => sysAgg[k].v));
+    const systems = ['eta', 'sj', 'mor', 'pac'].sort((a, b) => sysAgg[b].v - sysAgg[a].v).map((k) => ({
+      name: SYSN[k], vol: fmt(sysAgg[k].v), pct: Math.round(sysAgg[k].v / tot * 100), n: sysAgg[k].n, w: (sysAgg[k].v / maxV * 100).toFixed(1)
+    }));
+
+    const LV = {
+      alta: { level: 'Alta', bg: '#FCE8E6', fg: '#8C1D18' },
+      media: { level: 'Média', bg: '#FDF0DC', fg: '#8A3C06' },
+      baixa: { level: 'Baixa', bg: '#E3EEF9', fg: '#0057A8' }
+    };
+    const alerts = [
+      Object.assign({ title: 'Rua Goiás, 410, Jardim Anchieta', text: '7 descargas em outubro, cinco vezes a média dos outros pontos. Pode indicar problema de qualidade na região (cor, turbidez ou ponta de rede). Vale cruzar com as coletas de campo do Sistema ETA.' }, LV.alta),
+      Object.assign({ title: 'Rua Tibiriçá, 1100, Vila Moraes', text: 'Descarga iniciada hoje às 13:30 por Ana e ainda sem horário de fim registrado.' }, LV.media),
+      Object.assign({ title: 'Av. Domingos Camerlingo Caló, 3100, Vila Margarida', text: 'Descarga de 1 h 35 min em 16/10, acima do limite de 60 minutos. Volume estimado de 206 m³.' }, LV.media),
+      Object.assign({ title: 'Rua Sergipe, 45, Jardim Pacaembu', text: '92 dias sem descarga. A rotina deste ponto é trimestral.' }, LV.baixa)
+    ];
+
+    const R = [
+      ['19/10', 0, '15:38', '16:05', 'Rafael'], ['19/10', 9, '07:05', '07:25', 'Rafael'], ['19/10', 7, '06:30', '06:50', 'Ana'],
+      ['18/10', 0, '09:10', '09:40', 'Ana'], ['17/10', 10, '14:00', '14:30', 'Rafael'], ['16/10', 1, '08:15', '09:50', 'Felipe'],
+      ['16/10', 6, '07:40', '08:05', 'Ana'], ['15/10', 3, '10:20', '10:45', 'Rafael']
+    ];
+    const FLOW = [60, 130, 60, 36, 60, 36, 36, 18, 36, 18, 36, 18];
+    const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
+    const recent = R.map((r) => {
+      const m = toMin(r[3]) - toMin(r[2]), p = P[r[1]];
+      return {
+        date: r[0], addr: p[0], where: p[1] + ', ' + SYSN[p[2]], span: r[2] + ' às ' + r[3],
+        dur: m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min' : m + ' min',
+        dBg: m > 60 ? '#FDF0DC' : 'transparent', dFg: m > 60 ? '#8A3C06' : '#0F1E2E',
+        vol: '≈ ' + fmt(FLOW[r[1]] * m / 60) + ' m³', who: r[4]
+      };
+    });
+    const per = (k, label) => ({ label, on: st.per === k, bg: st.per === k ? '#0A2E5C' : 'transparent', fg: st.per === k ? '#FFFFFF' : '#0A2E5C', pick: () => this.setState({ per: k }) });
+    return {
+      sb: {
+        open: st.open, closed: !st.open, w: st.open ? 252 : 84, px: st.open ? 16 : 14,
+        just: st.open ? 'flex-start' : 'center',
+        label: st.open ? 'Recolher menu' : 'Expandir menu',
+        toggle: () => this.setState({ open: !st.open })
+      },
+      periods: [per('mes', 'Outubro'), per('ano', '2026')],
+      perLabel: isM ? 'Outubro' : 'Em 2026',
+      kpis, months, readout,
+      yTop: fmt(top), yMid: fmt(top / 2), avgPos: (avg9 / top * 100).toFixed(1), avgTxt: fmt(avg9),
+      points, systems, alerts, recent
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Importar e exportar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#EEF3F7}
+a{color:#0057A8}a:hover{color:#0A2E5C}
+button,input,select{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #0091BF;outline-offset:2px}
+.side a{color:#3D4E63;text-decoration:none}
+.side a:hover{color:#0A2E5C;background:#F2F6FA}
+.side a[aria-current="page"]{color:#0057A8;background:#E3EEF9}
+.sbt:hover{background:#E3EEF9 !important;color:#0057A8 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #EEF3F7; font-family: 'Atkinson Hyperlegible', sans-serif; color: #0F1E2E; font-size: 15px; line-height: 1.45">
+
+  <aside class="side" style="position: relative; z-index: 3; flex: 1 1 {{ sb.w }}px; background: #FFFFFF; border-right: 1px solid #DDE5EE; padding: 20px {{ sb.px }}px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; justify-content: {{ sb.just }}; min-height: 56px; padding: 0 4px">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><img src="/_blob/fe6e834808d55038aef3b4eef26066a9" alt="Ourinhos Saneamento, GS Inima Traçado" style="height: 50px; width: auto; max-width: 100%; display: block"></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><img src="/_blob/a374aab8668546a40330f45f663763c8" alt="Ourinhos Saneamento" style="width: 38px; height: 38px; display: block"></sc-if>
+    </div>
+    <button type="button" class="sbt" onClick="{{ sb.toggle }}" aria-expanded="{{ sb.open }}" aria-label="{{ sb.label }}" title="{{ sb.label }}" style="position: absolute; top: 16px; right: -14px; z-index: 5; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid #DDE5EE; background: #FFFFFF; color: #52627A; box-shadow: 0 2px 6px rgba(10,46,92,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></sc-if>
+    </button>
+    <nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+      <a href="WebDashboard.dc.html" aria-label="Painel" title="Painel" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Painel</span></sc-if>
+      </a>
+      <a href="WebQuimicos.dc.html" aria-label="Produtos químicos" title="Produtos químicos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Produtos químicos</span></sc-if>
+      </a>
+      <a href="WebColetas.dc.html" aria-label="Coleta de campo" title="Coleta de campo" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M12 6.5s-2.5 2.7-2.5 4.4a2.5 2.5 0 0 0 5 0c0-1.7-2.5-4.4-2.5-4.4z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Coleta de campo</span></sc-if>
+      </a>
+      <a href="WebDescargas.dc.html" aria-label="Descargas de rede" title="Descargas de rede" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M7 21h8"/><path d="M8 21V10h6v11"/><path d="M7 10h8"/><path d="M9 10V7a2 2 0 0 1 4 0v3"/><path d="M14 14h3"/><path d="M19 13c0 0 1.5 1.7 1.5 2.7a1.5 1.5 0 0 1-3 0c0-1 1.5-2.7 1.5-2.7z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Descargas de rede</span></sc-if>
+      </a>
+      <a href="Main.dc.html" aria-label="Lançamentos" title="Lançamentos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Lançamentos</span></sc-if>
+      </a>
+      <a href="WebAdmin.dc.html" aria-label="Usuários e permissões" title="Usuários e permissões" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.8c1.7.7 3 2.5 3.5 5.2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Usuários e permissões</span></sc-if>
+      </a>
+      <a href="WebDados.dc.html" aria-current="page" aria-label="Importar e exportar" title="Importar e exportar" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Importar e exportar</span></sc-if>
+      </a>
+      <span title="Tarefas automáticas (em breve)" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #66778C">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Tarefas automáticas (em breve)</span></sc-if>
+      </span>
+    </nav>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box">
+    <div style="margin: -28px calc(-1 * clamp(16px, 3vw, 40px)) 24px; padding: 0 clamp(16px, 3vw, 40px); height: 60px; background: #FFFFFF; border-bottom: 1px solid #DDE5EE; display: flex; justify-content: flex-end; align-items: center; gap: 10px">
+      <button type="button" aria-label="Avisos" title="Avisos" style="width: 38px; height: 38px; border-radius: 50%; border: 0; background: #EEF3F7; color: #0A2E5C; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+        <span style="position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: #D97706; border: 2px solid #EEF3F7"></span>
+      </button>
+      <span style="width: 1px; height: 26px; background: #DDE5EE"></span>
+      <button type="button" aria-label="Conta de Felipe Rodrigues, Administrador" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; color: #0F1E2E">
+        <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0">F</span>
+        <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15"><span style="font-weight: 700; font-size: 14px; color: #0A2E5C">Felipe Rodrigues</span><span style="font-size: 12px; color: #52627A">Administrador</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; color: #0A2E5C; letter-spacing: -0.3px">Importar e exportar dados</h1>
+        <span style="font-size: 15px; color: #52627A">Baixe os lançamentos em planilha ou traga históricos do Forms e do Excel para o sistema.</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+        <section style="flex: 1 1 380px; background: #FFFFFF; border-radius: 22px; padding: clamp(18px, 2.2vw, 26px); display: flex; flex-direction: column; gap: 20px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <span style="width: 44px; height: 44px; border-radius: 14px; background: #E3EEF9; color: #0057A8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></span>
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; color: #0A2E5C">Exportar</h2>
+          </div>
+
+          <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+            <legend style="font-weight: 700; color: #0A2E5C; padding: 0; margin-bottom: 8px">Quais dados</legend>
+            <sc-for list="{{ sets }}" as="d" hint-placeholder-count="5">
+              <label style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; cursor: pointer; border: 1.5px solid {{ d.bd }}; background: {{ d.bg }}">
+                <input type="checkbox" checked="{{ d.on }}" onChange="{{ d.toggle }}" style="width: 22px; height: 22px; accent-color: #0057A8; margin: 0" />
+                <span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">{{ d.name }}</span><span style="font-size: 13px; color: #52627A">{{ d.desc }}</span></span>
+              </label>
+            </sc-for>
+          </fieldset>
+
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="ex-de" style="font-weight: 700; font-size: 14px; color: #0A2E5C">De</label>
+              <input id="ex-de" type="date" value="2026-10-01" style="height: 46px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 15px; min-width: 0" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="ex-ate" style="font-weight: 700; font-size: 14px; color: #0A2E5C">Até</label>
+              <input id="ex-ate" type="date" value="2026-10-18" style="height: 46px; border: 1.5px solid #C7D4E2; border-radius: 12px; padding: 0 12px; font-size: 15px; min-width: 0" />
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-weight: 700; font-size: 14px; color: #0A2E5C">Formato</span>
+            <div role="radiogroup" aria-label="Formato" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+              <sc-for list="{{ fmts }}" as="f" hint-placeholder-count="2">
+                <button type="button" role="radio" aria-checked="{{ f.on }}" onClick="{{ f.pick }}" style="height: 46px; border-radius: 12px; font-weight: 700; cursor: pointer; border: 2px solid {{ f.bd }}; background: {{ f.bg }}; color: #0A2E5C">{{ f.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer">
+            <input type="checkbox" checked="{{ calc }}" onChange="{{ toggleCalc }}" style="width: 22px; height: 22px; accent-color: #0057A8; margin: 2px 0 0" />
+            <span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">Incluir volume calculado</span><span style="font-size: 13px; color: #52627A">Leitura de hoje menos a de ontem, com intervalo em horas, como na sua planilha.</span></span>
+          </label>
+
+          <button type="button" onClick="{{ doExport }}" style="height: 52px; border: 0; border-radius: 14px; background: #0057A8; color: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer">{{ exportLabel }}</button>
+        </section>
+
+        <section style="flex: 999 1 520px; min-width: 0; background: #FFFFFF; border-radius: 22px; padding: clamp(18px, 2.2vw, 26px); display: flex; flex-direction: column; gap: 20px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <span style="width: 44px; height: 44px; border-radius: 14px; background: #E0F1F8; color: #00759C; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/></svg></span>
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; color: #0A2E5C">Importar</h2>
+          </div>
+
+          <ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px" aria-label="Etapas da importação">
+            <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+              <li style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; background: {{ s.bg }}">
+                <span style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; background: {{ s.nBg }}; color: {{ s.nFg }}">{{ s.n }}</span>
+                <span style="font-weight: 700; font-size: 14px; color: {{ s.fg }}">{{ s.label }}</span>
+              </li>
+            </sc-for>
+          </ol>
+
+          <sc-if value="{{ st1 }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ pickFile }}" style="border: 2px dashed #9FB3C8; border-radius: 20px; background: #F8FAFC; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; color: #0A2E5C">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0091BF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px">Arraste a planilha aqui ou clique para escolher</span>
+              <span style="font-size: 14px; color: #52627A">CSV ou XLSX, até 20 MB. Serve para a exportação de respostas do Microsoft Forms.</span>
+            </button>
+          </sc-if>
+
+          <sc-if value="{{ st2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: #EEF3F7">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B6B57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+              <span style="display: flex; flex-direction: column; flex: 1; min-width: 0"><span style="font-weight: 700; color: #0A2E5C">Leituras_Pocos_Forms.xlsx</span><span style="font-size: 13px; color: #52627A">316 linhas, 8 colunas</span></span>
+              <button type="button" onClick="{{ reset }}" style="border: 0; background: transparent; color: #0057A8; font-weight: 700; cursor: pointer; padding: 8px">Trocar arquivo</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-weight: 700; color: #0A2E5C">Ligue cada coluna da planilha a um campo do sistema</span>
+              <div style="overflow-x: auto; border: 1px solid #DDE5EE; border-radius: 14px">
+                <table style="width: 100%; border-collapse: collapse; min-width: 480px; font-size: 14px">
+                  <thead><tr style="background: #F5F8FB; color: #52627A; text-align: left"><th style="padding: 10px 14px">Coluna da planilha</th><th style="padding: 10px 14px">Exemplo</th><th style="padding: 10px 14px">Campo no sistema</th></tr></thead>
+                  <tbody>
+                    <sc-for list="{{ maps }}" as="m" hint-placeholder-count="6">
+                      <tr style="border-top: 1px solid #EEF3F7">
+                        <td style="padding: 8px 14px; font-weight: 700; color: #0A2E5C">{{ m.col }}</td>
+                        <td style="padding: 8px 14px; color: #52627A">{{ m.ex }}</td>
+                        <td style="padding: 6px 14px">
+                          <select aria-label="{{ m.aria }}" style="height: 40px; border: 1.5px solid #C7D4E2; border-radius: 10px; padding: 0 10px; font-size: 14px; background: #FFFFFF; color: #0F1E2E; width: 100%">
+                            <option>{{ m.field }}</option>
+                            <option>Ignorar coluna</option>
+                          </select>
+                        </td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px">
+              <span style="padding: 8px 12px; border-radius: 10px; background: #E2F4EE; color: #0B6B57; font-weight: 700; font-size: 14px">312 linhas prontas</span>
+              <span style="padding: 8px 12px; border-radius: 10px; background: #FDF0DC; color: #8A3C06; font-weight: 700; font-size: 14px">4 linhas com totalizador vazio serão ignoradas</span>
+            </div>
+            <button type="button" onClick="{{ confirm }}" style="height: 52px; border: 0; border-radius: 14px; background: #0057A8; color: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer">Importar 312 linhas</button>
+          </sc-if>
+
+          <sc-if value="{{ st3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 16px; text-align: center">
+              <span style="width: 64px; height: 64px; border-radius: 50%; background: #E2F4EE; color: #0B6B57; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; color: #0A2E5C">312 linhas importadas</span>
+              <span style="font-size: 14px; color: #52627A; max-width: 46ch">As leituras já aparecem no painel e entram no cálculo de volume. Dá para desfazer esta importação por 7 dias.</span>
+              <button type="button" onClick="{{ reset }}" style="margin-top: 6px; height: 46px; padding: 0 18px; border: 1.5px solid #C7D4E2; border-radius: 12px; background: #FFFFFF; color: #0A2E5C; font-weight: 700; cursor: pointer">Importar outro arquivo</button>
+            </div>
+          </sc-if>
+        </section>
+      </div>
+
+      <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Movimentações recentes</h2>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px">
+            <thead><tr style="text-align: left; color: #52627A"><th style="padding: 8px 6px">Quando</th><th style="padding: 8px 6px">Tipo</th><th style="padding: 8px 6px">Arquivo</th><th style="padding: 8px 6px">Por</th><th style="padding: 8px 6px; text-align: right">Linhas</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ log }}" as="l" hint-placeholder-count="4">
+                <tr style="border-top: 1px solid #EEF3F7">
+                  <td style="padding: 10px 6px; color: #52627A">{{ l.when }}</td>
+                  <td style="padding: 10px 6px"><span style="padding: 2px 8px; border-radius: 8px; font-weight: 700; background: {{ l.bg }}; color: {{ l.fg }}">{{ l.type }}</span></td>
+                  <td style="padding: 10px 6px; font-weight: 700; color: #0A2E5C">{{ l.file }}</td>
+                  <td style="padding: 10px 6px">{{ l.who }}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{ l.rows }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: true, sets: { leit: true, res: true, est: false, eta: false, ete: false, col: false, dsc: false }, fmt: 'xlsx', calc: true, step: 1, exported: false, log: [
+      { when: 'Hoje, 07:58', type: 'Exportação', file: 'Leituras_out2026.xlsx', who: 'Juliana', rows: '1.240' },
+      { when: 'Ontem, 18:10', type: 'Importação', file: 'ETE_Trianon_setembro.csv', who: 'Felipe', rows: '96' },
+      { when: '15/10, 09:32', type: 'Exportação', file: 'Residuais_semana42.csv', who: 'Felipe', rows: '168' }
+    ] };
+  }
+  renderVals() {
+    const st = this.state;
+    const SETS = [
+      { k: 'leit', name: 'Leituras de macromedidores', desc: 'Vazão e totalizador de poços, reservatórios, recalque e ETAs' },
+      { k: 'res', name: 'Residuais de cloro e flúor', desc: 'Análises de campo dos poços' },
+      { k: 'est', name: 'Estoque de insumos', desc: 'Lançamentos de segunda e quinta' },
+      { k: 'eta', name: 'ETAs Pardo I e Pardo II', desc: 'Calibrações, medidores e estoque' },
+      { k: 'ete', name: 'ETEs', desc: 'Análises e checklist de limpeza das 6 estações' },
+      { k: 'col', name: 'Coletas de campo', desc: 'Pontos, cloro e análises de laboratório, com coletor e analista' },
+      { k: 'dsc', name: 'Descargas de rede', desc: 'Ponto, início, fim, duração e volume estimado' }
+    ];
+    const sets = SETS.map((d) => ({
+      name: d.name, desc: d.desc, on: !!st.sets[d.k],
+      bd: st.sets[d.k] ? '#0057A8' : '#DDE5EE', bg: st.sets[d.k] ? '#F2F7FD' : '#FFFFFF',
+      toggle: () => this.setState({ sets: Object.assign({}, st.sets, { [d.k]: !st.sets[d.k] }), exported: false })
+    }));
+    const nSel = SETS.filter((d) => st.sets[d.k]).length;
+    const fmts = [['xlsx', 'Excel (XLSX)'], ['csv', 'CSV']].map((f) => ({
+      label: f[1], on: st.fmt === f[0], bd: st.fmt === f[0] ? '#0057A8' : '#DDE5EE', bg: st.fmt === f[0] ? '#F2F7FD' : '#FFFFFF',
+      pick: () => this.setState({ fmt: f[0], exported: false })
+    }));
+    const steps = [['1', 'Enviar arquivo'], ['2', 'Ligar colunas'], ['3', 'Concluir']].map((s, i) => {
+      const n = i + 1, cur = st.step === n, past = st.step > n;
+      return {
+        n: past ? '✓' : s[0], label: s[1],
+        bg: cur ? '#E3EEF9' : 'transparent',
+        nBg: cur || past ? '#0057A8' : '#DDE5EE', nFg: cur || past ? '#FFFFFF' : '#52627A',
+        fg: cur ? '#0A2E5C' : '#52627A'
+      };
+    });
+    const maps = [
+      { col: 'Hora de início', ex: '18/10/2026 07:47', field: 'Data e hora da leitura' },
+      { col: 'Nome', ex: 'Ana', field: 'Operador' },
+      { col: 'Selecione o ponto', ex: 'Poço Pacaembu', field: 'Unidade (poço ou reservatório)' },
+      { col: 'Vazão instantânea (m³/h)', ex: '64,8', field: 'Vazão instantânea' },
+      { col: 'Totalizador (m³)', ex: '1285842', field: 'Leitura do totalizador' },
+      { col: 'Cloro residual', ex: '0,95', field: 'Cloro livre (mg/L)' },
+      { col: 'Flúor', ex: '0,70', field: 'Flúor (mg/L)' },
+      { col: 'Observações', ex: '', field: 'Observações' }
+    ].map((m) => Object.assign(m, { aria: 'Campo para a coluna ' + m.col }));
+    const log = st.log.map((l) => Object.assign({}, l, {
+      bg: l.type === 'Importação' ? '#E0F1F8' : '#EEF3F7', fg: l.type === 'Importação' ? '#00597A' : '#0A2E5C'
+    }));
+    return {
+      sb: {
+        open: st.open, closed: !st.open, w: st.open ? 252 : 84, px: st.open ? 16 : 14,
+        just: st.open ? 'flex-start' : 'center',
+        label: st.open ? 'Recolher menu' : 'Expandir menu',
+        toggle: () => this.setState({ open: !st.open })
+      },
+      sets, fmts, steps, maps, log,
+      calc: st.calc, toggleCalc: () => this.setState({ calc: !st.calc, exported: false }),
+      exportLabel: st.exported ? 'Arquivo gerado' : nSel === 0 ? 'Escolha ao menos um conjunto' : 'Baixar ' + (st.fmt === 'xlsx' ? 'planilha XLSX' : 'arquivo CSV'),
+      doExport: () => {
+        if (nSel === 0) return;
+        const file = 'Ourinhos_dados_01a18out.' + st.fmt;
+        this.setState({ exported: true, log: [{ when: 'Agora', type: 'Exportação', file, who: 'Felipe', rows: '2.016' }].concat(st.log) });
+      },
+      st1: st.step === 1, st2: st.step === 2, st3: st.step === 3,
+      pickFile: () => this.setState({ step: 2 }),
+      reset: () => this.setState({ step: 1 }),
+      confirm: () => this.setState({ step: 3, log: [{ when: 'Agora', type: 'Importação', file: 'Leituras_Pocos_Forms.xlsx', who: 'Felipe', rows: '312' }].concat(st.log) })
+    };
+  }
+}
+</script>
+</body>
+</html>

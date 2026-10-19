@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Painel de operação</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#EEF3F7}
+a{color:#0057A8}a:hover{color:#0A2E5C}
+button{font-family:inherit}
+button:focus-visible,a:focus-visible{outline:3px solid #0091BF;outline-offset:2px}
+.side a{color:#3D4E63;text-decoration:none}
+.side a:hover{color:#0A2E5C;background:#F2F6FA}
+.side a[aria-current="page"]{color:#0057A8;background:#E3EEF9}
+.sbt:hover{background:#E3EEF9 !important;color:#0057A8 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #EEF3F7; font-family: 'Atkinson Hyperlegible', sans-serif; color: #0F1E2E; font-size: 15px; line-height: 1.45">
+
+  <aside class="side" style="position: relative; z-index: 3; flex: 1 1 {{ sb.w }}px; background: #FFFFFF; border-right: 1px solid #DDE5EE; padding: 20px {{ sb.px }}px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; justify-content: {{ sb.just }}; min-height: 56px; padding: 0 4px">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><img src="/_blob/fe6e834808d55038aef3b4eef26066a9" alt="Ourinhos Saneamento, GS Inima Traçado" style="height: 50px; width: auto; max-width: 100%; display: block"></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><img src="/_blob/a374aab8668546a40330f45f663763c8" alt="Ourinhos Saneamento" style="width: 38px; height: 38px; display: block"></sc-if>
+    </div>
+    <button type="button" class="sbt" onClick="{{ sb.toggle }}" aria-expanded="{{ sb.open }}" aria-label="{{ sb.label }}" title="{{ sb.label }}" style="position: absolute; top: 16px; right: -14px; z-index: 5; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid #DDE5EE; background: #FFFFFF; color: #52627A; box-shadow: 0 2px 6px rgba(10,46,92,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></sc-if>
+      <sc-if value="{{ sb.closed }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></sc-if>
+    </button>
+    <nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+      <a href="WebDashboard.dc.html" aria-current="page" aria-label="Painel" title="Painel" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Painel</span></sc-if>
+      </a>
+      <a href="WebQuimicos.dc.html" aria-label="Produtos químicos" title="Produtos químicos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Produtos químicos</span></sc-if>
+      </a>
+      <a href="WebColetas.dc.html" aria-label="Coleta de campo" title="Coleta de campo" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M12 6.5s-2.5 2.7-2.5 4.4a2.5 2.5 0 0 0 5 0c0-1.7-2.5-4.4-2.5-4.4z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Coleta de campo</span></sc-if>
+      </a>
+      <a href="WebDescargas.dc.html" aria-label="Descargas de rede" title="Descargas de rede" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M7 21h8"/><path d="M8 21V10h6v11"/><path d="M7 10h8"/><path d="M9 10V7a2 2 0 0 1 4 0v3"/><path d="M14 14h3"/><path d="M19 13c0 0 1.5 1.7 1.5 2.7a1.5 1.5 0 0 1-3 0c0-1 1.5-2.7 1.5-2.7z"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Descargas de rede</span></sc-if>
+      </a>
+      <a href="Main.dc.html" aria-label="Lançamentos" title="Lançamentos" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Lançamentos</span></sc-if>
+      </a>
+      <a href="WebAdmin.dc.html" aria-label="Usuários e permissões" title="Usuários e permissões" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.8c1.7.7 3 2.5 3.5 5.2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Usuários e permissões</span></sc-if>
+      </a>
+      <a href="WebDados.dc.html" aria-label="Importar e exportar" title="Importar e exportar" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Importar e exportar</span></sc-if>
+      </a>
+      <span title="Tarefas automáticas (em breve)" style="display: flex; align-items: center; justify-content: {{ sb.just }}; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #66778C">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>Tarefas automáticas (em breve)</span></sc-if>
+      </span>
+    </nav>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box">
+    <div style="margin: -28px calc(-1 * clamp(16px, 3vw, 40px)) 24px; padding: 0 clamp(16px, 3vw, 40px); height: 60px; background: #FFFFFF; border-bottom: 1px solid #DDE5EE; display: flex; justify-content: flex-end; align-items: center; gap: 10px">
+      <button type="button" aria-label="Avisos" title="Avisos" style="width: 38px; height: 38px; border-radius: 50%; border: 0; background: #EEF3F7; color: #0A2E5C; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+        <span style="position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: #D97706; border: 2px solid #EEF3F7"></span>
+      </button>
+      <span style="width: 1px; height: 26px; background: #DDE5EE"></span>
+      <button type="button" aria-label="Conta de Felipe Rodrigues, Administrador" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; color: #0F1E2E">
+        <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A2E5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0">F</span>
+        <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15"><span style="font-weight: 700; font-size: 14px; color: #0A2E5C">Felipe Rodrigues</span><span style="font-size: 12px; color: #52627A">Administrador</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52627A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px">
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 14px; color: #52627A">Domingo, 18 de outubro de 2026, atualizado às 07:52</span>
+          <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; color: #0A2E5C; letter-spacing: -0.3px">Painel de operação</h1>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+          <div role="group" aria-label="Período" style="display: flex; background: #FFFFFF; border: 1px solid #DDE5EE; border-radius: 12px; padding: 3px">
+            <sc-for list="{{ periods }}" as="pr" hint-placeholder-count="3">
+              <button type="button" onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ pr.bg }}; color: {{ pr.fg }}">{{ pr.label }}</button>
+            </sc-for>
+          </div>
+          <a href="WebDados.dc.html" style="height: 42px; padding: 0 16px; border-radius: 12px; background: #0057A8; color: #FFFFFF; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; text-decoration: none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Exportar dados
+          </a>
+        </div>
+      </div>
+
+      <section style="background: #FFFFFF; border-radius: 26px; padding: clamp(18px, 2.4vw, 30px); display: flex; flex-wrap: wrap; gap: 28px">
+        <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+          <div role="tablist" aria-label="Tipo de ponto" style="display: inline-flex; align-self: flex-start; background: #EEF3F7; border-radius: 12px; padding: 3px; gap: 3px">
+            <button type="button" role="tab" aria-selected="{{ gp.pOn }}" onClick="{{ gp.poco }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ gp.pBg }}; color: {{ gp.pFg }}">Poços</button>
+            <button type="button" role="tab" aria-selected="{{ gp.rOn }}" onClick="{{ gp.res }}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; background: {{ gp.rBg }}; color: {{ gp.rFg }}">Reservatórios e recalque</button>
+          </div>
+          <p style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(21px, 2.2vw, 28px); line-height: 1.2; color: #0A2E5C; max-width: 34ch">{{ headline }}</p>
+          <div style="display: flex; flex-direction: column; gap: 4px" role="group" aria-label="Volume por ponto">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="7">
+              <button type="button" onClick="{{ b.pick }}" aria-pressed="{{ b.on }}" style="display: grid; grid-template-columns: minmax(110px, 230px) minmax(0, 1fr) 92px; align-items: center; gap: 12px; border: 0; padding: 7px 10px; border-radius: 10px; cursor: pointer; text-align: left; background: {{ b.rowBg }}">
+                <span style="font-size: 14px; font-weight: 700; color: #0A2E5C; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ b.name }}</span>
+                <span style="display: block; height: 14px; border-radius: 7px; background: #EEF3F7; overflow: hidden"><span style="display: block; height: 100%; width: {{ b.w }}%; border-radius: 7px; background: {{ b.col }}"></span></span>
+                <span style="font-size: 14px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; color: {{ b.vc }}">{{ b.valTxt }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex: 1 1 260px; background: #EEF3F7; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; align-self: flex-start">
+          <div style="display: flex; flex-direction: column">
+            <span style="font-size: 13px; color: #52627A">{{ sel.tipo }}</span>
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; color: #0A2E5C">{{ sel.name }}</span>
+          </div>
+          <sc-if value="{{ sel.pending }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; background: #FDF0DC; color: #7A3606; padding: 12px; border-radius: 12px; font-size: 14px">Sem leitura hoje. A última foi ontem às 07:58.</p>
+          </sc-if>
+          <sc-if value="{{ sel.has }}" hint-placeholder-val="{{ true }}">
+            <dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px">
+              <div><dt style="font-size: 13px; color: #52627A">Volume 24 h</dt><dd style="margin: 0; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ sel.volTxt }} m³</dd></div>
+              <div><dt style="font-size: 13px; color: #52627A">Vazão instantânea</dt><dd style="margin: 0; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ sel.vazTxt }} m³/h</dd></div>
+              <div><dt style="font-size: 13px; color: #52627A">Vazão média</dt><dd style="margin: 0; font-weight: 700; font-size: 18px; color: #0A2E5C">{{ sel.medTxt }} m³/h</dd></div>
+              <sc-if value="{{ sel.poco }}" hint-placeholder-val="{{ true }}">
+                <div><dt style="font-size: 13px; color: #52627A">Cloro livre</dt><dd style="margin: 0; font-weight: 700; font-size: 18px; color: {{ sel.clC }}">{{ sel.clTxt }} mg/L</dd></div>
+                <div><dt style="font-size: 13px; color: #52627A">Flúor</dt><dd style="margin: 0; font-weight: 700; font-size: 18px; color: {{ sel.flC }}">{{ sel.flTxt }} mg/L</dd></div>
+              </sc-if>
+            </dl>
+            <p style="margin: 0; font-size: 13px; color: #52627A">Lançado por {{ sel.op }} às {{ sel.time }}, com foto do macromedidor.</p>
+          </sc-if>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px">
+        <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Residuais dos poços</h2>
+            <span style="font-size: 13px; color: #52627A">Cloro 0,2 a 2,0 e flúor 0,6 a 0,8 mg/L</span>
+          </div>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 280px">
+              <thead><tr style="text-align: left; color: #52627A"><th style="padding: 8px 6px; font-weight: 700">Poço</th><th style="padding: 8px 6px; font-weight: 700; text-align: right">Cloro</th><th style="padding: 8px 6px; font-weight: 700; text-align: right">Flúor</th></tr></thead>
+              <tbody>
+                <sc-for list="{{ resid }}" as="r" hint-placeholder-count="7">
+                  <tr style="border-top: 1px solid #EEF3F7">
+                    <td style="padding: 9px 6px; font-weight: 700; color: #0A2E5C">{{ r.name }}</td>
+                    <td style="padding: 9px 6px; text-align: right; font-variant-numeric: tabular-nums"><span style="padding: 2px 8px; border-radius: 8px; background: {{ r.clBg }}; color: {{ r.clFg }}; font-weight: 700">{{ r.clTxt }}</span></td>
+                    <td style="padding: 9px 6px; text-align: right; font-variant-numeric: tabular-nums"><span style="padding: 2px 8px; border-radius: 8px; background: {{ r.flBg }}; color: {{ r.flFg }}; font-weight: 700">{{ r.flTxt }}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Estoque de insumos</h2>
+            <span style="font-size: 13px; color: #52627A">Menores níveis, lançamento de quinta, 15/10</span>
+          </div>
+          <sc-for list="{{ stock }}" as="k" hint-placeholder-count="5">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 14px">
+                <span><strong style="color: #0A2E5C">{{ k.where }}</strong> <span style="color: #52627A">{{ k.what }}</span></span>
+                <span style="font-weight: 700; white-space: nowrap; color: {{ k.tc }}">{{ k.pct }}%, {{ k.dias }} dias</span>
+              </div>
+              <span style="display: block; height: 10px; border-radius: 6px; background: #E3ECF4; overflow: hidden"><span style="display: block; height: 100%; width: {{ k.pct }}%; background: {{ k.col }}; border-radius: 6px"></span></span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Pendências de hoje</h2>
+          <div style="display: flex; flex-direction: column">
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid #EEF3F7"><span style="width: 10px; height: 10px; border-radius: 50%; background: #D97706; margin-top: 6px; flex-shrink: 0"></span><span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">Macromedidores da ETA</span><span style="font-size: 14px; color: #52627A">7 de 10 ainda sem leitura, incluindo o Poço Esmeralda</span></span></div>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid #EEF3F7"><span style="width: 10px; height: 10px; border-radius: 50%; background: #D97706; margin-top: 6px; flex-shrink: 0"></span><span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">ETA Pardo II</span><span style="font-size: 14px; color: #52627A">Calibrações ainda não lançadas</span></span></div>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid #EEF3F7"><span style="width: 10px; height: 10px; border-radius: 50%; background: #0091BF; margin-top: 6px; flex-shrink: 0"></span><span style="display: flex; flex-direction: column"><span style="font-weight: 700; color: #0A2E5C">ETE Moradas Clube</span><span style="font-size: 14px; color: #52627A">Última limpeza registrada há 3 dias</span></span></div>
+          </div>
+        </section>
+      </div>
+
+      <section style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; color: #0A2E5C">Volume produzido pelos poços</h2>
+          <span style="font-size: 13px; color: #52627A">Últimos 14 dias, soma dos poços (m³)</span>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 12px; color: #52627A; text-align: right; padding: 0 0 22px">
+            <span>9.800</span><span>9.300</span><span>8.800</span>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <div style="position: relative; height: 180px; border-left: 1px solid #DDE5EE; border-bottom: 1px solid #DDE5EE">
+              <div style="position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed #E3ECF4"></div>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Volume diário entre 8.990 e 9.650 m³ nos últimos 14 dias">
+                <polyline points="{{ linePts }}" fill="none" stroke="#0057A8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+              </svg>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #52627A"><span>05/10</span><span>11/10</span><span>18/10</span></div>
+          </div>
+        </div>
+      </section>
+
+      <p style="margin: 0; font-size: 13px; color: #52627A">Os números deste protótipo são de exemplo. No sistema, vêm dos lançamentos feitos no app.</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: true, period: 'hoje', group: 'poco', selP: 'Poço Pacaembu', selR: 'REL Paineiras' };
+  }
+  renderVals() {
+    const st = this.state;
+    const fmt = (n) => Math.round(n).toLocaleString('pt-BR');
+    const f1 = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const f2 = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const okIn = (v, lo, hi) => v >= lo && v <= hi;
+
+    const POCOS = [
+      { name: 'Poço Diamantes', vol: 1180, vaz: 49.6, h: 24.1, cl: 0.85, fl: 0.71, op: 'Ana', time: '07:12' },
+      { name: 'Poço Moradas', vol: 1312, vaz: 55.1, h: 24.08, cl: 0.95, fl: 0.70, op: 'Ana', time: '07:28' },
+      { name: 'Poço Nova Alcântara', vol: 742, vaz: 30.2, h: 23.9, cl: 0.60, fl: 0.68, op: 'Rafael', time: '07:44' },
+      { name: 'Poço Pacaembu', vol: 1540, vaz: 64.8, h: 24.25, cl: 1.35, fl: 0.74, op: 'Rafael', time: '07:38' },
+      { name: 'Poço São João', vol: 1064, vaz: 44.0, h: 24.0, cl: 1.10, fl: 0.92, op: 'Ana', time: '07:31' },
+      { name: 'Poço Ville de France', vol: 1369, vaz: 57.4, h: 24.0, cl: 0.70, fl: 0.69, op: 'Ana', time: '07:35' }
+    ];
+    const RES_N = ['REL Paineiras', 'Entrada RAP Paineiras 2', 'Saída RAP Paineiras 2', 'RAP Cohab', 'REL Cohab', 'REL São João',
+      'RAP Pacaembu - Zona Alta', 'RAP Pacaembu - Zona Baixa', 'REL Moradas - Condomínio', 'REL Moradas - Bairros', 'REL Moradas Clube',
+      'R3 > São Silvestre', 'REL São Silvestre', 'Recalque Vila Margarida', 'REL Parque Minas Gerais', 'REL Anchieta',
+      'RAP Nova Alcântara - Zona Baixa', 'RAP Nova Alcântara - Zona Alta'];
+    const RES = RES_N.map((name, i) => i === 15 ? { name, vol: null } : {
+      name, vol: 380 + ((i * 523) % 2300), vaz: 0, h: 24.0, op: i % 2 ? 'Rafael' : 'Ana',
+      time: '07:' + String(8 + i * 2).padStart(2, '0')
+    }).map((r) => r.vol ? Object.assign(r, { vaz: Math.round(r.vol / 24 * 10 * (0.9 + (r.name.length % 5) / 20)) / 10 }) : r);
+
+    const isP = st.group === 'poco';
+    const list = isP ? POCOS : RES;
+    const selName = isP ? st.selP : st.selR;
+    const mult = { hoje: 1, d7: 7, d30: 30 }[st.period];
+    const max = Math.max.apply(null, list.filter((x) => x.vol).map((x) => x.vol));
+    const bars = list.map((x) => {
+      const on = x.name === selName, has = x.vol != null;
+      return {
+        name: x.name, on,
+        w: has ? Math.max(2, Math.round(x.vol / max * 100)) : 0,
+        col: on ? '#0057A8' : '#8FC6DE',
+        rowBg: on ? '#F2F7FD' : 'transparent',
+        valTxt: has ? fmt(x.vol * mult) + ' m³' : 'sem leitura',
+        vc: has ? '#0A2E5C' : '#8A3C06',
+        pick: () => this.setState(isP ? { selP: x.name } : { selR: x.name })
+      };
+    });
+    const withRead = list.filter((x) => x.vol != null).length;
+    const totalVol = list.reduce((s, x) => s + (x.vol || 0), 0) * mult;
+    const lbl = { hoje: 'nas últimas 24 horas', d7: 'nos últimos 7 dias', d30: 'nos últimos 30 dias' }[st.period];
+    const headline = isP
+      ? withRead + ' de ' + list.length + ' poços lançados produziram ' + fmt(totalVol) + ' m³ ' + lbl + '.'
+      : withRead + ' de ' + list.length + ' pontos de reservação e recalque registraram ' + fmt(totalVol) + ' m³ ' + lbl + '.';
+
+    const sp = list.find((x) => x.name === selName) || list[0];
+    const has = sp.vol != null;
+    const sel = {
+      name: sp.name, tipo: isP ? 'Poço' : (sp.name.indexOf('Recalque') === 0 ? 'Recalque' : 'Reservatório'),
+      has, pending: !has, poco: isP,
+      volTxt: has ? fmt(sp.vol) : '', vazTxt: has ? f1(sp.vaz) : '', medTxt: has ? f1(sp.vol / sp.h) : '',
+      clTxt: has && isP ? f2(sp.cl) : '', flTxt: has && isP ? f2(sp.fl) : '',
+      clC: has && isP && okIn(sp.cl, 0.2, 2.0) ? '#0A2E5C' : '#8A3C06',
+      flC: has && isP && okIn(sp.fl, 0.6, 0.8) ? '#0A2E5C' : '#8A3C06',
+      op: sp.op || '', time: sp.time || ''
+    };
+    const resid = POCOS.filter((p) => p.vol != null).map((p) => {
+      const c = okIn(p.cl, 0.2, 2.0), f = okIn(p.fl, 0.6, 0.8);
+      return {
+        name: p.name.replace('Poço ', ''), clTxt: f2(p.cl), flTxt: f2(p.fl),
+        clBg: c ? 'transparent' : '#FDF0DC', clFg: c ? '#0F1E2E' : '#8A3C06',
+        flBg: f ? 'transparent' : '#FDF0DC', flFg: f ? '#0F1E2E' : '#8A3C06'
+      };
+    });
+    const stock = [
+      { where: 'ETA Pardo II', what: 'Alcalinizante', pct: 16, dias: 3 },
+      { where: 'Poço Pacaembu', what: 'Ácido fluossilícico', pct: 18, dias: 4 },
+      { where: 'Poço São João', what: 'Hipoclorito de sódio', pct: 34, dias: 6 },
+      { where: 'ETA Pardo I', what: 'Ácido fluossilícico', pct: 38, dias: 9 },
+      { where: 'Poço Diamantes', what: 'Hipoclorito de sódio', pct: 62, dias: 11 }
+    ].map((k) => Object.assign(k, { col: k.pct < 20 ? '#D97706' : '#0091BF', tc: k.pct < 20 ? '#8A3C06' : '#0A2E5C' }));
+    const days = [9120, 9340, 9010, 9560, 9480, 9210, 8990, 9300, 9650, 9410, 9280, 9390, 9505, 9412];
+    const linePts = days.map((v, i) => (i / (days.length - 1) * 100).toFixed(2) + ',' + (100 - (v - 8800) / 1000 * 100).toFixed(2)).join(' ');
+    const periods = [['hoje', 'Hoje'], ['d7', '7 dias'], ['d30', '30 dias']].map((x) => ({
+      label: x[1], on: st.period === x[0],
+      bg: st.period === x[0] ? '#0A2E5C' : 'transparent', fg: st.period === x[0] ? '#FFFFFF' : '#0A2E5C',
+      pick: () => this.setState({ period: x[0] })
+    }));
+    const tab = (on) => ({ bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#0A2E5C' : '#52627A' });
+    const tp = tab(isP), tr = tab(!isP);
+    return {
+      sb: {
+        open: st.open, closed: !st.open, w: st.open ? 252 : 84, px: st.open ? 16 : 14,
+        just: st.open ? 'flex-start' : 'center',
+        label: st.open ? 'Recolher menu' : 'Expandir menu',
+        toggle: () => this.setState({ open: !st.open })
+      },
+      gp: { poco: () => this.setState({ group: 'poco' }), res: () => this.setState({ group: 'res' }), pOn: isP, rOn: !isP, pBg: tp.bg, pFg: tp.fg, rBg: tr.bg, rFg: tr.fg },
+      periods, bars, sel, resid, stock, linePts, headline
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Sistema operacional
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+
+# Dependências e builds futuros
+node_modules/
+dist/
+build/
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
