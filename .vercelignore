@@ -1,0 +1,4 @@
+# Arquivos que ficam no repositório, mas não vão para o site publicado
+prototipo-fonte/
+LEIA-ME.md
+.gitignore

@@ -3,7 +3,8 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Editores
+# Editores e ferramentas locais
+.claude/
 .vscode/
 .idea/
 
