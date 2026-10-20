@@ -807,6 +807,24 @@
     });
   }
 
+  function redefinirSenha(comp, u) {
+    if (!u || u.pendente) return;
+    if (perfil && u.id === perfil.id) { toast('Você não pode redefinir a sua própria senha por aqui.'); return; }
+    if (!window.confirm('Redefinir a senha de ' + u.name + '?\n\nA senha atual deixa de valer. No próximo acesso, ' + u.name +
+      ' entra com o login "' + u.email + '" e cria uma senha nova. Cargo, permissões e lançamentos continuam iguais.')) return;
+    chamarPrimeiroAcesso({ acao: 'redefinir', perfil_id: u.id }).then(function () {
+      // Atualiza só esta pessoa na tela, sem perder alterações de permissões ainda não salvas.
+      var st = comp.state;
+      comp.setState({
+        users: st.users.map(function (x) { return x.id === u.id ? Object.assign({}, x, { pendente: true, last: 'aguardando o primeiro acesso' }) : x; }),
+        dbUsers: st.dbUsers.map(function (p) { return p.id === u.id ? Object.assign({}, p, { usuario_id: null }) : p; })
+      });
+      toast('Senha redefinida. No próximo acesso, ' + u.name + ' entra com o login "' + u.email + '" e cria uma senha nova.', 'ok');
+    }).catch(function (err) {
+      toast('A senha NÃO foi redefinida (' + erroTxt(err) + ').');
+    });
+  }
+
   function instalarAdmin(cls) {
     var montar = cls.prototype.componentDidMount;
     cls.prototype.componentDidMount = function () {
@@ -825,6 +843,13 @@
         if (u && u.pendente && u.active) { vu.status = 'Aguardando 1º acesso'; vu.stBg = '#FDF0DC'; vu.stFg = '#8A3C06'; }
       });
       v.cadastrar = function () { formCadastro(comp); };
+      // "Redefinir senha": apaga a conta da pessoa e o perfil volta a aguardar o primeiro acesso
+      // (ela cria uma senha nova ao entrar). Não vale para a própria conta nem para quem ainda não entrou.
+      var sel = comp.state.users.find(function (u) { return u.id === comp.state.sel; });
+      if (v.cur) {
+        v.cur.podeRedefinir = !!(comp.state.dbUsers && sel && !sel.pendente && !(perfil && sel.id === perfil.id));
+        v.cur.redefinir = function () { redefinirSenha(comp, sel); };
+      }
       var salvar = v.save;
       v.save = function () {
         var st = comp.state;

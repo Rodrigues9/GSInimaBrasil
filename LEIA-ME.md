@@ -32,7 +32,7 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 - Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas.
 - **Cadastrar usuário**: o administrador informa nome, login e cargo, sem senha. A conta fica "Aguardando 1º acesso" (perfil com `usuario_id` vazio).
 - **Primeiro acesso**: a pessoa entra no app ou no sistema web com o login e a senha que quiser (mínimo 8 caracteres), confirma a senha e a conta é criada na hora pela Edge Function `primeiro-acesso` (`supabase/functions/primeiro-acesso`), já com as permissões definidas pelo administrador. Avise a pessoa logo depois do cadastro: até o primeiro acesso, quem souber o login pode criar a senha.
-- Trocar a senha de alguém (ex.: esqueceu) ainda é feito no painel do Supabase, em Authentication → Users.
+- **Redefinir senha** (ex.: a pessoa esqueceu): na tela "Usuários e permissões", o administrador escolhe a pessoa e clica em "Redefinir senha". A conta de Auth dela é apagada (função `primeiro-acesso`, ação `redefinir`, que confere se quem chamou é administrador) e o perfil volta a "Aguardando 1º acesso", com o mesmo login, cargo e permissões; no próximo acesso ela cria uma senha nova. Os lançamentos antigos continuam (o `usuario_id` deles fica vazio). O administrador não pode redefinir a própria senha por aqui.
 
 ## Rodar no computador
 Precisa do Node.js e do arquivo `.env` (não vai para o GitHub) com:
