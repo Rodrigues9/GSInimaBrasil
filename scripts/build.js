@@ -33,7 +33,7 @@ if (!url || !key) {
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out);
-['index.html', 'favicon.svg', 'app', 'sistema-web', 'js'].forEach((p) => copy(p));
+['index.html', 'favicon.png', 'app', 'sistema-web', 'js'].forEach((p) => copy(p));
 copy('node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'vendor/supabase.js');
 fs.writeFileSync(path.join(out, 'env.js'),
   'window.ENV = ' + JSON.stringify({ SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');

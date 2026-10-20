@@ -70,6 +70,7 @@
       throw r.error;
     }
     storeSet(LOGIN_KEY, login);
+    storeSet('gsinima.web.atividade', String(Date.now()));
     var p = await carregarPerfil();
     sb.rpc('registrar_acesso').then(function () {}, function () {});
     return p;
@@ -110,10 +111,10 @@
   function confirmarSenha() {
     return new Promise(function (resolve) {
       var fundo = document.createElement('div');
-      fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif';
+      fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Inter\',system-ui,sans-serif';
       fundo.innerHTML =
         '<form role="dialog" aria-modal="true" aria-labelledby="pa-tit" style="width:100%;max-width:360px;background:#fff;border-radius:22px;padding:22px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">' +
-        '<h2 id="pa-tit" style="margin:0;font-family:\'Bricolage Grotesque\',sans-serif;font-size:22px;color:#0A2E5C">Primeiro acesso</h2>' +
+        '<h2 id="pa-tit" style="margin:0;font-family:\'Inter\',sans-serif;font-size:22px;color:#0A2E5C">Primeiro acesso</h2>' +
         '<p style="margin:0;color:#52627A;font-size:15px">Este é o seu primeiro acesso. A senha que você digitou será a sua senha. Digite-a de novo para confirmar.</p>' +
         '<label for="pa-conf" style="font-weight:700;font-size:14px;color:#0A2E5C">Confirme a senha</label>' +
         '<input id="pa-conf" type="password" autocomplete="new-password" style="height:52px;border:1.5px solid #C7D4E2;border-radius:14px;padding:0 16px;font-size:17px">' +
@@ -593,9 +594,9 @@
   var COR = { fundo: '#EEF3F7', azul: '#0057A8', marinho: '#0A2E5C', texto: '#52627A', borda: '#C7D4E2' };
   function cartao(html) {
     var shell = document.getElementById('shell');
-    shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:' + COR.fundo + ';font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif">' +
+    shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:' + COR.fundo + ';font-family:\'Inter\',system-ui,sans-serif">' +
       '<div style="width:100%;max-width:380px;background:#fff;border-radius:22px;padding:28px 24px;box-sizing:border-box;box-shadow:0 20px 60px rgba(10,46,92,.12);display:flex;flex-direction:column;gap:14px">' +
-      '<h1 style="margin:0;font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:26px;color:' + COR.marinho + '">Sistema Ourinhos Saneamento</h1>' +
+      '<h1 style="margin:0;font-family:\'Inter\',sans-serif;font-weight:800;font-size:26px;color:' + COR.marinho + '">Sistema Ourinhos Saneamento</h1>' +
       html + '</div></div>';
     return shell;
   }
@@ -624,7 +625,7 @@
     if (!html) return telaLoginSimples(iniciar, aviso);
     var shell = document.getElementById('shell');
     shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:#DCE6EF">' +
-      '<div style="position:relative;width:420px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:640px;border-radius:28px;overflow:hidden;background:#EEF3F7;box-shadow:0 30px 80px rgba(10,46,92,.18);font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' +
+      '<div style="position:relative;width:420px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:640px;border-radius:28px;overflow:hidden;background:#EEF3F7;box-shadow:0 30px 80px rgba(10,46,92,.18);font-family:\'Inter\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' +
       html + '</div></div>';
     var u = shell.querySelector('#lg-user'), s = shell.querySelector('#lg-pass'), b = shell.querySelector('#lg-btn');
     u.value = storeGet(LOGIN_KEY) || '';
@@ -704,13 +705,87 @@
         };
       });
     }
+    esconderAvisoAmarelo();
+    vigiarInatividade(iniciar);
     iniciar();
   }
+
+  // ---------- sistema web: sessão expira após 20 minutos sem atividade ----------
+  // Conta como atividade: clique, toque, tecla ou rolagem (mexer o mouse não conta).
+  // O horário da última atividade fica no aparelho, então reabrir o navegador depois de 20 minutos também pede login.
+  var LIMITE_INATIVO = 20 * 60 * 1000;
+  var ATIVIDADE_KEY = 'gsinima.web.atividade';
+  var EVENTOS_ATIVIDADE = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+  var vigia = null;
+
+  function marcarAtividade() { storeSet(ATIVIDADE_KEY, String(Date.now())); }
+  function inativoDemais() {
+    var t = Number(storeGet(ATIVIDADE_KEY));
+    return !t || Date.now() - t > LIMITE_INATIVO;
+  }
+
+  function vigiarInatividade(iniciar) {
+    pararVigia();
+    marcarAtividade();
+    var ultimaGravacao = Date.now();
+    var aoAgir = function (e) {
+      if (inativoDemais()) {
+        // Passou do tempo: a ação não acontece e a sessão é encerrada.
+        e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+        encerrarPorInatividade(iniciar);
+        return;
+      }
+      if (Date.now() - ultimaGravacao > 5000) { ultimaGravacao = Date.now(); marcarAtividade(); }
+    };
+    EVENTOS_ATIVIDADE.forEach(function (ev) { document.addEventListener(ev, aoAgir, true); });
+    // Se a pessoa saiu da frente da tela, a sessão já se encerra sozinha (o aviso estará lá quando voltar).
+    var relogio = setInterval(function () { if (inativoDemais()) encerrarPorInatividade(iniciar); }, 30000);
+    var aoVoltar = function () { if (document.visibilityState === 'visible' && inativoDemais()) encerrarPorInatividade(iniciar); };
+    document.addEventListener('visibilitychange', aoVoltar);
+    vigia = function () {
+      EVENTOS_ATIVIDADE.forEach(function (ev) { document.removeEventListener(ev, aoAgir, true); });
+      clearInterval(relogio);
+      document.removeEventListener('visibilitychange', aoVoltar);
+    };
+  }
+  function pararVigia() { if (vigia) { vigia(); vigia = null; } }
+
+  function encerrarPorInatividade(iniciar) {
+    pararVigia();
+    sair().then(function () {
+      telaLogin(iniciar);
+      mostrarAvisoAmarelo('Tempo esgotado. Por segurança, sua sessão foi encerrada após 20 minutos sem atividade. Entre novamente para continuar.');
+    });
+  }
+
+  var avisoEl = null;
+  function mostrarAvisoAmarelo(texto) {
+    if (!avisoEl) {
+      avisoEl = document.createElement('div');
+      avisoEl.setAttribute('role', 'alert');
+      avisoEl.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 32px));box-sizing:border-box;' +
+        'background:#FEF3C7;color:#78350F;border:1.5px solid #F59E0B;border-radius:14px;padding:14px 16px;z-index:9999;' +
+        'font:500 15px/1.4 \'Inter\',system-ui,sans-serif;box-shadow:0 8px 24px rgba(10,46,92,.18);display:flex;gap:10px;align-items:flex-start';
+      document.body.appendChild(avisoEl);
+    }
+    avisoEl.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:1px">' +
+      '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M9 2h6"/></svg><span></span>';
+    avisoEl.querySelector('span').textContent = texto;
+    avisoEl.hidden = false;
+  }
+  function esconderAvisoAmarelo() { if (avisoEl) avisoEl.hidden = true; }
 
   function guardWeb(iniciar) {
     cartao('<p style="margin:0;color:' + COR.texto + '">Carregando…</p>');
     carregarPerfil().then(function (p) {
       if (!p) return telaLogin(iniciar);
+      // Sessão guardada, mas sem atividade há mais de 20 minutos: pede login de novo.
+      if (inativoDemais()) {
+        return sair().then(function () {
+          telaLogin(iniciar);
+          mostrarAvisoAmarelo('Tempo esgotado. Por segurança, sua sessão foi encerrada após 20 minutos sem atividade. Entre novamente para continuar.');
+        });
+      }
       sb.rpc('registrar_acesso').then(function () {}, function () {});
       if (!podeWeb()) return semAcesso();
       abrirWeb(iniciar);
@@ -753,10 +828,10 @@
     var fundo = document.createElement('div');
     var campoF = 'height:48px;border:1.5px solid #C7D4E2;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;width:100%;box-sizing:border-box;background:#fff';
     var rot = 'font-weight:700;font-size:14px;color:#0A2E5C';
-    fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif';
+    fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Inter\',system-ui,sans-serif';
     fundo.innerHTML =
       '<form role="dialog" aria-modal="true" aria-labelledby="cu-tit" style="width:100%;max-width:440px;background:#fff;border-radius:22px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">' +
-      '<h2 id="cu-tit" style="margin:0 0 4px;font-family:\'Bricolage Grotesque\',sans-serif;font-size:24px;color:#0A2E5C">Cadastrar usuário</h2>' +
+      '<h2 id="cu-tit" style="margin:0 0 4px;font-family:\'Inter\',sans-serif;font-size:24px;color:#0A2E5C">Cadastrar usuário</h2>' +
       '<p style="margin:0 0 6px;color:#52627A;font-size:14px">A pessoa cria a própria senha no primeiro acesso, entrando com o login abaixo e a senha que quiser.</p>' +
       '<label for="cu-nome" style="' + rot + '">Nome para visualização</label>' +
       '<input id="cu-nome" maxlength="80" autocomplete="off" placeholder="Ex.: Ana Souza" style="' + campoF + '">' +
