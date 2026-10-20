@@ -1,11 +1,13 @@
-/* Conexão do app do operador com o Supabase (sem login: qualquer pessoa lê e envia).
+/* Conexão do app e do sistema web com o Supabase.
  *
- * As telas do app continuam como estão; este arquivo:
+ * As telas continuam como estão; este arquivo:
+ *  - faz o login (login + senha) e guarda a sessão no aparelho;
+ *  - libera no app só os blocos permitidos para a conta, e o sistema web só para quem tem acesso;
  *  - carrega do banco o que já foi lançado (hoje, pendências e totais do mês) e substitui os dados de exemplo;
  *  - grava no banco cada formulário salvo;
- *  - registra como operador o nome digitado na tela de entrada.
+ *  - liga a tela "Usuários e permissões" aos perfis reais.
  *
- * Uso: DB.install(PAGES.Main.cls) antes de montar a tela do app.
+ * Uso: DB.install(PAGES.Main.cls) antes de montar o app; no sistema web, DB.guardWeb(iniciar).
  */
 (function () {
   'use strict';
@@ -16,14 +18,63 @@
     return;
   }
   var sb = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'gsinima.sessao' }
   });
 
   // ---------- utilidades ----------
-  var OP_KEY = 'gsinima.operador';
+  var LOGIN_KEY = 'gsinima.login';
   function storeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function storeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } }
-  function operador() { return (storeGet(OP_KEY) || '').trim() || 'Operador'; }
+
+  // ---------- login e perfil ----------
+  // O login (ex.: felipe.altafini) vira um e-mail interno no Supabase Auth; nenhum e-mail é enviado.
+  var DOMINIO_LOGIN = 'usuarios.gsinima.local';
+  var BLOCOS = ['eta', 'ete', 'poco', 'coleta', 'descarga'];
+  var PAPEIS = { operador: 'Operador', lab: 'Laboratório', super: 'Supervisor', admin: 'Administrador' };
+  var perfil = null;
+
+  function operador() { return perfil ? perfil.nome : 'Operador'; }
+  function papelTxt() { return perfil ? (PAPEIS[perfil.papel] || perfil.papel) : ''; }
+  function podeWeb() { return !!(perfil && perfil.permissoes && perfil.permissoes.web && perfil.permissoes.web.acesso); }
+  function blocosLiberados(p) {
+    var acc = {};
+    BLOCOS.forEach(function (k) { acc[k] = !!(p && p.permissoes && p.permissoes[k] && p.permissoes[k].on); });
+    return acc;
+  }
+
+  async function carregarPerfil() {
+    var s = await sb.auth.getSession();
+    var sessao = s.data && s.data.session;
+    if (!sessao) { perfil = null; return null; }
+    var r = await sb.from('perfis').select('*').eq('id', sessao.user.id).maybeSingle();
+    if (r.error) throw r.error;
+    perfil = r.data || null;
+    if (!perfil || !perfil.ativo) {
+      await sb.auth.signOut();
+      perfil = null;
+      throw new Error(!r.data ? 'usuário sem perfil cadastrado, fale com o administrador' : 'conta desativada, fale com o administrador');
+    }
+    return perfil;
+  }
+
+  async function entrar(login, senha) {
+    login = String(login || '').trim().toLowerCase();
+    if (!login || !senha) throw new Error('Preencha o login e a senha.');
+    var r = await sb.auth.signInWithPassword({ email: login + '@' + DOMINIO_LOGIN, password: senha });
+    if (r.error) {
+      if (/invalid/i.test(r.error.message)) throw new Error('Login ou senha incorretos.');
+      throw r.error;
+    }
+    storeSet(LOGIN_KEY, login);
+    var p = await carregarPerfil();
+    sb.rpc('registrar_acesso').then(function () {}, function () {});
+    return p;
+  }
+
+  async function sair() {
+    try { await sb.auth.signOut(); } catch (e) { /* já saiu */ }
+    perfil = null;
+  }
 
   // Números digitados no padrão brasileiro: "1.234.567" (inteiro) e "1,25" (decimal).
   function num(s) {
@@ -214,6 +265,7 @@
   }
 
   function atualizar(comp) {
+    if (!perfil) return Promise.resolve();
     return carregar(comp).then(function (patch) { comp.setState(patch); }, function (err) {
       console.error(err);
       toast('Não foi possível carregar os dados do sistema (' + erroTxt(err) + ').');
@@ -252,22 +304,37 @@
   function decorar(comp, v) {
     var st = comp.state;
     v.opName = operador();
+    v.opPapel = papelTxt();
     v.alertas = st.alertas || [];
     v.semAlertas = !!st.dbOk && v.alertas.length === 0;
 
-    // Tela de entrada: o nome digitado vira o operador dos registros.
+    // Tela de entrada: login e senha. Só entra no app depois que o Supabase confirma.
     if (v.nav && typeof v.nav.home === 'function') {
       var home = v.nav.home;
       v.nav.home = function () {
-        if (comp.state.screen === 'login') {
-          var el = document.getElementById('lg-user');
-          var nome = el ? el.value.trim() : '';
-          if (!nome) { toast('Digite seu nome para entrar.'); if (el) el.focus(); return; }
-          storeSet(OP_KEY, nome.slice(0, 80));
+        if (comp.state.screen !== 'login') return home.apply(this, arguments);
+        if (entrando) return;
+        var u = document.getElementById('lg-user'), s = document.getElementById('lg-pass');
+        var self = this, args = arguments;
+        entrando = true;
+        entrar(u ? u.value : '', s ? s.value : '').then(function (p) {
+          if (s) s.value = '';
           if (toastEl) toastEl.hidden = true;
+          comp.setState({ acc: blocosLiberados(p) });
+          home.apply(self, args);
           atualizar(comp);
-        }
-        return home.apply(this, arguments);
+        }, function (err) {
+          toast(err && err.message && !/fetch/i.test(err.message) ? err.message : 'Não foi possível entrar (' + erroTxt(err) + ').');
+        }).then(function () { entrando = false; });
+      };
+    }
+
+    // Botão "Sair" do perfil: encerra a sessão antes de voltar à tela de entrada.
+    if (v.nav && typeof v.nav.login === 'function') {
+      var paraLogin = v.nav.login;
+      v.nav.login = function () {
+        var self = this, args = arguments;
+        sair().then(function () { paraLogin.apply(self, args); });
       };
     }
 
@@ -416,22 +483,38 @@
   }
 
   // ---------- instalação na tela do app ----------
-  var atual = null;
+  var atual = null, entrando = false;
   function install(cls) {
     var montar = cls.prototype.componentDidMount;
     cls.prototype.componentDidMount = function () {
       if (montar) montar.call(this);
-      atual = this;
-      // Tira os dados de exemplo até o banco responder.
-      this.setState({
+      var comp = this;
+      atual = comp;
+      // Tira os dados de exemplo e esconde os blocos até saber quem está logado.
+      comp.setState({
+        acc: blocosLiberados(null),
         done: {}, etaDone: {}, eteDone: {}, descLast: null, dbLast: {}, dbEtaPrev: {}, alertas: [],
         colPend: [], colDone: { eta: 0, sj: 0, mor: 0, pac: 0 }, colHist: [],
         dscRun: [], dscToday: [], dscMonthN: 0, dscMonthVol: 0
       });
-      atualizar(this);
+      // Sessão guardada no aparelho: entra direto.
+      carregarPerfil().then(function (p) {
+        if (!p) return;
+        comp.setState({ acc: blocosLiberados(p), screen: comp.state.screen === 'login' ? 'home' : comp.state.screen });
+        atualizar(comp);
+      }, function (err) { toast('Entre de novo: ' + erroTxt(err) + '.'); });
       setTimeout(function () {
-        var el = document.getElementById('lg-user');
-        if (el && !el.value) el.value = storeGet(OP_KEY) || '';
+        var u = document.getElementById('lg-user'), s = document.getElementById('lg-pass');
+        if (u && !u.value) u.value = storeGet(LOGIN_KEY) || '';
+        // Enter na senha = Entrar.
+        if (s && !s.__enter) {
+          s.__enter = true;
+          s.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            var b = Array.prototype.find.call(document.querySelectorAll('#app button'), function (x) { return x.textContent.trim() === 'Entrar'; });
+            if (b) b.click();
+          });
+        }
       }, 0);
     };
     var render = cls.prototype.renderVals;
@@ -447,5 +530,153 @@
     if (document.visibilityState === 'visible' && atual && document.body.contains(document.getElementById('app'))) atualizar(atual);
   });
 
-  window.DB = { client: sb, install: install, operador: operador, toast: toast };
+  // ---------- sistema web: entrada e controle de acesso ----------
+  var COR = { fundo: '#EEF3F7', azul: '#0057A8', marinho: '#0A2E5C', texto: '#52627A', borda: '#C7D4E2' };
+  function cartao(html) {
+    var shell = document.getElementById('shell');
+    shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:' + COR.fundo + ';font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif">' +
+      '<div style="width:100%;max-width:380px;background:#fff;border-radius:22px;padding:28px 24px;box-sizing:border-box;box-shadow:0 20px 60px rgba(10,46,92,.12);display:flex;flex-direction:column;gap:14px">' +
+      '<h1 style="margin:0;font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:26px;color:' + COR.marinho + '">Sistema Ourinhos Saneamento</h1>' +
+      html + '</div></div>';
+    return shell;
+  }
+  var campo = 'height:50px;border:1.5px solid ' + COR.borda + ';border-radius:14px;padding:0 14px;font-size:16px;font-family:inherit;width:100%;box-sizing:border-box';
+  var botao = 'height:52px;border:0;border-radius:16px;background:' + COR.azul + ';color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit';
+
+  function telaLogin(iniciar, aviso) {
+    var shell = cartao(
+      '<p style="margin:0;color:' + COR.texto + '">Entre com seu login e senha.</p>' +
+      '<form id="wl-form" style="display:flex;flex-direction:column;gap:12px">' +
+      '<label for="wl-user" style="font-weight:700;font-size:14px;color:' + COR.marinho + '">Login</label>' +
+      '<input id="wl-user" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Ex.: nome.sobrenome" style="' + campo + '">' +
+      '<label for="wl-pass" style="font-weight:700;font-size:14px;color:' + COR.marinho + '">Senha</label>' +
+      '<input id="wl-pass" type="password" autocomplete="current-password" style="' + campo + '">' +
+      '<p id="wl-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
+      '<button type="submit" style="' + botao + '">Entrar</button>' +
+      '</form>' +
+      '<p style="margin:0;color:' + COR.texto + ';font-size:13px">Esqueceu a senha? Fale com o administrador do sistema.</p>');
+    var u = shell.querySelector('#wl-user'), s = shell.querySelector('#wl-pass'), msg = shell.querySelector('#wl-msg');
+    u.value = storeGet(LOGIN_KEY) || '';
+    msg.textContent = aviso || '';
+    (u.value ? s : u).focus();
+    shell.querySelector('#wl-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var b = shell.querySelector('button[type=submit]');
+      b.disabled = true; b.textContent = 'Entrando…'; msg.textContent = '';
+      entrar(u.value, s.value).then(function () {
+        if (!podeWeb()) return semAcesso();
+        abrirWeb(iniciar);
+      }, function (err) {
+        msg.textContent = err && err.message && !/fetch/i.test(err.message) ? err.message : 'Não foi possível entrar (' + erroTxt(err) + ').';
+        b.disabled = false; b.textContent = 'Entrar'; s.value = ''; s.focus();
+      });
+    });
+  }
+
+  function semAcesso() {
+    var shell = cartao(
+      '<p style="margin:0;color:' + COR.marinho + ';font-weight:700">Olá, ' + operador().replace(/[<>&"]/g, '') + '.</p>' +
+      '<p style="margin:0;color:' + COR.texto + '">Sua conta não tem acesso ao sistema web. Use o app do operador para fazer seus lançamentos.</p>' +
+      '<a href="/app/" style="' + botao + ';display:flex;align-items:center;justify-content:center;text-decoration:none">Abrir o app</a>' +
+      '<button type="button" id="wl-sair" style="' + botao + ';background:#fff;color:' + COR.marinho + ';border:1.5px solid ' + COR.borda + '">Sair</button>');
+    shell.querySelector('#wl-sair').addEventListener('click', function () { sair().then(function () { location.reload(); }); });
+  }
+
+  // Cabeçalho das telas web: nome e perfil de quem está logado; clicar oferece sair.
+  var webInstalado = false;
+  function abrirWeb(iniciar) {
+    if (!webInstalado && window.PAGES) {
+      webInstalado = true;
+      Object.keys(window.PAGES).forEach(function (k) {
+        if (k === 'Main') return;
+        var cls = window.PAGES[k].cls, render = cls.prototype.renderVals;
+        cls.prototype.renderVals = function () {
+          var v = render.call(this);
+          v.me = {
+            nome: operador(), papel: papelTxt(), ini: operador().charAt(0).toUpperCase(),
+            sair: function () { if (window.confirm('Sair da conta de ' + operador() + '?')) sair().then(function () { location.reload(); }); }
+          };
+          return v;
+        };
+      });
+    }
+    iniciar();
+  }
+
+  function guardWeb(iniciar) {
+    cartao('<p style="margin:0;color:' + COR.texto + '">Carregando…</p>');
+    carregarPerfil().then(function (p) {
+      if (!p) return telaLogin(iniciar);
+      sb.rpc('registrar_acesso').then(function () {}, function () {});
+      if (!podeWeb()) return semAcesso();
+      abrirWeb(iniciar);
+    }, function (err) { telaLogin(iniciar, 'Entre de novo: ' + erroTxt(err) + '.'); });
+  }
+
+  // ---------- tela "Usuários e permissões" ----------
+  function permCompleta(p) {
+    var x = JSON.parse(JSON.stringify(p || {}));
+    x.web = Object.assign({ acesso: false, painelVer: false, painelExp: false, imp: false, exp: false, admin: false }, x.web || {});
+    return x;
+  }
+  function instalarAdmin(cls) {
+    var montar = cls.prototype.componentDidMount;
+    cls.prototype.componentDidMount = function () {
+      if (montar) montar.call(this);
+      var comp = this;
+      var vazio = { id: '_', name: 'Carregando…', email: '', role: 'operador', last: '', active: true };
+      comp.setState({ users: [vazio], perms: { _: permCompleta(comp.preset('operador')) }, sel: '_', saved: false });
+      sb.from('perfis').select('*').order('nome').then(function (r) {
+        if (r.error) { toast('Não foi possível carregar os usuários (' + erroTxt(r.error) + ').'); return; }
+        var users = r.data.map(function (p) {
+          return { id: p.id, name: p.nome, email: p.login, role: p.papel, last: p.ultimo_acesso ? quando(p.ultimo_acesso) : 'nunca entrou', active: p.ativo };
+        });
+        if (!users.length) return;
+        var perms = {};
+        r.data.forEach(function (p) { perms[p.id] = permCompleta(p.permissoes); });
+        var sel = users.some(function (u) { return u.id === comp.state.sel; }) ? comp.state.sel : users[0].id;
+        comp.setState({ users: users, perms: perms, sel: sel, saved: false, dbUsers: r.data });
+      });
+    };
+    var render = cls.prototype.renderVals;
+    cls.prototype.renderVals = function () {
+      var comp = this, v = render.call(this);
+      var salvar = v.save;
+      v.save = function () {
+        var st = comp.state;
+        if (!st.dbUsers) return;
+        // Proteção: ninguém tira de si mesmo o acesso de administrador nem desativa a própria conta.
+        var eu = perfil && st.users.find(function (u) { return u.id === perfil.id; });
+        if (eu && (!eu.active || !st.perms[eu.id].web.admin || !st.perms[eu.id].web.acesso)) {
+          toast('Você não pode tirar o seu próprio acesso de administrador nem desativar a sua conta.');
+          return;
+        }
+        var mudou = st.users.filter(function (u) {
+          var orig = st.dbUsers.find(function (p) { return p.id === u.id; });
+          return orig && (orig.papel !== u.role || orig.ativo !== u.active || JSON.stringify(permCompleta(orig.permissoes)) !== JSON.stringify(st.perms[u.id]));
+        });
+        if (!mudou.length) { salvar.apply(this, arguments); return; }
+        Promise.all(mudou.map(function (u) {
+          return q(sb.from('perfis').update({ papel: u.role, ativo: u.active, permissoes: st.perms[u.id] }).eq('id', u.id).select('*'));
+        })).then(function (res) {
+          if (res.some(function (rows) { return !rows || !rows.length; })) throw new Error('só administradores podem alterar permissões');
+          var dbUsers = st.dbUsers.map(function (p) {
+            var nova = null;
+            res.forEach(function (rows) { if (rows[0].id === p.id) nova = rows[0]; });
+            return nova || p;
+          });
+          comp.setState({ dbUsers: dbUsers, saved: true });
+          toast('Permissões salvas.', 'ok');
+        }).catch(function (err) {
+          toast('As alterações NÃO foram salvas (' + erroTxt(err) + ').');
+        });
+      };
+      return v;
+    };
+  }
+
+  window.DB = {
+    client: sb, install: install, guardWeb: guardWeb, instalarAdmin: instalarAdmin,
+    operador: operador, toast: toast
+  };
 })();

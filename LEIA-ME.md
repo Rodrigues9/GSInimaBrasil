@@ -25,7 +25,11 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Coleta de campo e análises | `coletas` |
 | Descargas de rede | `descargas_rede` |
 
-**Sem login, por enquanto**: na entrada o operador só digita o nome, que fica registrado em cada lançamento. Qualquer pessoa com o endereço do site pode ler e enviar dados; ninguém consegue apagar. Só é possível alterar uma coleta pendente (para lançar as análises) e uma descarga em andamento (para encerrar).
+## Login e permissões
+- Cada pessoa entra com **login e senha** (Supabase Auth). O login vira o e-mail interno `<login>@usuarios.gsinima.local`; nenhum e-mail é enviado.
+- A tabela `perfis` guarda nome, login, perfil (operador, laboratório, supervisor, administrador), se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados e ações no sistema web, incluindo **Acesso ao sistema web** (sem ele, a pessoa usa só o app).
+- O banco aplica as regras: sem login não se lê nada; cada formulário só aceita lançamento de quem tem o bloco liberado; o nome de quem lançou é preenchido pelo próprio banco. Ninguém apaga registros.
+- Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas. Criar contas novas e trocar senhas ainda é feito direto no Supabase (o botão "Convidar usuário" ainda não funciona).
 
 ## Rodar no computador
 Precisa do Node.js e do arquivo `.env` (não vai para o GitHub) com:
