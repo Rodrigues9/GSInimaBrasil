@@ -4,9 +4,10 @@
 // POST { acao: "criar", login, senha }     -> { ok: true }  (cria a conta no Auth e liga ao perfil)
 // POST { acao: "redefinir", perfil_id }    -> { ok: true }  (só administrador: apaga a conta e o perfil
 //                                                             volta a aguardar o primeiro acesso)
+// POST { acao: "excluir", perfil_id }      -> { ok: true }  (só administrador: apaga a conta e o perfil)
 //
 // Roda sem login (verify_jwt desligado), por isso só cria conta para perfis ativos que ainda não têm uma;
-// "redefinir" confere o token de quem chamou.
+// "redefinir" e "excluir" conferem o token de quem chamou.
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const DOMINIO_LOGIN = "usuarios.gsinima.local";
@@ -37,6 +38,7 @@ Deno.serve(async (req) => {
   });
 
   if (dados.acao === "redefinir") return redefinir(admin, req, String(dados.perfil_id ?? ""));
+  if (dados.acao === "excluir") return excluir(admin, req, String(dados.perfil_id ?? ""));
 
   const login = String(dados.login ?? "").trim().toLowerCase();
   if (!LOGIN_OK.test(login)) return resposta({ pendente: false });
@@ -77,18 +79,50 @@ Deno.serve(async (req) => {
   return resposta({ ok: true });
 });
 
-// Redefinir senha: apaga a conta de Auth do perfil e deixa o perfil aguardando o primeiro acesso.
-// Os lançamentos antigos ficam (usuario_id deles vira vazio; o nome do operador continua gravado).
-async function redefinir(admin: SupabaseClient, req: Request, perfilId: string) {
+// Confere o token de quem chamou: devolve o id da conta se for administrador ativo, ou a resposta de erro.
+async function administradorQueChamou(admin: SupabaseClient, req: Request, oQue: string): Promise<string | Response> {
   const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   const { data: quem } = token ? await admin.auth.getUser(token) : { data: { user: null } };
-  if (!quem?.user) return resposta({ erro: "Entre de novo para redefinir senhas." }, 401);
+  if (!quem?.user) return resposta({ erro: `Entre de novo para ${oQue}.` }, 401);
 
   const { data: eu } = await admin
     .from("perfis").select("ativo, permissoes").eq("usuario_id", quem.user.id).maybeSingle();
   if (!eu || !eu.ativo || String(eu.permissoes?.web?.admin) !== "true") {
-    return resposta({ erro: "Só administradores podem redefinir senhas." }, 403);
+    return resposta({ erro: `Só administradores podem ${oQue}.` }, 403);
   }
+  return quem.user.id;
+}
+
+// Excluir conta: apaga o login (conta de Auth, se já existir) e o perfil.
+// Os lançamentos antigos ficam (usuario_id deles vira vazio; o nome do operador continua gravado).
+async function excluir(admin: SupabaseClient, req: Request, perfilId: string) {
+  const eu = await administradorQueChamou(admin, req, "excluir contas");
+  if (eu instanceof Response) return eu;
+
+  const { data: alvo } = await admin
+    .from("perfis").select("id, usuario_id").eq("id", perfilId).maybeSingle();
+  if (!alvo) return resposta({ erro: "Usuário não encontrado." }, 404);
+  if (alvo.usuario_id === eu) return resposta({ erro: "Você não pode excluir a sua própria conta." }, 400);
+
+  // Primeiro a conta de Auth (o perfil fica sem vínculo), depois o perfil.
+  // Se o segundo passo falhar, a pessoa aparece como "Aguardando 1º acesso" e dá para tentar de novo.
+  if (alvo.usuario_id) {
+    const apagada = await admin.auth.admin.deleteUser(alvo.usuario_id);
+    if (apagada.error) return resposta({ erro: "Não foi possível excluir a conta. Tente de novo." }, 500);
+  }
+  const removido = await admin.from("perfis").delete().eq("id", alvo.id).select("id");
+  if (removido.error || !removido.data?.length) {
+    return resposta({ erro: "O login foi apagado, mas o cadastro não. Tente excluir de novo." }, 500);
+  }
+  return resposta({ ok: true });
+}
+
+// Redefinir senha: apaga a conta de Auth do perfil e deixa o perfil aguardando o primeiro acesso.
+// Os lançamentos antigos ficam (usuario_id deles vira vazio; o nome do operador continua gravado).
+async function redefinir(admin: SupabaseClient, req: Request, perfilId: string) {
+  const euId = await administradorQueChamou(admin, req, "redefinir senhas");
+  if (euId instanceof Response) return euId;
+  const quem = { user: { id: euId } };
 
   const { data: alvo } = await admin
     .from("perfis").select("id, usuario_id").eq("id", perfilId).maybeSingle();

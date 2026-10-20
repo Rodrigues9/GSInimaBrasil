@@ -825,6 +825,30 @@
     });
   }
 
+  // "Excluir conta": apaga o login e o cadastro da pessoa. Os lançamentos dela continuam no sistema.
+  function excluirConta(comp, u) {
+    if (!u || u.id === '_') return;
+    if (perfil && u.id === perfil.id) { toast('Você não pode excluir a sua própria conta.'); return; }
+    var digitado = window.prompt('Excluir a conta de ' + u.name + '?\n\nO login e o cadastro serão apagados e isso não pode ser desfeito. ' +
+      'Os lançamentos já feitos por ' + u.name + ' continuam no sistema.\n\nPara confirmar, digite o login: ' + u.email);
+    if (digitado === null) return;
+    if (digitado.trim().toLowerCase() !== u.email) { toast('Login digitado não confere. A conta NÃO foi excluída.'); return; }
+    chamarPrimeiroAcesso({ acao: 'excluir', perfil_id: u.id }).then(function () {
+      // Tira só esta pessoa da tela, sem perder alterações de permissões ainda não salvas das outras.
+      var st = comp.state;
+      var users = st.users.filter(function (x) { return x.id !== u.id; });
+      var perms = Object.assign({}, st.perms); delete perms[u.id];
+      comp.setState({
+        users: users, perms: perms,
+        dbUsers: st.dbUsers.filter(function (p) { return p.id !== u.id; }),
+        sel: users.length ? users[0].id : st.sel
+      });
+      toast('Conta de ' + u.name + ' excluída.', 'ok');
+    }).catch(function (err) {
+      toast('A conta NÃO foi excluída (' + erroTxt(err) + ').');
+    });
+  }
+
   function instalarAdmin(cls) {
     var montar = cls.prototype.componentDidMount;
     cls.prototype.componentDidMount = function () {
@@ -849,6 +873,9 @@
       if (v.cur) {
         v.cur.podeRedefinir = !!(comp.state.dbUsers && sel && !sel.pendente && !(perfil && sel.id === perfil.id));
         v.cur.redefinir = function () { redefinirSenha(comp, sel); };
+        // "Excluir conta": vale também para quem ainda não fez o primeiro acesso; nunca para a própria conta.
+        v.cur.podeExcluir = !!(comp.state.dbUsers && sel && sel.id !== '_' && !(perfil && sel.id === perfil.id));
+        v.cur.excluir = function () { excluirConta(comp, sel); };
       }
       var salvar = v.save;
       v.save = function () {
