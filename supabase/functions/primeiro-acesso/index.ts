@@ -107,6 +107,9 @@ async function excluir(admin: SupabaseClient, req: Request, perfilId: string) {
   // Primeiro a conta de Auth (o perfil fica sem vínculo), depois o perfil.
   // Se o segundo passo falhar, a pessoa aparece como "Aguardando 1º acesso" e dá para tentar de novo.
   if (alvo.usuario_id) {
+    // Fotos de perfil da pessoa (pasta com o id da conta).
+    const { data: fotos } = await admin.storage.from("avatares").list(alvo.usuario_id);
+    if (fotos?.length) await admin.storage.from("avatares").remove(fotos.map((f) => `${alvo.usuario_id}/${f.name}`));
     const apagada = await admin.auth.admin.deleteUser(alvo.usuario_id);
     if (apagada.error) return resposta({ erro: "Não foi possível excluir a conta. Tente de novo." }, 500);
   }

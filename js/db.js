@@ -54,6 +54,7 @@
       perfil = null;
       throw new Error(!r.data ? 'usuário sem perfil cadastrado, fale com o administrador' : 'conta desativada, fale com o administrador');
     }
+    atualizarFotoUrl().then(function () {}, function () {});
     return perfil;
   }
 
@@ -134,6 +135,217 @@
   async function sair() {
     try { await sb.auth.signOut(); } catch (e) { /* já saiu */ }
     perfil = null;
+    fotoUrl = null; fotoDe = null;
+  }
+
+  // ---------- foto de perfil e iniciais ----------
+  // Iniciais do login: "felipe.altafini" -> "FA".
+  function iniciais() {
+    var partes = String((perfil && perfil.login) || operador()).split(/[._\s-]+/).filter(Boolean);
+    return ((partes[0] || '?').charAt(0) + (partes.length > 1 ? partes[partes.length - 1].charAt(0) : '')).toUpperCase();
+  }
+  function primeiroNome() { return operador().trim().split(/\s+/)[0]; }
+
+  // A foto fica numa pasta privada do Storage; para mostrar, gera um link temporário (24 h).
+  var fotoUrl = null, fotoDe = null, telasParaAtualizar = [];
+  // Telas abertas que mostram a foto (as últimas montadas); redesenhadas quando a foto muda.
+  function aoMudarFoto(comp) {
+    if (telasParaAtualizar.indexOf(comp) >= 0) return;
+    telasParaAtualizar.push(comp);
+    if (telasParaAtualizar.length > 4) telasParaAtualizar.shift();
+  }
+  function redesenhar() { telasParaAtualizar.forEach(function (c) { c.forceUpdate(); }); }
+  function atualizarFotoUrl() {
+    var caminho = perfil && perfil.foto;
+    if (!caminho) { if (fotoUrl) { fotoUrl = null; fotoDe = null; redesenhar(); } return Promise.resolve(); }
+    if (caminho === fotoDe && fotoUrl) return Promise.resolve();
+    return sb.storage.from('avatares').createSignedUrl(caminho, 86400).then(function (r) {
+      fotoUrl = r.data ? r.data.signedUrl : null;
+      fotoDe = caminho;
+      redesenhar();
+    });
+  }
+
+  // Recorta no centro em quadrado de 320 px e gera JPEG (fica leve, uns 30 KB).
+  function prepararFoto(arquivo) {
+    return new Promise(function (resolve, reject) {
+      if (!/^image\/(jpeg|png|webp)$/.test(arquivo.type)) return reject(new Error('use uma imagem JPG, PNG ou WebP'));
+      var img = new Image(), url = URL.createObjectURL(arquivo);
+      img.onload = function () {
+        var lado = Math.min(img.naturalWidth, img.naturalHeight), T = 320;
+        var c = document.createElement('canvas'); c.width = T; c.height = T;
+        c.getContext('2d').drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, T, T);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? resolve(b) : reject(new Error('não foi possível ler a imagem')); }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('não foi possível ler a imagem')); };
+      img.src = url;
+    });
+  }
+
+  var enviandoFoto = false;
+  function trocarFoto() {
+    if (enviandoFoto || !perfil) return;
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.addEventListener('change', function () {
+      var arq = input.files && input.files[0];
+      if (!arq) return;
+      enviandoFoto = true; redesenhar();
+      var antigo = perfil.foto;
+      var caminho;
+      sb.auth.getUser().then(function (u) {
+        if (!u.data || !u.data.user) throw new Error('entre de novo');
+        caminho = u.data.user.id + '/' + Date.now() + '.jpg';
+        return prepararFoto(arq);
+      }).then(function (blob) {
+        return sb.storage.from('avatares').upload(caminho, blob, { contentType: 'image/jpeg', upsert: false });
+      }).then(function (r) {
+        if (r.error) throw r.error;
+        return sb.rpc('definir_minha_foto', { caminho: caminho });
+      }).then(function (r) {
+        if (r.error) throw r.error;
+        perfil.foto = caminho;
+        if (antigo) sb.storage.from('avatares').remove([antigo]).then(function () {}, function () {});
+        return atualizarFotoUrl();
+      }).then(function () {
+        toast('Foto atualizada.', 'ok');
+      }).catch(function (err) {
+        toast('A foto NÃO foi trocada (' + erroTxt(err) + ').');
+      }).then(function () { enviandoFoto = false; redesenhar(); });
+    });
+    input.click();
+  }
+
+  function fotoPadrao() {
+    if (!perfil || !perfil.foto || enviandoFoto) return;
+    var antigo = perfil.foto;
+    sb.rpc('definir_minha_foto', { caminho: null }).then(function (r) {
+      if (r.error) throw r.error;
+      perfil.foto = null;
+      sb.storage.from('avatares').remove([antigo]).then(function () {}, function () {});
+      return atualizarFotoUrl();
+    }).then(function () {
+      toast('Pronto: no lugar da foto aparecem as suas iniciais (' + iniciais() + ').', 'ok');
+    }).catch(function (err) {
+      toast('Não foi possível tirar a foto (' + erroTxt(err) + ').');
+    });
+  }
+
+  // Valores de foto e iniciais para as telas (app: prefixo "op"; web: dentro de "me").
+  function valoresFoto() {
+    var tem = !!(perfil && perfil.foto && fotoUrl);
+    return {
+      ini: iniciais(), foto: tem ? fotoUrl : '', temFoto: tem, semFoto: !tem,
+      trocarTxt: enviandoFoto ? 'Enviando foto…' : tem ? 'Alterar foto' : 'Escolher foto',
+      padraoOp: tem ? 1 : 0.45
+    };
+  }
+
+  // ---------- alterar a própria senha (sistema web) ----------
+  var trocandoSenha = false;
+  function alterarSenha() {
+    if (trocandoSenha || !perfil) return;
+    var atual = document.getElementById('pf-atual'), nova = document.getElementById('pf-nova'), conf = document.getElementById('pf-conf');
+    if (!atual || !nova || !conf) return;
+    if (!atual.value) { toast('Digite a sua senha atual.'); atual.focus(); return; }
+    if (nova.value.length < 8) { toast('A nova senha precisa ter pelo menos 8 caracteres.'); nova.focus(); return; }
+    if (nova.value.length > 72) { toast('A nova senha pode ter no máximo 72 caracteres.'); nova.focus(); return; }
+    if (nova.value !== conf.value) { toast('A confirmação não confere com a nova senha.'); conf.focus(); return; }
+    if (nova.value === atual.value) { toast('A nova senha precisa ser diferente da atual.'); nova.focus(); return; }
+    trocandoSenha = true; redesenhar();
+    // Confere a senha atual entrando de novo; só então troca.
+    sb.auth.signInWithPassword({ email: perfil.login + '@' + DOMINIO_LOGIN, password: atual.value }).then(function (r) {
+      if (r.error) throw new Error(/invalid/i.test(r.error.message) ? 'a senha atual não confere' : r.error.message);
+      return sb.auth.updateUser({ password: nova.value });
+    }).then(function (r) {
+      if (r.error) throw new Error(/different|same/i.test(r.error.message) ? 'a nova senha precisa ser diferente da atual' :
+        /weak|short|characters/i.test(r.error.message) ? 'a nova senha é fraca demais' : r.error.message);
+      atual.value = ''; nova.value = ''; conf.value = '';
+      toast('Senha alterada. Use a nova senha no próximo acesso.', 'ok');
+    }).catch(function (err) {
+      toast('A senha NÃO foi alterada (' + (err && err.message ? err.message : erroTxt(err)) + ').');
+    }).then(function () { trocandoSenha = false; redesenhar(); });
+  }
+
+  // ---------- sair com confirmação no centro da tela ----------
+  function confirmarSaida() {
+    if (document.getElementById('cs-fundo')) return;
+    var fundo = document.createElement('div');
+    fundo.id = 'cs-fundo';
+    fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Inter\',system-ui,sans-serif';
+    fundo.innerHTML =
+      '<div role="alertdialog" aria-modal="true" aria-labelledby="cs-tit" aria-describedby="cs-txt" style="width:100%;max-width:380px;background:#fff;border-radius:22px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;text-align:center">' +
+      '<span style="width:52px;height:52px;border-radius:50%;background:#FDECEA;color:#B42318;display:flex;align-items:center;justify-content:center;align-self:center">' +
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></svg></span>' +
+      '<h2 id="cs-tit" style="margin:0;font-size:21px;font-weight:800;color:#0A2E5C">Sair da conta?</h2>' +
+      '<p id="cs-txt" style="margin:0;color:#52627A;font-size:15px">Você vai precisar entrar de novo com login e senha.</p>' +
+      '<div style="display:flex;gap:10px;margin-top:6px">' +
+      '<button type="button" id="cs-nao" style="flex:1;height:46px;border:1.5px solid #C7D4E2;border-radius:12px;background:#fff;color:#0A2E5C;font:700 15px \'Inter\',sans-serif;cursor:pointer">Cancelar</button>' +
+      '<button type="button" id="cs-sim" style="flex:1;height:46px;border:0;border-radius:12px;background:#B42318;color:#fff;font:700 15px \'Inter\',sans-serif;cursor:pointer">Sair</button>' +
+      '</div></div>';
+    document.body.appendChild(fundo);
+    var fechar = function () { fundo.remove(); };
+    fundo.querySelector('#cs-nao').addEventListener('click', fechar);
+    fundo.addEventListener('click', function (e) { if (e.target === fundo) fechar(); });
+    fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+    fundo.querySelector('#cs-sim').addEventListener('click', function () {
+      pararVigia();
+      sair().then(function () { location.reload(); });
+    });
+    fundo.querySelector('#cs-nao').focus();
+  }
+
+  // ---------- submenu da conta (canto superior direito do sistema web) ----------
+  var ICONES = {
+    perfil: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    config: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    sair: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>'
+  };
+  function fecharMenuConta() { var m = document.getElementById('menu-conta'); if (m) m.remove(); }
+  function abrirMenuConta(ev) {
+    if (document.getElementById('menu-conta')) { fecharMenuConta(); return; }
+    var botao = ev && ev.currentTarget ? ev.currentTarget : null;
+    var r = botao ? botao.getBoundingClientRect() : { bottom: 60, right: window.innerWidth - 16 };
+    var menu = document.createElement('div');
+    menu.id = 'menu-conta';
+    menu.setAttribute('role', 'menu');
+    menu.style.cssText = 'position:fixed;top:' + Math.round(r.bottom + 6) + 'px;right:' + Math.max(8, Math.round(window.innerWidth - r.right)) + 'px;' +
+      'min-width:220px;background:#fff;border:1px solid #DDE5EE;border-radius:14px;box-shadow:0 14px 40px rgba(10,46,92,.16);padding:6px;z-index:9990;font-family:\'Inter\',system-ui,sans-serif';
+    var item = function (id, rotulo, icone, cor) {
+      return '<button type="button" role="menuitem" data-acao="' + id + '" style="width:100%;display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:' + cor + ';font:600 15px \'Inter\',sans-serif;cursor:pointer;text-align:left">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icone + '</svg>' + rotulo + '</button>';
+    };
+    menu.innerHTML = item('perfil', 'Perfil', ICONES.perfil, '#0A2E5C') + item('config', 'Configurações', ICONES.config, '#0A2E5C') +
+      '<div style="height:1px;background:#DDE5EE;margin:4px 6px"></div>' + item('sair', 'Sair', ICONES.sair, '#B42318');
+    document.body.appendChild(menu);
+    Array.prototype.forEach.call(menu.querySelectorAll('button'), function (b) {
+      b.addEventListener('mouseenter', function () { b.style.background = '#F2F6FA'; });
+      b.addEventListener('mouseleave', function () { b.style.background = 'transparent'; });
+      b.addEventListener('click', function () {
+        var acao = b.getAttribute('data-acao');
+        fecharMenuConta();
+        if (acao === 'perfil' && window.DCRoute) window.DCRoute('WebPerfil');
+        else if (acao === 'config' && window.DCRoute) window.DCRoute('WebConfig');
+        else if (acao === 'sair') confirmarSaida();
+      });
+    });
+    menu.querySelector('button').focus();
+    // Fecha ao clicar fora, apertar Esc ou rolar a página.
+    setTimeout(function () {
+      var fora = function (e) { if (!menu.contains(e.target)) { fecharMenuConta(); limpar(); } };
+      var tecla = function (e) { if (e.key === 'Escape') { fecharMenuConta(); limpar(); if (botao) botao.focus(); } };
+      var limpar = function () {
+        document.removeEventListener('pointerdown', fora, true);
+        document.removeEventListener('keydown', tecla, true);
+        window.removeEventListener('scroll', rolar, true);
+      };
+      var rolar = function () { fecharMenuConta(); limpar(); };
+      document.addEventListener('pointerdown', fora, true);
+      document.addEventListener('keydown', tecla, true);
+      window.addEventListener('scroll', rolar, true);
+    }, 0);
   }
 
   // Números digitados no padrão brasileiro: "1.234.567" (inteiro) e "1,25" (decimal).
@@ -365,6 +577,12 @@
     var st = comp.state;
     v.opName = operador();
     v.opPapel = papelTxt();
+    v.opPrimeiro = primeiroNome();
+    aoMudarFoto(comp);
+    var vf = valoresFoto();
+    v.opIni = vf.ini; v.opFoto = vf.foto; v.opTemFoto = vf.temFoto; v.opSemFoto = vf.semFoto;
+    v.opTrocarTxt = vf.trocarTxt; v.opPadraoOp = vf.padraoOp;
+    v.opTrocarFoto = trocarFoto; v.opFotoPadrao = fotoPadrao;
     v.alertas = st.alertas || [];
     v.semAlertas = !!st.dbOk && v.alertas.length === 0;
 
@@ -697,10 +915,13 @@
         var cls = window.PAGES[k].cls, render = cls.prototype.renderVals;
         cls.prototype.renderVals = function () {
           var v = render.call(this);
-          v.me = {
-            nome: operador(), papel: papelTxt(), ini: operador().charAt(0).toUpperCase(),
-            sair: function () { if (window.confirm('Sair da conta de ' + operador() + '?')) sair().then(function () { location.reload(); }); }
-          };
+          aoMudarFoto(this);
+          v.me = Object.assign(valoresFoto(), {
+            nome: operador(), papel: papelTxt(), login: perfil ? perfil.login : '',
+            menu: abrirMenuConta, sair: confirmarSaida,
+            trocarFoto: trocarFoto, fotoPadrao: fotoPadrao,
+            alterarSenha: alterarSenha, trocandoSenha: trocandoSenha, senhaTxt: trocandoSenha ? 'Alterando…' : 'Alterar senha'
+          });
           return v;
         };
       });
