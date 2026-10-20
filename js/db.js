@@ -46,7 +46,7 @@
     var s = await sb.auth.getSession();
     var sessao = s.data && s.data.session;
     if (!sessao) { perfil = null; return null; }
-    var r = await sb.from('perfis').select('*').eq('id', sessao.user.id).maybeSingle();
+    var r = await sb.from('perfis').select('*').eq('usuario_id', sessao.user.id).maybeSingle();
     if (r.error) throw r.error;
     perfil = r.data || null;
     if (!perfil || !perfil.ativo) {
@@ -62,13 +62,72 @@
     if (!login || !senha) throw new Error('Preencha o login e a senha.');
     var r = await sb.auth.signInWithPassword({ email: login + '@' + DOMINIO_LOGIN, password: senha });
     if (r.error) {
-      if (/invalid/i.test(r.error.message)) throw new Error('Login ou senha incorretos.');
+      if (/invalid/i.test(r.error.message)) {
+        var e = new Error('Login ou senha incorretos.');
+        e.credenciais = true;
+        throw e;
+      }
       throw r.error;
     }
     storeSet(LOGIN_KEY, login);
     var p = await carregarPerfil();
     sb.rpc('registrar_acesso').then(function () {}, function () {});
     return p;
+  }
+
+  // Primeiro acesso: login cadastrado pelo administrador e ainda sem senha.
+  // A pessoa digita o login e a senha que quer; confirmamos a senha e a conta é criada na hora.
+  async function chamarPrimeiroAcesso(corpo) {
+    var r = await sb.functions.invoke('primeiro-acesso', { body: corpo });
+    if (r.error) {
+      var msg = 'não foi possível falar com o servidor';
+      try { var j = await r.error.context.json(); if (j && j.erro) msg = j.erro; } catch (e) { /* sem corpo */ }
+      throw new Error(msg);
+    }
+    return r.data || {};
+  }
+
+  async function entrarOuPrimeiroAcesso(login, senha) {
+    try {
+      return await entrar(login, senha);
+    } catch (err) {
+      if (!err.credenciais) throw err;
+      login = String(login || '').trim().toLowerCase();
+      var v = await chamarPrimeiroAcesso({ acao: 'verificar', login: login }).catch(function () { return {}; });
+      if (!v.pendente) throw err;
+      if (String(senha).length < 8) throw new Error('Primeiro acesso: escolha uma senha com pelo menos 8 caracteres.');
+      var conf = await confirmarSenha();
+      if (conf === null) throw new Error('Primeiro acesso cancelado. Sua senha ainda não foi criada.');
+      if (conf !== senha) throw new Error('As senhas não conferem. Digite de novo a senha que você quer usar.');
+      await chamarPrimeiroAcesso({ acao: 'criar', login: login, senha: senha });
+      var p = await entrar(login, senha);
+      toast('Senha criada. Bem-vindo(a), ' + p.nome + '!', 'ok');
+      return p;
+    }
+  }
+
+  // Janela para confirmar a senha no primeiro acesso (fica fora das telas do app).
+  function confirmarSenha() {
+    return new Promise(function (resolve) {
+      var fundo = document.createElement('div');
+      fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif';
+      fundo.innerHTML =
+        '<form role="dialog" aria-modal="true" aria-labelledby="pa-tit" style="width:100%;max-width:360px;background:#fff;border-radius:22px;padding:22px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">' +
+        '<h2 id="pa-tit" style="margin:0;font-family:\'Bricolage Grotesque\',sans-serif;font-size:22px;color:#0A2E5C">Primeiro acesso</h2>' +
+        '<p style="margin:0;color:#52627A;font-size:15px">Este é o seu primeiro acesso. A senha que você digitou será a sua senha. Digite-a de novo para confirmar.</p>' +
+        '<label for="pa-conf" style="font-weight:700;font-size:14px;color:#0A2E5C">Confirme a senha</label>' +
+        '<input id="pa-conf" type="password" autocomplete="new-password" style="height:52px;border:1.5px solid #C7D4E2;border-radius:14px;padding:0 16px;font-size:17px">' +
+        '<button type="submit" style="height:52px;border:0;border-radius:16px;background:#0057A8;color:#fff;font-size:16px;font-weight:700;cursor:pointer">Criar senha e entrar</button>' +
+        '<button type="button" id="pa-cancel" style="height:46px;border:1.5px solid #C7D4E2;border-radius:14px;background:#fff;color:#0A2E5C;font-size:15px;font-weight:700;cursor:pointer">Cancelar</button>' +
+        '</form>';
+      document.body.appendChild(fundo);
+      var campoConf = fundo.querySelector('#pa-conf');
+      campoConf.focus();
+      var fim = function (v) { fundo.remove(); resolve(v); };
+      fundo.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); e.stopPropagation(); fim(campoConf.value); });
+      fundo.querySelector('#pa-cancel').addEventListener('click', function () { fim(null); });
+      fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fim(null); });
+    });
   }
 
   async function sair() {
@@ -138,7 +197,7 @@
     toastEl.textContent = msg;
     toastEl.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.hidden = true; }, err ? 7000 : 3000);
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, err ? 7000 : Math.max(3000, msg.length * 70));
   }
   function erroTxt(err) {
     var m = (err && (err.message || err.details)) || String(err || '');
@@ -317,7 +376,7 @@
         var u = document.getElementById('lg-user'), s = document.getElementById('lg-pass');
         var self = this, args = arguments;
         entrando = true;
-        entrar(u ? u.value : '', s ? s.value : '').then(function (p) {
+        entrarOuPrimeiroAcesso(u ? u.value : '', s ? s.value : '').then(function (p) {
           if (s) s.value = '';
           if (toastEl) toastEl.hidden = true;
           comp.setState({ acc: blocosLiberados(p) });
@@ -543,7 +602,52 @@
   var campo = 'height:50px;border:1.5px solid ' + COR.borda + ';border-radius:14px;padding:0 14px;font-size:16px;font-family:inherit;width:100%;box-sizing:border-box';
   var botao = 'height:52px;border:0;border-radius:16px;background:' + COR.azul + ';color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit';
 
+  // Painel de entrada do sistema web: o mesmo do app (logo, campos e ilustração), tirado do próprio template do app.
+  function painelDoApp() {
+    var tpl = window.PAGES && window.PAGES.Main && window.PAGES.Main.tpl;
+    if (!tpl) return null;
+    var a = tpl.indexOf('<!-- ============ LOGIN ============ -->');
+    var b = tpl.indexOf('<!-- ============ HOME', a);
+    if (a < 0 || b < 0) return null;
+    var html = tpl.slice(a, b)
+      .replace(/<sc-if value="\{\{ s\.login \}\}"[^>]*>/, '')
+      .replace(/<\/sc-if>\s*$/, '')
+      .replace('onClick="{{ nav.home }}"', 'id="lg-btn"')
+      .replace('Operação em campo', 'Sistema web')
+      .replace('Leituras, análises e estoque de cada unidade, num só lugar.', 'Painel, lançamentos e permissões da operação.');
+    if (/\{\{/.test(html) || html.indexOf('lg-pass') < 0) return null;
+    return html;
+  }
+
   function telaLogin(iniciar, aviso) {
+    var html = painelDoApp();
+    if (!html) return telaLoginSimples(iniciar, aviso);
+    var shell = document.getElementById('shell');
+    shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:#DCE6EF">' +
+      '<div style="position:relative;width:420px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:640px;border-radius:28px;overflow:hidden;background:#EEF3F7;box-shadow:0 30px 80px rgba(10,46,92,.18);font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' +
+      html + '</div></div>';
+    var u = shell.querySelector('#lg-user'), s = shell.querySelector('#lg-pass'), b = shell.querySelector('#lg-btn');
+    u.value = storeGet(LOGIN_KEY) || '';
+    if (aviso) toast(aviso);
+    (u.value ? s : u).focus();
+    var ir = function () {
+      if (b.disabled) return;
+      b.disabled = true; b.textContent = 'Entrando…';
+      entrarOuPrimeiroAcesso(u.value, s.value).then(function () {
+        if (toastEl) toastEl.hidden = true;
+        if (!podeWeb()) return semAcesso();
+        abrirWeb(iniciar);
+      }, function (err) {
+        toast(err && err.message && !/fetch/i.test(err.message) ? err.message : 'Não foi possível entrar (' + erroTxt(err) + ').');
+        b.disabled = false; b.textContent = 'Entrar'; s.value = ''; s.focus();
+      });
+    };
+    b.addEventListener('click', ir);
+    s.addEventListener('keydown', function (e) { if (e.key === 'Enter') ir(); });
+  }
+
+  // Reserva, caso o template do app não esteja disponível.
+  function telaLoginSimples(iniciar, aviso) {
     var shell = cartao(
       '<p style="margin:0;color:' + COR.texto + '">Entre com seu login e senha.</p>' +
       '<form id="wl-form" style="display:flex;flex-direction:column;gap:12px">' +
@@ -563,7 +667,7 @@
       e.preventDefault();
       var b = shell.querySelector('button[type=submit]');
       b.disabled = true; b.textContent = 'Entrando…'; msg.textContent = '';
-      entrar(u.value, s.value).then(function () {
+      entrarOuPrimeiroAcesso(u.value, s.value).then(function () {
         if (!podeWeb()) return semAcesso();
         abrirWeb(iniciar);
       }, function (err) {
@@ -619,6 +723,90 @@
     x.web = Object.assign({ acesso: false, painelVer: false, painelExp: false, imp: false, exp: false, admin: false }, x.web || {});
     return x;
   }
+  function carregarUsuarios(comp, selecionar) {
+    return sb.from('perfis').select('*').order('nome').then(function (r) {
+      if (r.error) { toast('Não foi possível carregar os usuários (' + erroTxt(r.error) + ').'); return; }
+      var users = r.data.map(function (p) {
+        return {
+          id: p.id, name: p.nome, email: p.login, role: p.papel, active: p.ativo, pendente: !p.usuario_id,
+          last: !p.usuario_id ? 'aguardando o primeiro acesso' : p.ultimo_acesso ? 'último acesso ' + quando(p.ultimo_acesso) : 'nunca entrou'
+        };
+      });
+      if (!users.length) return;
+      var perms = {};
+      r.data.forEach(function (p) { perms[p.id] = permCompleta(p.permissoes); });
+      var quer = selecionar || comp.state.sel;
+      var sel = users.some(function (u) { return u.id === quer; }) ? quer : users[0].id;
+      comp.setState({ users: users, perms: perms, sel: sel, saved: false, dbUsers: r.data });
+    });
+  }
+
+  // "Cadastrar usuário": nome, login e cargo; sem senha (a pessoa cria no primeiro acesso).
+  var CARGOS = [
+    ['operador', 'Operador', 'Lança em campo'],
+    ['lab', 'Laboratório', 'ETAs e calibrações'],
+    ['super', 'Supervisor', 'Corrige e exporta'],
+    ['admin', 'Administrador', 'Acesso total']
+  ];
+  function formCadastro(comp) {
+    if (!comp.state.dbUsers) { toast('Aguarde a lista de usuários carregar.'); return; }
+    var fundo = document.createElement('div');
+    var campoF = 'height:48px;border:1.5px solid #C7D4E2;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;width:100%;box-sizing:border-box;background:#fff';
+    var rot = 'font-weight:700;font-size:14px;color:#0A2E5C';
+    fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Atkinson Hyperlegible\',system-ui,sans-serif';
+    fundo.innerHTML =
+      '<form role="dialog" aria-modal="true" aria-labelledby="cu-tit" style="width:100%;max-width:440px;background:#fff;border-radius:22px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">' +
+      '<h2 id="cu-tit" style="margin:0 0 4px;font-family:\'Bricolage Grotesque\',sans-serif;font-size:24px;color:#0A2E5C">Cadastrar usuário</h2>' +
+      '<p style="margin:0 0 6px;color:#52627A;font-size:14px">A pessoa cria a própria senha no primeiro acesso, entrando com o login abaixo e a senha que quiser.</p>' +
+      '<label for="cu-nome" style="' + rot + '">Nome para visualização</label>' +
+      '<input id="cu-nome" maxlength="80" autocomplete="off" placeholder="Ex.: Ana Souza" style="' + campoF + '">' +
+      '<label for="cu-login" style="' + rot + '">Login</label>' +
+      '<input id="cu-login" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ex.: ana.souza" style="' + campoF + '">' +
+      '<span style="font-size:13px;color:#52627A;margin-top:-4px">Letras minúsculas, números, ponto, hífen ou sublinhado (3 a 40).</span>' +
+      '<label for="cu-cargo" style="' + rot + '">Cargo</label>' +
+      '<select id="cu-cargo" style="' + campoF + '">' +
+      CARGOS.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + ' — ' + c[2] + '</option>'; }).join('') +
+      '</select>' +
+      '<span style="font-size:13px;color:#52627A;margin-top:-4px">O cargo preenche as permissões; depois você pode ajustá-las na tela.</span>' +
+      '<p id="cu-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">' +
+      '<button type="button" id="cu-cancel" style="height:46px;padding:0 18px;border:1.5px solid #C7D4E2;border-radius:12px;background:#fff;color:#0A2E5C;font-size:15px;font-weight:700;cursor:pointer">Cancelar</button>' +
+      '<button type="submit" style="height:46px;padding:0 18px;border:0;border-radius:12px;background:#0057A8;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Cadastrar</button>' +
+      '</div></form>';
+    document.body.appendChild(fundo);
+    var nome = fundo.querySelector('#cu-nome'), login = fundo.querySelector('#cu-login'), cargo = fundo.querySelector('#cu-cargo'), msg = fundo.querySelector('#cu-msg');
+    nome.focus();
+    // Sugere o login a partir do nome (ex.: "Ana Souza" -> "ana.souza") enquanto ninguém mexeu no campo.
+    var loginMexido = false;
+    login.addEventListener('input', function () { loginMexido = true; });
+    nome.addEventListener('input', function () {
+      if (loginMexido) return;
+      login.value = nome.value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+        .replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 40);
+    });
+    var fechar = function () { fundo.remove(); };
+    fundo.querySelector('#cu-cancel').addEventListener('click', fechar);
+    fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+    fundo.querySelector('form').addEventListener('submit', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var n = nome.value.trim(), l = login.value.trim().toLowerCase(), c = cargo.value;
+      if (!n) { msg.textContent = 'Informe o nome.'; nome.focus(); return; }
+      if (!/^[a-z0-9._-]{3,40}$/.test(l)) { msg.textContent = 'Login inválido: use 3 a 40 letras minúsculas, números, ponto, hífen ou sublinhado.'; login.focus(); return; }
+      if (comp.state.dbUsers.some(function (p) { return p.login === l; })) { msg.textContent = 'Esse login já existe.'; login.focus(); return; }
+      var b = fundo.querySelector('button[type=submit]');
+      b.disabled = true; b.textContent = 'Cadastrando…'; msg.textContent = '';
+      q(sb.from('perfis').insert({ login: l, nome: n, papel: c, permissoes: permCompleta(comp.preset(c)) }).select('id')).then(function (rows) {
+        fechar();
+        toast('Usuário cadastrado. No primeiro acesso, ' + n + ' entra com o login "' + l + '" e a senha que quiser.', 'ok');
+        return carregarUsuarios(comp, rows && rows[0] && rows[0].id);
+      }).catch(function (err) {
+        b.disabled = false; b.textContent = 'Cadastrar';
+        msg.textContent = /duplicate|23505/.test(String(err && (err.code || err.message))) ? 'Esse login já existe.' :
+          /row-level security/i.test(String(err && err.message)) ? 'Só administradores podem cadastrar usuários.' : 'Não foi possível cadastrar (' + erroTxt(err) + ').';
+      });
+    });
+  }
+
   function instalarAdmin(cls) {
     var montar = cls.prototype.componentDidMount;
     cls.prototype.componentDidMount = function () {
@@ -626,21 +814,17 @@
       var comp = this;
       var vazio = { id: '_', name: 'Carregando…', email: '', role: 'operador', last: '', active: true };
       comp.setState({ users: [vazio], perms: { _: permCompleta(comp.preset('operador')) }, sel: '_', saved: false });
-      sb.from('perfis').select('*').order('nome').then(function (r) {
-        if (r.error) { toast('Não foi possível carregar os usuários (' + erroTxt(r.error) + ').'); return; }
-        var users = r.data.map(function (p) {
-          return { id: p.id, name: p.nome, email: p.login, role: p.papel, last: p.ultimo_acesso ? quando(p.ultimo_acesso) : 'nunca entrou', active: p.ativo };
-        });
-        if (!users.length) return;
-        var perms = {};
-        r.data.forEach(function (p) { perms[p.id] = permCompleta(p.permissoes); });
-        var sel = users.some(function (u) { return u.id === comp.state.sel; }) ? comp.state.sel : users[0].id;
-        comp.setState({ users: users, perms: perms, sel: sel, saved: false, dbUsers: r.data });
-      });
+      carregarUsuarios(comp);
     };
     var render = cls.prototype.renderVals;
     cls.prototype.renderVals = function () {
       var comp = this, v = render.call(this);
+      // Quem foi cadastrado e ainda não criou a senha aparece como "Aguardando 1º acesso".
+      (v.users || []).forEach(function (vu, i) {
+        var u = comp.state.users[i];
+        if (u && u.pendente && u.active) { vu.status = 'Aguardando 1º acesso'; vu.stBg = '#FDF0DC'; vu.stFg = '#8A3C06'; }
+      });
+      v.cadastrar = function () { formCadastro(comp); };
       var salvar = v.save;
       v.save = function () {
         var st = comp.state;
