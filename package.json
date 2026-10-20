@@ -1,0 +1,14 @@
+{
+  "name": "gsinima-ourinhos-saneamento",
+  "private": true,
+  "version": "1.0.0",
+  "description": "App do operador e sistema web da Ourinhos Saneamento",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/build.js && node scripts/serve.js"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0"
+  }
+}
