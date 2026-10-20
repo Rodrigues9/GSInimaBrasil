@@ -545,27 +545,103 @@
   }
 
   // ---------- gravação dos formulários ----------
-  // Envolve um botão de salvar: roda a lógica original do app (validação e tela de confirmação)
-  // e, se ela aceitou o envio, grava no banco e recarrega os dados.
-  function aoSalvar(comp, obj, key, aceito, gravar, antes, depois) {
+  // Envolve um botão de salvar: roda a lógica original do app (validação e montagem do resumo).
+  // Se ela aceitou, em vez da tela de resumo aparece uma janela de confirmação com os dados;
+  // ao confirmar, grava no banco e volta para a lista de onde a pessoa veio.
+  // opcoes: { validar(st) -> mensagem de erro ou nada, limpar: campos zerados depois de enviar }
+  function aoSalvar(comp, obj, key, aceito, gravar, antes, depois, opcoes) {
     if (!obj || typeof obj[key] !== 'function') return;
     var orig = obj[key];
+    opcoes = opcoes || {};
     obj[key] = function () {
       var st = comp.state;
+      if (opcoes.validar) {
+        var problema = opcoes.validar(st);
+        if (problema) { toast(problema); return; }
+      }
       var extra = antes ? antes(st) : null;
       orig.apply(this, arguments);
       if (comp.state === st || !aceito(comp.state, st)) return;
       if (depois) depois(st, extra);
-      Promise.resolve().then(function () { return gravar(st, extra); }).then(function () {
-        return atualizar(comp);
-      }, function (err) {
-        console.error(err);
-        toast('Atenção: o registro NÃO foi salvo no sistema (' + erroTxt(err) + '). Tente de novo.');
-        return atualizar(comp);
+      var feito = comp.state;
+      var resumo = feito.last || {};
+      var enviar = function () {
+        Promise.resolve().then(function () { return gravar(st, extra); }).then(function () {
+          if (feito.screen === 'ok' && resumo.title) toast(resumo.title + '.', 'ok');
+          return atualizar(comp);
+        }, function (err) {
+          console.error(err);
+          toast('Atenção: o registro NÃO foi salvo no sistema (' + erroTxt(err) + '). Tente de novo.');
+          return atualizar(comp);
+        });
+      };
+      // Sem tela de resumo (ex.: "Salvar e terminar depois"): grava direto.
+      if (feito.screen !== 'ok') { enviar(); return; }
+      // Desfaz a ida para a tela de resumo: o formulário continua na tela, com os dados, atrás da janela.
+      comp.state = st;
+      comp.forceUpdate();
+      confirmarEnvio(resumo).then(function (ok) {
+        if (!ok) return;
+        comp.state = Object.assign({}, feito, destinoApos(feito.okCtx), opcoes.limpar || {});
+        comp.forceUpdate();
+        enviar();
       });
     };
   }
   var foiParaConfirmacao = function (novo) { return novo.screen === 'ok'; };
+
+  // Depois de confirmar, volta para a lista de onde a pessoa veio (e não para o próximo da fila).
+  function destinoApos(ctx) {
+    if (ctx === 'etamac') return { screen: 'eta', block: 'eta', etaMode: 'mac' };
+    if (ctx === 'coleta') return { screen: 'coleta' };
+    if (ctx === 'descarga') return { screen: 'descarga' };
+    return { screen: 'lista', block: ctx === 'eta' || ctx === 'ete' ? ctx : 'poco', filt: 'todos', q: '' };
+  }
+
+  // Janela de confirmação com o resumo dos dados preenchidos.
+  function confirmarEnvio(resumo) {
+    return new Promise(function (resolve) {
+      var fundo = document.createElement('div');
+      fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Inter\',system-ui,sans-serif';
+      var caixa = document.createElement('div');
+      caixa.setAttribute('role', 'dialog');
+      caixa.setAttribute('aria-modal', 'true');
+      caixa.setAttribute('aria-labelledby', 'ce-tit');
+      caixa.style.cssText = 'width:100%;max-width:380px;max-height:calc(100vh - 32px);overflow-y:auto;background:#fff;border-radius:22px;padding:22px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px';
+      caixa.innerHTML =
+        '<h2 id="ce-tit" style="margin:0;font-size:21px;font-weight:800;color:#0A2E5C">Confirme os dados</h2>' +
+        '<p id="ce-sub" style="margin:-6px 0 0;color:#52627A;font-size:14px"></p>' +
+        '<div id="ce-linhas" style="display:flex;flex-direction:column;border:1px solid #DDE5EE;border-radius:14px;overflow:hidden"></div>' +
+        '<p style="margin:0;color:#52627A;font-size:13px">Confira antes de enviar. Depois de enviado, o lançamento não pode ser apagado.</p>' +
+        '<div style="display:flex;gap:10px">' +
+        '<button type="button" id="ce-nao" style="flex:1;height:50px;border:1.5px solid #C7D4E2;border-radius:14px;background:#fff;color:#0A2E5C;font:700 16px \'Inter\',sans-serif;cursor:pointer">Corrigir</button>' +
+        '<button type="button" id="ce-sim" style="flex:1;height:50px;border:0;border-radius:14px;background:#0057A8;color:#fff;font:700 16px \'Inter\',sans-serif;cursor:pointer">Confirmar</button>' +
+        '</div>';
+      caixa.querySelector('#ce-sub').textContent = resumo.sub || '';
+      var linhas = caixa.querySelector('#ce-linhas');
+      (resumo.rows || []).forEach(function (r, i) {
+        var l = document.createElement('div');
+        l.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 12px;font-size:14px' + (i ? ';border-top:1px solid #EEF3F7' : '');
+        var k = document.createElement('span'); k.style.color = '#52627A'; k.textContent = r.k;
+        var val = document.createElement('span'); val.style.cssText = 'font-weight:700;color:' + (r.alerta ? '#9A3412' : '#0A2E5C') + ';text-align:right'; val.textContent = r.v;
+        l.appendChild(k); l.appendChild(val); linhas.appendChild(l);
+      });
+      fundo.appendChild(caixa);
+      document.body.appendChild(fundo);
+      var fim = function (v) { fundo.remove(); resolve(v); };
+      caixa.querySelector('#ce-nao').addEventListener('click', function () { fim(false); });
+      caixa.querySelector('#ce-sim').addEventListener('click', function () { fim(true); });
+      fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fim(false); });
+      caixa.querySelector('#ce-sim').focus();
+    });
+  }
+
+  // Rótulos dos padrões da calibração (para o resumo).
+  var PADROES_CAL = {
+    t20: ['Turbidímetro', '20 NTU', 20], t100: ['Turbidímetro', '100 NTU', 100], t800: ['Turbidímetro', '800 NTU', 800], t10: ['Turbidímetro', '10 NTU', 10],
+    c500: ['Colorímetro', '500 Pt-Co', 500], c100: ['Colorímetro', '100 Pt-Co', 100], c10: ['Colorímetro', '10 Pt-Co', 10], c0: ['Colorímetro', '0 Pt-Co', 0],
+    p4: ['pHmetro', 'pH 4', 4], p7: ['pHmetro', 'pH 7', 7], p10: ['pHmetro', 'pH 10', 10], slope: ['pHmetro', 'Average slope', 100]
+  };
 
   function inserir(tabela, linha) { return q(sb.from(tabela).insert(linha)); }
   async function alterar(tabela, id, campos) {
@@ -648,7 +724,7 @@
         vazao_m3h: dec(s.vaz), totalizador_m3: tot,
         volume_m3: last ? tot - last.tot : null,
         cloro_mg_l: p.poco ? dec(s.cl) : null, fluor_mg_l: p.poco ? dec(s.fl) : null,
-        foto_anexada: !!s.foto, observacao: obs, operador: op
+        foto_anexada: false, observacao: obs, operador: op
       });
     }, function () {
       // O campo de observações não fica no estado do app: lê antes de a tela mudar.
@@ -671,16 +747,33 @@
         ponto_id: p.id, ponto_nome: p.name,
         hipoclorito_l: dec(s.hip), acido_fluossilicico_l: dec(s.aci), operador: op
       });
+    }, null, null, {
+      // O estoque começa em branco em cada poço: exige os dois volumes.
+      validar: function (s) {
+        if (dec(s.hip) == null || dec(s.aci) == null) return 'Informe o volume atual de hipoclorito e de ácido fluossilícico.';
+      },
+      limpar: { hip: '', aci: '' }
     });
 
     aoSalvar(comp, v.on, 'saveCal', foiParaConfirmacao, function (s) {
       return inserir('calibracoes_eta', { leituras: soPreenchidos(s.calv, dec), operador: op });
-    });
+    }, null, function (s) {
+      // Resumo com cada leitura preenchida e o desvio em relação ao padrão.
+      var rows = [];
+      Object.keys(PADROES_CAL).forEach(function (k) {
+        var val = dec((s.calv || {})[k]);
+        if (val == null) return;
+        var pd = PADROES_CAL[k], ref = pd[2];
+        var desvio = ref > 0 ? Math.abs(val - ref) / ref * 100 : 0;
+        rows.push({ k: pd[0] + ' · ' + pd[1], v: br(val) + (desvio > 10 ? ' (desvio de ' + Math.round(desvio) + '%)' : ''), alerta: desvio > 10 });
+      });
+      comp.state.last = Object.assign({}, comp.state.last, { rows: rows });
+    }, { limpar: { calv: {} } });
 
     aoSalvar(comp, v.on, 'saveEtaStock', foiParaConfirmacao, function (s) {
       var niveis = Object.assign({}, s.dbEtaPrev || {}, soPreenchidos(s.lev, num));
       return inserir('estoque_eta', { niveis_l: niveis, operador: op });
-    });
+    }, null, null, { limpar: { lev: {} } });
 
     aoSalvar(comp, v.on, 'saveDesc', foiParaConfirmacao, function (s) {
       return inserir('descarregamentos_quimicos', {
