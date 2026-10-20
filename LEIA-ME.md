@@ -29,7 +29,10 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 - Cada pessoa entra com **login e senha** (Supabase Auth). O login vira o e-mail interno `<login>@usuarios.gsinima.local`; nenhum e-mail é enviado.
 - A tabela `perfis` guarda nome, login, perfil (operador, laboratório, supervisor, administrador), se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados e ações no sistema web, incluindo **Acesso ao sistema web** (sem ele, a pessoa usa só o app).
 - O banco aplica as regras: sem login não se lê nada; cada formulário só aceita lançamento de quem tem o bloco liberado; o nome de quem lançou é preenchido pelo próprio banco. Ninguém apaga registros.
-- Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas. Criar contas novas e trocar senhas ainda é feito direto no Supabase (o botão "Convidar usuário" ainda não funciona).
+- Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas.
+- **Cadastrar usuário**: o administrador informa nome, login e cargo, sem senha. A conta fica "Aguardando 1º acesso" (perfil com `usuario_id` vazio).
+- **Primeiro acesso**: a pessoa entra no app ou no sistema web com o login e a senha que quiser (mínimo 8 caracteres), confirma a senha e a conta é criada na hora pela Edge Function `primeiro-acesso` (`supabase/functions/primeiro-acesso`), já com as permissões definidas pelo administrador. Avise a pessoa logo depois do cadastro: até o primeiro acesso, quem souber o login pode criar a senha.
+- Trocar a senha de alguém (ex.: esqueceu) ainda é feito no painel do Supabase, em Authentication → Users.
 
 ## Rodar no computador
 Precisa do Node.js e do arquivo `.env` (não vai para o GitHub) com:
