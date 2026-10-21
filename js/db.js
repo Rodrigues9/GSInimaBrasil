@@ -304,7 +304,9 @@
     sair: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>'
   };
   function fecharMenuConta() { var m = document.getElementById('menu-conta'); if (m) m.remove(); }
-  function abrirMenuConta(ev) {
+  // acoes (opcional): { perfil, config } para o app abrir as próprias telas; sem isso, vale o sistema web.
+  function abrirMenuConta(ev, acoes) {
+    acoes = acoes || {};
     if (document.getElementById('menu-conta')) { fecharMenuConta(); return; }
     var botao = ev && ev.currentTarget ? ev.currentTarget : null;
     var r = botao ? botao.getBoundingClientRect() : { bottom: 60, right: window.innerWidth - 16 };
@@ -326,8 +328,8 @@
       b.addEventListener('click', function () {
         var acao = b.getAttribute('data-acao');
         fecharMenuConta();
-        if (acao === 'perfil' && window.DCRoute) window.DCRoute('WebPerfil');
-        else if (acao === 'config' && window.DCRoute) window.DCRoute('WebConfig');
+        if (acao === 'perfil') { if (acoes.perfil) acoes.perfil(); else if (window.DCRoute) window.DCRoute('WebPerfil'); }
+        else if (acao === 'config') { if (acoes.config) acoes.config(); else if (window.DCRoute) window.DCRoute('WebConfig'); }
         else if (acao === 'sair') confirmarSaida();
       });
     });
@@ -710,6 +712,16 @@
     v.opIni = vf.ini; v.opFoto = vf.foto; v.opTemFoto = vf.temFoto; v.opSemFoto = vf.semFoto;
     v.opTrocarTxt = vf.trocarTxt; v.opPadraoOp = vf.padraoOp;
     v.opTrocarFoto = trocarFoto; v.opFotoPadrao = fotoPadrao;
+    // Foto do canto superior direito: Perfil, Configurações e Sair (como no sistema web).
+    v.opMenu = function (ev) {
+      abrirMenuConta(ev, {
+        perfil: function () { comp.setState({ screen: 'perfil' }); },
+        config: function () { comp.setState({ screen: 'config' }); }
+      });
+    };
+    v.opAlterarSenha = alterarSenha;
+    v.opTrocandoSenha = trocandoSenha;
+    v.opSenhaTxt = trocandoSenha ? 'Alterando…' : 'Alterar senha';
     v.alertas = st.alertas || [];
     v.semAlertas = !!st.dbOk && v.alertas.length === 0;
 
