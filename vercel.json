@@ -23,27 +23,5 @@
         }
       ]
     }
-  ],
-  "redirects": [
-    {
-      "source": "/app/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/sistema-web/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/app",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/sistema-web",
-      "destination": "/",
-      "permanent": false
-    }
   ]
 }

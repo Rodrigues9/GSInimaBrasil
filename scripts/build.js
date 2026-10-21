@@ -35,6 +35,9 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out);
 ['index.html', 'favicon.png', 'js'].forEach((p) => copy(p));
 copy('node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'vendor/supabase.js');
+// Endereços antigos (/app/ e /sistema-web/): levam para a entrada única, mantendo a tela depois do #.
+const leva = '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/"><title>GS Inima Tech</title><script>location.replace("/" + location.hash);</script>';
+['app', 'sistema-web'].forEach((p) => { fs.mkdirSync(path.join(out, p)); fs.writeFileSync(path.join(out, p, 'index.html'), leva); });
 fs.writeFileSync(path.join(out, 'env.js'),
   'window.ENV = ' + JSON.stringify({ SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');
 
