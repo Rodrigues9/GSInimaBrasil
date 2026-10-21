@@ -22,10 +22,11 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Visita à ETE (checklist e análises) | `visitas_ete` |
 | Coleta de campo e análises | `coletas` |
 | Descargas de rede | `descargas_rede` |
-| Operação ETA (computador) | `operacao_eta` — horário, até 3 operadores, medições por etapa em `dados` (bruta, coagulada, decantada, filtrada, tratada) e observações |
+| Operação ETA (computador) | `operacao_eta` — ETA Pardo I ou II, horário, até 3 operadores (primeiro nome das contas "Operador de ETA", função `operadores_eta()`), medições por etapa em `dados` (captacao, bruta, pac, coagulada, decantada, filtrada, tratada) e observações |
 
 ## Site único: celular x computador
 - Um só endereço. Tela menor que **1024 px** = celular; 1024 px ou mais (tablet deitado, computador) = computador.
+- "Operador" abaixo = Operador Volante ou Operador de ETA.
 - **Operador no celular**: o app de sempre, em tela cheia, sem barra inferior; o cartão **Painel** (ainda vazio) fica logo abaixo de "O que temos para hoje?".
 - **Operador no computador**: por enquanto só **Início** (o painel, com outro nome no menu) e **Operação ETA**, conforme marcado em **Usuários e permissões → No computador**. As demais telas voltam para o operador depois.
 - **Outros cargos no computador**: todas as telas, como antes.
@@ -34,7 +35,7 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 
 ## Login e permissões
 - Cada pessoa entra com **login e senha** (Supabase Auth). O login vira o e-mail interno `<login>@usuarios.gsinima.local`; nenhum e-mail é enviado.
-- A tabela `perfis` guarda nome, login, perfil (operador, laboratório, supervisor, administrador), se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados, ações no computador e, para operadores, as **telas no computador** (`permissoes.telas`: painel e operacao).
+- A tabela `perfis` guarda nome, login, cargo (Operador Volante, Operador de ETA, Analista de Laboratório, Supervisor, Coordenador, Administrador), se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados, ações no computador e, para operadores, as **telas no computador** (`permissoes.telas`: painel e operacao).
 - O banco aplica as regras: sem login não se lê nada; cada formulário só aceita lançamento de quem tem o bloco liberado; o nome de quem lançou é preenchido pelo próprio banco. Ninguém apaga registros.
 - Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas.
 - **Perfil**: no sistema web, o menu da conta (canto superior direito) tem Perfil (foto e troca de senha), Configurações (vazia por enquanto) e Sair (com confirmação). No app, a aba Perfil tem a troca de foto. Sem foto, aparecem as iniciais do login (ex.: felipe.altafini → FA). As fotos ficam na pasta privada `avatares` do Supabase Storage; cada pessoa só troca a própria.

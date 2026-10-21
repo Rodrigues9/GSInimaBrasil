@@ -30,7 +30,7 @@
   // O login (ex.: felipe.altafini) vira um e-mail interno no Supabase Auth; nenhum e-mail é enviado.
   var DOMINIO_LOGIN = 'usuarios.gsinima.local';
   var BLOCOS = ['eta', 'ete', 'poco', 'coleta', 'descarga'];
-  var PAPEIS = { operador: 'Operador', lab: 'Laboratório', super: 'Supervisor', admin: 'Administrador' };
+  var PAPEIS = { operador_volante: 'Operador Volante', operador_eta: 'Operador de ETA', analista: 'Analista de Laboratório', supervisor: 'Supervisor', coordenador: 'Coordenador', admin: 'Administrador' };
   var perfil = null;
 
   function operador() { return perfil ? perfil.nome : 'Operador'; }
@@ -1076,7 +1076,8 @@
   var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
   var TODAS_TELAS = ORDEM_TELAS.concat(['WebAdmin', 'WebDados']);
-  function eOperador() { return !!perfil && perfil.papel === 'operador'; }
+  // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
+  function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
     if (!perfil) return false;
     if (nome === 'Main') return true;
@@ -1329,9 +1330,11 @@
 
   // "Cadastrar usuário": nome, login e cargo; sem senha (a pessoa cria no primeiro acesso).
   var CARGOS = [
-    ['operador', 'Operador', 'Lança em campo'],
-    ['lab', 'Laboratório', 'ETAs e calibrações'],
-    ['super', 'Supervisor', 'Corrige e exporta'],
+    ['operador_volante', 'Operador Volante', 'Poços, ETEs, coletas e descargas'],
+    ['operador_eta', 'Operador de ETA', 'Operação das ETAs'],
+    ['analista', 'Analista de Laboratório', 'Análises e calibrações'],
+    ['supervisor', 'Supervisor', 'Corrige e exporta'],
+    ['coordenador', 'Coordenador', 'Acompanha, importa e exporta'],
     ['admin', 'Administrador', 'Acesso total']
   ];
   function formCadastro(comp) {
@@ -1440,8 +1443,8 @@
     cls.prototype.componentDidMount = function () {
       if (montar) montar.call(this);
       var comp = this;
-      var vazio = { id: '_', name: 'Carregando…', email: '', role: 'operador', last: '', active: true };
-      comp.setState({ users: [vazio], perms: { _: permCompleta(comp.preset('operador')) }, sel: '_', saved: false });
+      var vazio = { id: '_', name: 'Carregando…', email: '', role: 'operador_volante', last: '', active: true };
+      comp.setState({ users: [vazio], perms: { _: permCompleta(comp.preset('operador_volante')) }, sel: '_', saved: false });
       carregarUsuarios(comp);
     };
     var render = cls.prototype.renderVals;
@@ -1503,6 +1506,11 @@
     inicio: inicio, podeAbrir: podeAbrir, menuPermitido: menuPermitido,
     // Operação ETA (computador): confirmação e gravação do lançamento.
     confirmarEnvio: confirmarEnvio,
-    salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); }
+    salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); },
+    operadoresEta: function () {
+      return q(sb.rpc('operadores_eta')).then(function (rows) {
+        return (rows || []).map(function (r) { return r.nome; }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+      });
+    }
   };
 })();
