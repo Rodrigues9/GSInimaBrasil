@@ -22,6 +22,7 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Visita à ETE (checklist e análises) | `visitas_ete` |
 | Coleta de campo e análises | `coletas` |
 | Descargas de rede | `descargas_rede` |
+| Operação ETA (computador) | `operacao_eta` — horário, até 3 operadores, medições por etapa em `dados` (bruta, coagulada, decantada, filtrada, tratada) e observações |
 
 ## Site único: celular x computador
 - Um só endereço. Tela menor que **1024 px** = celular; 1024 px ou mais (tablet deitado, computador) = computador.

@@ -1500,6 +1500,9 @@
   window.DB = {
     client: sb, install: install, guardWeb: guardWeb, instalarAdmin: instalarAdmin,
     operador: operador, toast: toast,
-    inicio: inicio, podeAbrir: podeAbrir, menuPermitido: menuPermitido
+    inicio: inicio, podeAbrir: podeAbrir, menuPermitido: menuPermitido,
+    // Operação ETA (computador): confirmação e gravação do lançamento.
+    confirmarEnvio: confirmarEnvio,
+    salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); }
   };
 })();
