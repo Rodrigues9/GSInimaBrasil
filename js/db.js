@@ -236,13 +236,19 @@
     var tem = !!(perfil && perfil.foto && fotoUrl);
     return {
       ini: iniciais(), foto: tem ? fotoUrl : '', temFoto: tem, semFoto: !tem,
-      trocarTxt: enviandoFoto ? 'Enviando foto…' : tem ? 'Alterar foto' : 'Escolher foto',
+      trocarTxt: enviandoFoto ? 'Enviando foto…' : 'Alterar foto',
       padraoOp: tem ? 1 : 0.45
     };
   }
 
-  // ---------- alterar a própria senha (sistema web) ----------
-  var trocandoSenha = false;
+  // ---------- alterar a própria senha (app e sistema web) ----------
+  // Fica fechado (só o botão "Alterar senha"); ao clicar, abrem os três campos.
+  var trocandoSenha = false, senhaAberta = false;
+  function abrirSenha() {
+    senhaAberta = true; redesenhar();
+    setTimeout(function () { var a = document.getElementById('pf-atual'); if (a) a.focus(); }, 0);
+  }
+  function fecharSenha() { if (trocandoSenha) return; senhaAberta = false; redesenhar(); }
   function alterarSenha() {
     if (trocandoSenha || !perfil) return;
     var atual = document.getElementById('pf-atual'), nova = document.getElementById('pf-nova'), conf = document.getElementById('pf-conf');
@@ -261,6 +267,7 @@
       if (r.error) throw new Error(/different|same/i.test(r.error.message) ? 'a nova senha precisa ser diferente da atual' :
         /weak|short|characters/i.test(r.error.message) ? 'a nova senha é fraca demais' : r.error.message);
       atual.value = ''; nova.value = ''; conf.value = '';
+      senhaAberta = false;
       toast('Senha alterada. Use a nova senha no próximo acesso.', 'ok');
     }).catch(function (err) {
       toast('A senha NÃO foi alterada (' + (err && err.message ? err.message : erroTxt(err)) + ').');
@@ -299,39 +306,38 @@
   var ICONES = {
     perfil: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     config: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-    sair: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>'
+    sair: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
+    imagem: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
+    semFoto: '<circle cx="12" cy="12" r="9"/><path d="M8.5 15.5c.9-1.3 2.1-2 3.5-2s2.6.7 3.5 2"/><circle cx="12" cy="9.5" r="2.2"/>'
   };
   function fecharMenuConta() { var m = document.getElementById('menu-conta'); if (m) m.remove(); }
-  // acoes (opcional): { perfil, config } para o app abrir as próprias telas; sem isso, vale o sistema web.
-  function abrirMenuConta(ev, acoes) {
-    acoes = acoes || {};
+  // Menu suspenso preso ao botão clicado. itens: [{ rotulo, icone, cor, acao, desligado, separar }].
+  // alinhar: 'direita' (abre para a esquerda do botão, ex.: conta no canto) ou 'esquerda'.
+  function abrirMenu(ev, itens, alinhar) {
     if (document.getElementById('menu-conta')) { fecharMenuConta(); return; }
     var botao = ev && ev.currentTarget ? ev.currentTarget : null;
-    var r = botao ? botao.getBoundingClientRect() : { bottom: 60, right: window.innerWidth - 16 };
+    var r = botao ? botao.getBoundingClientRect() : { bottom: 60, left: 16, right: window.innerWidth - 16 };
     var menu = document.createElement('div');
     menu.id = 'menu-conta';
     menu.setAttribute('role', 'menu');
-    menu.style.cssText = 'position:fixed;top:' + Math.round(r.bottom + 6) + 'px;right:' + Math.max(8, Math.round(window.innerWidth - r.right)) + 'px;' +
+    var lado = alinhar === 'esquerda' ? 'left:' + Math.max(8, Math.round(r.left)) + 'px;' : 'right:' + Math.max(8, Math.round(window.innerWidth - r.right)) + 'px;';
+    menu.style.cssText = 'position:fixed;top:' + Math.round(r.bottom + 6) + 'px;' + lado +
       'min-width:220px;background:#fff;border:1px solid #DDE5EE;border-radius:14px;box-shadow:0 14px 40px rgba(10,46,92,.16);padding:6px;z-index:9990;font-family:\'Inter\',system-ui,sans-serif';
-    var item = function (id, rotulo, icone, cor) {
-      return '<button type="button" role="menuitem" data-acao="' + id + '" style="width:100%;display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:' + cor + ';font:600 15px \'Inter\',sans-serif;cursor:pointer;text-align:left">' +
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icone + '</svg>' + rotulo + '</button>';
-    };
-    menu.innerHTML = item('perfil', 'Perfil', ICONES.perfil, '#0A2E5C') + item('config', 'Configurações', ICONES.config, '#0A2E5C') +
-      '<div style="height:1px;background:#DDE5EE;margin:4px 6px"></div>' + item('sair', 'Sair', ICONES.sair, '#B42318');
+    menu.innerHTML = itens.map(function (it, i) {
+      return (it.separar ? '<div style="height:1px;background:#DDE5EE;margin:4px 6px"></div>' : '') +
+        '<button type="button" role="menuitem" data-i="' + i + '"' + (it.desligado ? ' disabled' : '') + ' style="width:100%;display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:' + (it.cor || '#0A2E5C') + ';font:600 15px \'Inter\',sans-serif;cursor:pointer;text-align:left' + (it.desligado ? ';opacity:.45' : '') + '">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + it.icone + '</svg>' + it.rotulo + '</button>';
+    }).join('');
     document.body.appendChild(menu);
     Array.prototype.forEach.call(menu.querySelectorAll('button'), function (b) {
-      b.addEventListener('mouseenter', function () { b.style.background = '#F2F6FA'; });
+      b.addEventListener('mouseenter', function () { if (!b.disabled) b.style.background = '#F2F6FA'; });
       b.addEventListener('mouseleave', function () { b.style.background = 'transparent'; });
       b.addEventListener('click', function () {
-        var acao = b.getAttribute('data-acao');
         fecharMenuConta();
-        if (acao === 'perfil') { if (acoes.perfil) acoes.perfil(); else if (window.DCRoute) window.DCRoute('WebPerfil'); }
-        else if (acao === 'config') { if (acoes.config) acoes.config(); else if (window.DCRoute) window.DCRoute('WebConfig'); }
-        else if (acao === 'sair') confirmarSaida();
+        itens[Number(b.getAttribute('data-i'))].acao();
       });
     });
-    menu.querySelector('button').focus();
+    menu.querySelector('button:not([disabled])').focus();
     // Fecha ao clicar fora, apertar Esc ou rolar a página.
     setTimeout(function () {
       var fora = function (e) { if (!menu.contains(e.target)) { fecharMenuConta(); limpar(); } };
@@ -346,6 +352,24 @@
       document.addEventListener('keydown', tecla, true);
       window.addEventListener('scroll', rolar, true);
     }, 0);
+  }
+  // Conta: Perfil, Configurações e Sair. acoes (opcional): { perfil, config } para o app abrir as próprias telas.
+  function abrirMenuConta(ev, acoes) {
+    acoes = acoes || {};
+    abrirMenu(ev, [
+      { rotulo: 'Perfil', icone: ICONES.perfil, acao: function () { if (acoes.perfil) acoes.perfil(); else if (window.DCRoute) window.DCRoute('WebPerfil'); } },
+      { rotulo: 'Configurações', icone: ICONES.config, acao: function () { if (acoes.config) acoes.config(); else if (window.DCRoute) window.DCRoute('WebConfig'); } },
+      { rotulo: 'Sair', icone: ICONES.sair, cor: '#B42318', separar: true, acao: confirmarSaida }
+    ]);
+  }
+  // "Alterar foto": carregar uma imagem ou voltar para as iniciais.
+  function abrirMenuFoto(ev) {
+    if (enviandoFoto) return;
+    var tem = !!(perfil && perfil.foto);
+    abrirMenu(ev, [
+      { rotulo: 'Carregar imagem', icone: ICONES.imagem, acao: trocarFoto },
+      { rotulo: 'Padrão sem foto', icone: ICONES.semFoto, desligado: !tem, acao: fotoPadrao }
+    ], 'esquerda');
   }
 
   // Números digitados no padrão brasileiro: "1.234.567" (inteiro) e "1,25" (decimal).
@@ -709,7 +733,9 @@
     var vf = valoresFoto();
     v.opIni = vf.ini; v.opFoto = vf.foto; v.opTemFoto = vf.temFoto; v.opSemFoto = vf.semFoto;
     v.opTrocarTxt = vf.trocarTxt; v.opPadraoOp = vf.padraoOp;
-    v.opTrocarFoto = trocarFoto; v.opFotoPadrao = fotoPadrao;
+    v.opTrocarFoto = trocarFoto; v.opFotoPadrao = fotoPadrao; v.opMenuFoto = abrirMenuFoto;
+    v.opSenhaAberta = senhaAberta; v.opSenhaFechada = !senhaAberta; v.opAbrirSenha = abrirSenha; v.opFecharSenha = fecharSenha;
+    v.opOperador = eOperador();
     // Foto do canto superior direito: Perfil, Configurações e Sair (como no sistema web).
     v.opMenu = function (ev) {
       abrirMenuConta(ev, {
@@ -719,7 +745,7 @@
     };
     v.opAlterarSenha = alterarSenha;
     v.opTrocandoSenha = trocandoSenha;
-    v.opSenhaTxt = trocandoSenha ? 'Alterando…' : 'Alterar senha';
+    v.opSenhaTxt = trocandoSenha ? 'Salvando…' : 'Salvar nova senha';
     v.alertas = st.alertas || [];
     v.semAlertas = !!st.dbOk && v.alertas.length === 0;
 
@@ -1057,6 +1083,8 @@
     if (eOperador()) {
       if (cel) return false;
       if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
+      // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
+      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas') return false;
       var t = (perfil.permissoes && perfil.permissoes.telas) || {};
       return TELAS[nome] ? t[TELAS[nome]] !== false : true;
     }
@@ -1178,7 +1206,9 @@
             nome: operador(), papel: papelTxt(), login: perfil ? perfil.login : '', primeiro: primeiroNome(),
             menu: abrirMenuConta, sair: confirmarSaida,
             trocarFoto: trocarFoto, fotoPadrao: fotoPadrao,
-            alterarSenha: alterarSenha, trocandoSenha: trocandoSenha, senhaTxt: trocandoSenha ? 'Alterando…' : 'Alterar senha'
+            alterarSenha: alterarSenha, trocandoSenha: trocandoSenha, senhaTxt: trocandoSenha ? 'Salvando…' : 'Salvar nova senha',
+            menuFoto: abrirMenuFoto, senhaAberta: senhaAberta, senhaFechada: !senhaAberta, abrirSenha: abrirSenha, fecharSenha: fecharSenha,
+            painelNome: eOperador() ? 'Início' : 'Painel'
           });
           return v;
         };
