@@ -1,10 +1,8 @@
-# Ourinhos Saneamento — app do operador e sistema web
+# GS Inima Tech — app do operador e sistema web num só site
 
 | Pasta / arquivo | Conteúdo |
 |---|---|
-| `index.html` | Página inicial com links para as duas partes |
-| `app/` | App do operador (celular) |
-| `sistema-web/` | Sistema web (painel, químicos, coletas, descargas, dados, usuários) — inclui uma cópia do app em "Lançamentos" |
+| `index.html` | Site único: entrada (login), app do operador e telas do sistema (painel, químicos, coletas, descargas, Operação ETA, dados, usuários). O layout muda pelo tamanho da tela |
 | `js/db.js` | Liga os formulários do app ao Supabase (grava e carrega os dados) |
 | `scripts/build.js` | Gera o site em `dist/`, com as chaves do Supabase lidas do `.env` |
 | `scripts/serve.js` | Servidor local para testar `dist/` |
@@ -25,9 +23,17 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Coleta de campo e análises | `coletas` |
 | Descargas de rede | `descargas_rede` |
 
+## Site único: celular x computador
+- Um só endereço. Tela menor que **1024 px** = celular; 1024 px ou mais (tablet deitado, computador) = computador.
+- **Operador no celular**: o app de sempre, em tela cheia, com as abas Início e Painel (o Painel ainda está vazio).
+- **Operador no computador**: as telas do sistema marcadas para ele em **Usuários e permissões → No computador** (Painel, Produtos químicos, Coleta de campo, Descargas de rede, Operação ETA). Nunca vê Usuários e permissões nem Importar e exportar.
+- **Outros cargos no computador**: todas as telas, como antes.
+- **Outros cargos no celular**: uma tela inicial com atalhos para cada tela do sistema (que se ajustam à largura do celular) e, mais abaixo, **Fazer um lançamento** (abre o app).
+- **Sessão**: continua aberta ao fechar a aba ou o navegador. Só é encerrada depois de **1 hora sem atividade** (clique, toque, tecla ou rolagem), em qualquer aparelho e cargo. O campo de login começa sempre em branco.
+
 ## Login e permissões
 - Cada pessoa entra com **login e senha** (Supabase Auth). O login vira o e-mail interno `<login>@usuarios.gsinima.local`; nenhum e-mail é enviado.
-- A tabela `perfis` guarda nome, login, perfil (operador, laboratório, supervisor, administrador), se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados e ações no sistema web, incluindo **Acesso ao sistema web** (sem ele, a pessoa usa só o app).
+- A tabela `perfis` guarda nome, login, perfil (operador, laboratório, supervisor, administrador), se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados, ações no computador e, para operadores, as **telas no computador** (`permissoes.telas`: painel, quimicos, coletas, descargas, operacao).
 - O banco aplica as regras: sem login não se lê nada; cada formulário só aceita lançamento de quem tem o bloco liberado; o nome de quem lançou é preenchido pelo próprio banco. Ninguém apaga registros.
 - Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas.
 - **Perfil**: no sistema web, o menu da conta (canto superior direito) tem Perfil (foto e troca de senha), Configurações (vazia por enquanto) e Sair (com confirmação). No app, a aba Perfil tem a troca de foto. Sem foto, aparecem as iniciais do login (ex.: felipe.altafini → FA). As fotos ficam na pasta privada `avatares` do Supabase Storage; cada pessoa só troca a própria.
@@ -58,11 +64,10 @@ O `vercel.json` já define o build (`npm run build`) e a pasta publicada (`dist`
 Depois disso, cada envio (push) para a branch `main` atualiza o site sozinho.
 
 Endereços do site:
-- `/` — página inicial
-- `/app/` — app do operador
-- `/sistema-web/` — sistema web (as telas internas usam `#`, ex.: `/sistema-web/#WebQuimicos`)
+- `/` — entrada única (as telas internas usam `#`, ex.: `/#WebQuimicos`)
+- `/app/` e `/sistema-web/` (endereços antigos) — redirecionam para `/`
 
 ## Pontos de atenção
-- **Telas do sistema web** (painel, químicos, coletas, descargas, dados, usuários) ainda mostram dados de exemplo; só o app do operador (inclusive dentro do sistema web, em "Lançamentos") usa o banco.
+- **Telas do sistema web** (painel, químicos, coletas, descargas, dados, usuários) ainda mostram dados de exemplo; só o app do operador usa o banco.
 - **Autenticação**: ficou para depois. A biblioteca `@supabase/ssr` já está instalada para quando o login for implementado.
 - **Leitura automática por foto**: ficou para uma etapa futura. O botão "Tirar foto do macromedidor" só marca que a foto foi tirada; a imagem não é enviada.

@@ -2,7 +2,7 @@
  *
  * As telas continuam como estão; este arquivo:
  *  - faz o login (login + senha) e guarda a sessão no aparelho;
- *  - libera no app só os blocos permitidos para a conta, e o sistema web só para quem tem acesso;
+ *  - libera no app só os blocos permitidos para a conta e, no computador, só as telas permitidas;
  *  - carrega do banco o que já foi lançado (hoje, pendências e totais do mês) e substitui os dados de exemplo;
  *  - grava no banco cada formulário salvo;
  *  - liga a tela "Usuários e permissões" aos perfis reais.
@@ -22,9 +22,9 @@
   });
 
   // ---------- utilidades ----------
-  var LOGIN_KEY = 'gsinima.login';
   function storeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function storeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } }
+  try { localStorage.removeItem('gsinima.login'); localStorage.removeItem('gsinima.entrada'); } catch (e) { /* sem armazenamento */ }
 
   // ---------- login e perfil ----------
   // O login (ex.: felipe.altafini) vira um e-mail interno no Supabase Auth; nenhum e-mail é enviado.
@@ -35,47 +35,16 @@
 
   function operador() { return perfil ? perfil.nome : 'Operador'; }
   function papelTxt() { return perfil ? (PAPEIS[perfil.papel] || perfil.papel) : ''; }
-  function podeWeb() { return !!(perfil && perfil.permissoes && perfil.permissoes.web && perfil.permissoes.web.acesso); }
   function blocosLiberados(p) {
     var acc = {};
     BLOCOS.forEach(function (k) { acc[k] = !!(p && p.permissoes && p.permissoes[k] && p.permissoes[k].on); });
     return acc;
   }
 
-  // ---------- troca de turno (só para quem tem o cargo de operador) ----------
-  // Turnos 12x36 com troca às 7h e às 19h: quem entra entre 7h e 19h sai às 19h;
-  // quem entra entre 19h e 7h sai às 7h. O horário de entrada fica guardado no aparelho.
-  var ENTRADA_KEY = 'gsinima.entrada', AVISO_KEY = 'gsinima.aviso';
-  var inicioDaSessao = null;
-  function fimDoTurno(inicio) {
-    var d = new Date(inicio), fim = new Date(d), h = d.getHours();
-    fim.setMinutes(0, 0, 0);
-    if (h >= 7 && h < 19) fim.setHours(19);
-    else { if (h >= 19) fim.setDate(fim.getDate() + 1); fim.setHours(7); }
-    return fim;
-  }
-  function horaDeEntrada() { return storeGet(ENTRADA_KEY) || inicioDaSessao; }
-  function turnoAcabou() {
-    if (!perfil || perfil.papel !== 'operador') return false;
-    var ini = horaDeEntrada();
-    return !!ini && Date.now() >= fimDoTurno(ini).getTime();
-  }
-  function avisoDeTurno() {
-    var fim = fimDoTurno(horaDeEntrada() || Date.now());
-    return 'Turno encerrado às ' + fim.getHours() + 'h. Por segurança, entre com a sua conta para continuar.';
-  }
-  // Encerra a sessão e recarrega a página; o aviso amarelo aparece na tela de entrada.
-  function encerrarTurno() {
-    try { sessionStorage.setItem(AVISO_KEY, avisoDeTurno()); } catch (e) { /* sem armazenamento */ }
-    if (typeof pararVigia === 'function') pararVigia();
-    sair().then(function () { location.reload(); });
-  }
-
   async function carregarPerfil() {
     var s = await sb.auth.getSession();
     var sessao = s.data && s.data.session;
     if (!sessao) { perfil = null; return null; }
-    inicioDaSessao = sessao.user && sessao.user.last_sign_in_at;
     var r = await sb.from('perfis').select('*').eq('usuario_id', sessao.user.id).maybeSingle();
     if (r.error) throw r.error;
     perfil = r.data || null;
@@ -83,13 +52,6 @@
       await sb.auth.signOut();
       perfil = null;
       throw new Error(!r.data ? 'usuário sem perfil cadastrado, fale com o administrador' : 'conta desativada, fale com o administrador');
-    }
-    // Operador abrindo o app depois da troca de turno: precisa entrar de novo.
-    if (turnoAcabou()) {
-      var aviso = avisoDeTurno();
-      await sair();
-      setTimeout(function () { mostrarAvisoAmarelo(aviso); }, 0);
-      return null;
     }
     atualizarFotoUrl().then(function () {}, function () {});
     return perfil;
@@ -107,9 +69,7 @@
       }
       throw r.error;
     }
-    storeSet(LOGIN_KEY, login);
     storeSet('gsinima.web.atividade', String(Date.now()));
-    storeSet(ENTRADA_KEY, new Date().toISOString()); // início do turno de quem acabou de entrar
     var p = await carregarPerfil();
     sb.rpc('registrar_acesso').then(function () {}, function () {});
     return p;
@@ -174,8 +134,6 @@
     try { await sb.auth.signOut(); } catch (e) { /* já saiu */ }
     perfil = null;
     fotoUrl = null; fotoDe = null;
-    inicioDaSessao = null;
-    try { localStorage.removeItem(ENTRADA_KEY); } catch (e) { /* sem armazenamento */ }
   }
 
   // ---------- foto de perfil e iniciais ----------
@@ -789,10 +747,9 @@
 
     // Botão "Sair" do perfil: encerra a sessão antes de voltar à tela de entrada.
     if (v.nav && typeof v.nav.login === 'function') {
-      var paraLogin = v.nav.login;
       v.nav.login = function () {
-        var self = this, args = arguments;
-        sair().then(function () { paraLogin.apply(self, args); });
+        pararVigia();
+        sair().then(function () { location.reload(); });
       };
     }
 
@@ -1055,7 +1012,6 @@
       }, function (err) { toast('Entre de novo: ' + erroTxt(err) + '.'); });
       setTimeout(function () {
         var u = document.getElementById('lg-user'), s = document.getElementById('lg-pass');
-        if (u && !u.value) u.value = storeGet(LOGIN_KEY) || '';
         // Enter na senha = Entrar.
         if (s && !s.__enter) {
           s.__enter = true;
@@ -1075,18 +1031,6 @@
     };
   }
 
-  // Troca de turno com o app (ou o sistema web) aberto: confere a cada 30 s e ao voltar para a tela.
-  setInterval(function () { if (perfil && turnoAcabou()) encerrarTurno(); }, 30000);
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible' && perfil && turnoAcabou()) encerrarTurno();
-  });
-  // Aviso deixado antes de recarregar a página (ex.: turno encerrado).
-  (function () {
-    var aviso = null;
-    try { aviso = sessionStorage.getItem(AVISO_KEY); sessionStorage.removeItem(AVISO_KEY); } catch (e) { /* sem armazenamento */ }
-    if (aviso) setTimeout(function () { mostrarAvisoAmarelo(aviso); }, 0);
-  })();
-
   // Virou o dia com o app aberto: recarrega (tudo volta a "pendente") e os filtros dos macros voltam para Pendentes.
   setInterval(function () {
     if (!atual || !perfil || !atual.state.diaCarregado) return;
@@ -1100,13 +1044,45 @@
     if (document.visibilityState === 'visible' && atual && document.body.contains(document.getElementById('app'))) atualizar(atual);
   });
 
+  // ---------- telas permitidas (site único: celular x computador) ----------
+  // Operador no celular: só o app. Operador no computador: as telas marcadas em "Telas no computador",
+  // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
+  var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
+  var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebAdmin', 'WebDados']);
+  function eOperador() { return !!perfil && perfil.papel === 'operador'; }
+  function podeAbrir(nome, cel) {
+    if (!perfil) return false;
+    if (nome === 'Main') return true;
+    if (eOperador()) {
+      if (cel) return false;
+      if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
+      var t = (perfil.permissoes && perfil.permissoes.telas) || {};
+      return TELAS[nome] ? t[TELAS[nome]] !== false : true;
+    }
+    if (nome === 'MobileHome') return !!cel;
+    return true;
+  }
+  function inicio(cel) {
+    if (cel) return eOperador() ? 'Main' : 'MobileHome';
+    for (var i = 0; i < ORDEM_TELAS.length; i++) if (podeAbrir(ORDEM_TELAS[i], false)) return ORDEM_TELAS[i];
+    return 'WebPerfil';
+  }
+  // Esconde do menu lateral (e dos atalhos) as telas que a pessoa não pode abrir.
+  var estiloMenu = null;
+  function menuPermitido(cel) {
+    if (!estiloMenu) { estiloMenu = document.createElement('style'); document.head.appendChild(estiloMenu); }
+    estiloMenu.textContent = TODAS_TELAS.filter(function (n) { return !podeAbrir(n, cel); })
+      .map(function (n) { return 'a[href="#' + n + '"]'; }).join(',') + (TODAS_TELAS.some(function (n) { return !podeAbrir(n, cel); }) ? '{display:none!important}' : '');
+  }
+
   // ---------- sistema web: entrada e controle de acesso ----------
   var COR = { fundo: '#EEF3F7', azul: '#0057A8', marinho: '#0A2E5C', texto: '#52627A', borda: '#C7D4E2' };
   function cartao(html) {
     var shell = document.getElementById('shell');
     shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:' + COR.fundo + ';font-family:\'Inter\',system-ui,sans-serif">' +
       '<div style="width:100%;max-width:380px;background:#fff;border-radius:22px;padding:28px 24px;box-sizing:border-box;box-shadow:0 20px 60px rgba(10,46,92,.12);display:flex;flex-direction:column;gap:14px">' +
-      '<h1 style="margin:0;font-family:\'Inter\',sans-serif;font-weight:800;font-size:26px;color:' + COR.marinho + '">Sistema Ourinhos Saneamento</h1>' +
+      '<h1 style="margin:0;font-family:\'Inter\',sans-serif;font-weight:800;font-size:26px;color:' + COR.marinho + '">GS Inima Tech</h1>' +
       html + '</div></div>';
     return shell;
   }
@@ -1124,8 +1100,8 @@
       .replace(/<sc-if value="\{\{ s\.login \}\}"[^>]*>/, '')
       .replace(/<\/sc-if>\s*$/, '')
       .replace('onClick="{{ nav.home }}"', 'id="lg-btn"')
-      .replace('Operação em campo', 'Sistema web')
-      .replace('Leituras, análises e estoque de cada unidade, num só lugar.', 'Painel, lançamentos e permissões da operação.');
+      .replace('Operação em campo', 'Operação e acompanhamento')
+      .replace('Leituras, análises e estoque de cada unidade, num só lugar.', 'Lançamentos, painéis e acompanhamento, num só lugar.');
     if (/\{\{/.test(html) || html.indexOf('lg-pass') < 0) return null;
     return html;
   }
@@ -1134,19 +1110,20 @@
     var html = painelDoApp();
     if (!html) return telaLoginSimples(iniciar, aviso);
     var shell = document.getElementById('shell');
-    shell.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:#DCE6EF">' +
+    var cel = window.innerWidth < 1024;
+    shell.innerHTML = cel
+      ? '<div style="position:relative;width:100%;height:100dvh;min-height:560px;overflow:hidden;background:#EEF3F7;font-family:\'Inter\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' + html + '</div>'
+      : '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:#DCE6EF">' +
       '<div style="position:relative;width:420px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:640px;border-radius:28px;overflow:hidden;background:#EEF3F7;box-shadow:0 30px 80px rgba(10,46,92,.18);font-family:\'Inter\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' +
       html + '</div></div>';
     var u = shell.querySelector('#lg-user'), s = shell.querySelector('#lg-pass'), b = shell.querySelector('#lg-btn');
-    u.value = storeGet(LOGIN_KEY) || '';
     if (aviso) toast(aviso);
-    (u.value ? s : u).focus();
+    u.focus();
     var ir = function () {
       if (b.disabled) return;
       b.disabled = true; b.textContent = 'Entrando…';
       entrarOuPrimeiroAcesso(u.value, s.value).then(function () {
         if (toastEl) toastEl.hidden = true;
-        if (!podeWeb()) return semAcesso();
         abrirWeb(iniciar);
       }, function (err) {
         toast(err && err.message && !/fetch/i.test(err.message) ? err.message : 'Não foi possível entrar (' + erroTxt(err) + ').');
@@ -1171,30 +1148,19 @@
       '</form>' +
       '<p style="margin:0;color:' + COR.texto + ';font-size:13px">Esqueceu a senha? Fale com o administrador do sistema.</p>');
     var u = shell.querySelector('#wl-user'), s = shell.querySelector('#wl-pass'), msg = shell.querySelector('#wl-msg');
-    u.value = storeGet(LOGIN_KEY) || '';
     msg.textContent = aviso || '';
-    (u.value ? s : u).focus();
+    u.focus();
     shell.querySelector('#wl-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var b = shell.querySelector('button[type=submit]');
       b.disabled = true; b.textContent = 'Entrando…'; msg.textContent = '';
       entrarOuPrimeiroAcesso(u.value, s.value).then(function () {
-        if (!podeWeb()) return semAcesso();
         abrirWeb(iniciar);
       }, function (err) {
         msg.textContent = err && err.message && !/fetch/i.test(err.message) ? err.message : 'Não foi possível entrar (' + erroTxt(err) + ').';
         b.disabled = false; b.textContent = 'Entrar'; s.value = ''; s.focus();
       });
     });
-  }
-
-  function semAcesso() {
-    var shell = cartao(
-      '<p style="margin:0;color:' + COR.marinho + ';font-weight:700">Olá, ' + operador().replace(/[<>&"]/g, '') + '.</p>' +
-      '<p style="margin:0;color:' + COR.texto + '">Sua conta não tem acesso ao sistema web. Use o app do operador para fazer seus lançamentos.</p>' +
-      '<a href="/app/" style="' + botao + ';display:flex;align-items:center;justify-content:center;text-decoration:none">Abrir o app</a>' +
-      '<button type="button" id="wl-sair" style="' + botao + ';background:#fff;color:' + COR.marinho + ';border:1.5px solid ' + COR.borda + '">Sair</button>');
-    shell.querySelector('#wl-sair').addEventListener('click', function () { sair().then(function () { location.reload(); }); });
   }
 
   // Cabeçalho das telas web: nome e perfil de quem está logado; clicar oferece sair.
@@ -1209,7 +1175,7 @@
           var v = render.call(this);
           aoMudarFoto(this);
           v.me = Object.assign(valoresFoto(), {
-            nome: operador(), papel: papelTxt(), login: perfil ? perfil.login : '',
+            nome: operador(), papel: papelTxt(), login: perfil ? perfil.login : '', primeiro: primeiroNome(),
             menu: abrirMenuConta, sair: confirmarSaida,
             trocarFoto: trocarFoto, fotoPadrao: fotoPadrao,
             alterarSenha: alterarSenha, trocandoSenha: trocandoSenha, senhaTxt: trocandoSenha ? 'Alterando…' : 'Alterar senha'
@@ -1223,11 +1189,12 @@
     iniciar();
   }
 
-  // ---------- sistema web: sessão expira após 20 minutos sem atividade ----------
+  // ---------- sessão expira após 1 hora sem atividade (todos os cargos, celular ou computador) ----------
   // Conta como atividade: clique, toque, tecla ou rolagem (mexer o mouse não conta).
-  // O horário da última atividade fica no aparelho, então reabrir o navegador depois de 20 minutos também pede login.
-  var LIMITE_INATIVO = 20 * 60 * 1000;
+  // O horário da última atividade fica no aparelho, então reabrir o navegador depois de 1 hora também pede login.
+  var LIMITE_INATIVO = 60 * 60 * 1000;
   var ATIVIDADE_KEY = 'gsinima.web.atividade';
+  var MSG_INATIVO = 'Sessão encerrada após 1 hora sem atividade. Por segurança, entre novamente para continuar.';
   var EVENTOS_ATIVIDADE = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
   var vigia = null;
 
@@ -1267,7 +1234,7 @@
     pararVigia();
     sair().then(function () {
       telaLogin(iniciar);
-      mostrarAvisoAmarelo('Tempo esgotado. Por segurança, sua sessão foi encerrada após 20 minutos sem atividade. Entre novamente para continuar.');
+      mostrarAvisoAmarelo(MSG_INATIVO);
     });
   }
 
@@ -1292,15 +1259,14 @@
     cartao('<p style="margin:0;color:' + COR.texto + '">Carregando…</p>');
     carregarPerfil().then(function (p) {
       if (!p) return telaLogin(iniciar);
-      // Sessão guardada, mas sem atividade há mais de 20 minutos: pede login de novo.
+      // Sessão guardada, mas sem atividade há mais de 1 hora: pede login de novo.
       if (inativoDemais()) {
         return sair().then(function () {
           telaLogin(iniciar);
-          mostrarAvisoAmarelo('Tempo esgotado. Por segurança, sua sessão foi encerrada após 20 minutos sem atividade. Entre novamente para continuar.');
+          mostrarAvisoAmarelo(MSG_INATIVO);
         });
       }
       sb.rpc('registrar_acesso').then(function () {}, function () {});
-      if (!podeWeb()) return semAcesso();
       abrirWeb(iniciar);
     }, function (err) { telaLogin(iniciar, 'Entre de novo: ' + erroTxt(err) + '.'); });
   }
@@ -1308,7 +1274,9 @@
   // ---------- tela "Usuários e permissões" ----------
   function permCompleta(p) {
     var x = JSON.parse(JSON.stringify(p || {}));
-    x.web = Object.assign({ acesso: false, painelVer: false, painelExp: false, imp: false, exp: false, admin: false }, x.web || {});
+    x.web = Object.assign({ painelVer: false, painelExp: false, imp: false, exp: false, admin: false }, x.web || {});
+    delete x.web.acesso;
+    x.telas = Object.assign({ painel: true, quimicos: true, coletas: true, descargas: true, operacao: true }, x.telas || {});
     return x;
   }
   function carregarUsuarios(comp, selecionar) {
@@ -1501,6 +1469,7 @@
 
   window.DB = {
     client: sb, install: install, guardWeb: guardWeb, instalarAdmin: instalarAdmin,
-    operador: operador, toast: toast
+    operador: operador, toast: toast,
+    inicio: inicio, podeAbrir: podeAbrir, menuPermitido: menuPermitido
   };
 })();
