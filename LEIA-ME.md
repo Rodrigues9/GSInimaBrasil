@@ -65,7 +65,6 @@ Depois disso, cada envio (push) para a branch `main` atualiza o site sozinho.
 
 Endereços do site:
 - `/` — entrada única (as telas internas usam `#`, ex.: `/#WebQuimicos`)
-- `/app/` e `/sistema-web/` (endereços antigos) — redirecionam para `/`
 
 ## Pontos de atenção
 - **Telas do sistema web** (painel, químicos, coletas, descargas, dados, usuários) ainda mostram dados de exemplo; só o app do operador usa o banco.
