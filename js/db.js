@@ -42,10 +42,40 @@
     return acc;
   }
 
+  // ---------- troca de turno (só para quem tem o cargo de operador) ----------
+  // Turnos 12x36 com troca às 7h e às 19h: quem entra entre 7h e 19h sai às 19h;
+  // quem entra entre 19h e 7h sai às 7h. O horário de entrada fica guardado no aparelho.
+  var ENTRADA_KEY = 'gsinima.entrada', AVISO_KEY = 'gsinima.aviso';
+  var inicioDaSessao = null;
+  function fimDoTurno(inicio) {
+    var d = new Date(inicio), fim = new Date(d), h = d.getHours();
+    fim.setMinutes(0, 0, 0);
+    if (h >= 7 && h < 19) fim.setHours(19);
+    else { if (h >= 19) fim.setDate(fim.getDate() + 1); fim.setHours(7); }
+    return fim;
+  }
+  function horaDeEntrada() { return storeGet(ENTRADA_KEY) || inicioDaSessao; }
+  function turnoAcabou() {
+    if (!perfil || perfil.papel !== 'operador') return false;
+    var ini = horaDeEntrada();
+    return !!ini && Date.now() >= fimDoTurno(ini).getTime();
+  }
+  function avisoDeTurno() {
+    var fim = fimDoTurno(horaDeEntrada() || Date.now());
+    return 'Turno encerrado às ' + fim.getHours() + 'h. Por segurança, entre com a sua conta para continuar.';
+  }
+  // Encerra a sessão e recarrega a página; o aviso amarelo aparece na tela de entrada.
+  function encerrarTurno() {
+    try { sessionStorage.setItem(AVISO_KEY, avisoDeTurno()); } catch (e) { /* sem armazenamento */ }
+    if (typeof pararVigia === 'function') pararVigia();
+    sair().then(function () { location.reload(); });
+  }
+
   async function carregarPerfil() {
     var s = await sb.auth.getSession();
     var sessao = s.data && s.data.session;
     if (!sessao) { perfil = null; return null; }
+    inicioDaSessao = sessao.user && sessao.user.last_sign_in_at;
     var r = await sb.from('perfis').select('*').eq('usuario_id', sessao.user.id).maybeSingle();
     if (r.error) throw r.error;
     perfil = r.data || null;
@@ -53,6 +83,13 @@
       await sb.auth.signOut();
       perfil = null;
       throw new Error(!r.data ? 'usuário sem perfil cadastrado, fale com o administrador' : 'conta desativada, fale com o administrador');
+    }
+    // Operador abrindo o app depois da troca de turno: precisa entrar de novo.
+    if (turnoAcabou()) {
+      var aviso = avisoDeTurno();
+      await sair();
+      setTimeout(function () { mostrarAvisoAmarelo(aviso); }, 0);
+      return null;
     }
     atualizarFotoUrl().then(function () {}, function () {});
     return perfil;
@@ -72,6 +109,7 @@
     }
     storeSet(LOGIN_KEY, login);
     storeSet('gsinima.web.atividade', String(Date.now()));
+    storeSet(ENTRADA_KEY, new Date().toISOString()); // início do turno de quem acabou de entrar
     var p = await carregarPerfil();
     sb.rpc('registrar_acesso').then(function () {}, function () {});
     return p;
@@ -136,6 +174,8 @@
     try { await sb.auth.signOut(); } catch (e) { /* já saiu */ }
     perfil = null;
     fotoUrl = null; fotoDe = null;
+    inicioDaSessao = null;
+    try { localStorage.removeItem(ENTRADA_KEY); } catch (e) { /* sem armazenamento */ }
   }
 
   // ---------- foto de perfil e iniciais ----------
@@ -737,6 +777,7 @@
         entrarOuPrimeiroAcesso(u ? u.value : '', s ? s.value : '').then(function (p) {
           if (s) s.value = '';
           if (toastEl) toastEl.hidden = true;
+          esconderAvisoAmarelo();
           comp.setState({ acc: blocosLiberados(p) });
           home.apply(self, args);
           atualizar(comp);
@@ -1033,6 +1074,18 @@
       return v;
     };
   }
+
+  // Troca de turno com o app (ou o sistema web) aberto: confere a cada 30 s e ao voltar para a tela.
+  setInterval(function () { if (perfil && turnoAcabou()) encerrarTurno(); }, 30000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && perfil && turnoAcabou()) encerrarTurno();
+  });
+  // Aviso deixado antes de recarregar a página (ex.: turno encerrado).
+  (function () {
+    var aviso = null;
+    try { aviso = sessionStorage.getItem(AVISO_KEY); sessionStorage.removeItem(AVISO_KEY); } catch (e) { /* sem armazenamento */ }
+    if (aviso) setTimeout(function () { mostrarAvisoAmarelo(aviso); }, 0);
+  })();
 
   // Virou o dia com o app aberto: recarrega (tudo volta a "pendente") e os filtros dos macros voltam para Pendentes.
   setInterval(function () {
