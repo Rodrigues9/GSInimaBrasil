@@ -441,9 +441,27 @@
       q(sb.from('descargas_rede').select('*').eq('status', 'concluida').gte('fim_em', m0).order('fim_em', { ascending: false })),
       q(sb.from('estoque_poco').select('ponto_id,ponto_nome,hipoclorito_l,acido_fluossilicico_l,criado_em').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('coletas').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
-        .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false }))
+        .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
+      q(sb.from('descarregamentos_quimicos').select('produto,eta').gte('criado_em', t0)),
+      q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em').order('criado_em', { ascending: false }).limit(50))
     ]);
-    var estPoco = res[10], colPositivas = res[11];
+    var estPoco = res[10], colPositivas = res[11], descHoje = res[12], pdRecentes = res[13];
+
+    // Estoque dos poços lançado hoje (por ponto).
+    var estDone = {};
+    estPoco.forEach(function (r) { if (!estDone[r.ponto_id] && Date.parse(r.criado_em) >= Date.parse(t0)) estDone[r.ponto_id] = hhmm(r.criado_em); });
+    // Último descarregamento nos poços (o lote mais recente, somado por produto).
+    var pdLast = null;
+    if (pdRecentes.length) {
+      var lote = pdRecentes[0].lote_id, soma = {}, destinos = 0;
+      pdRecentes.forEach(function (r) {
+        if (r.lote_id !== lote) return;
+        destinos++;
+        var nome = r.produto === 'Hipoclorito de sódio' ? 'cloro' : 'flúor';
+        soma[nome] = (soma[nome] || 0) + Number(r.quantidade_l);
+      });
+      pdLast = Object.keys(soma).map(function (k) { return fmt(soma[k]) + ' L de ' + k; }).join(' e ') + (destinos > 1 ? ', ' + destinos + ' destinos' : '');
+    }
     var leit = res[0], cal = res[1], estEta = res[2], ete = res[3], desc = res[4];
     var colPend = res[5], colMes = res[6], colHoje = res[7], dscAnd = res[8], dscMes = res[9];
     var hoje = Date.parse(t0);
@@ -528,7 +546,7 @@
     });
 
     return {
-      alertas: alertas,
+      alertas: alertas, estDone: estDone, pdLast: pdLast, descHoje: descHoje, diaCarregado: t0,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, descLast: descLast,
       colPend: pend, colDone: colDone, colHist: hist,
@@ -582,7 +600,7 @@
       comp.forceUpdate();
       confirmarEnvio(resumo).then(function (ok) {
         if (!ok) return;
-        comp.state = Object.assign({}, feito, destinoApos(feito.okCtx), opcoes.limpar || {});
+        comp.state = Object.assign({}, feito, destinoApos(feito), opcoes.limpar || {});
         comp.forceUpdate();
         enviar();
       });
@@ -591,10 +609,16 @@
   var foiParaConfirmacao = function (novo) { return novo.screen === 'ok'; };
 
   // Depois de confirmar, volta para a lista de onde a pessoa veio (e não para o próximo da fila).
-  function destinoApos(ctx) {
-    if (ctx === 'etamac') return { screen: 'eta', block: 'eta', etaMode: 'mac' };
+  function destinoApos(feito) {
+    var ctx = feito.okCtx;
+    if (ctx === 'etamac') return { screen: 'eta', block: 'eta', etaMode: 'mac', etaFilt: 'pend' };
     if (ctx === 'coleta') return { screen: 'coleta' };
     if (ctx === 'descarga') return { screen: 'descarga' };
+    if (ctx === 'pocosDesc') return { screen: 'lista', block: 'pocos', filt: 'todos', q: '' };
+    if (ctx === 'poco') {
+      return feito.tab === 'estoque' ? { screen: 'lista', block: 'pocoEst', filt: 'todos', q: '' }
+        : { screen: 'lista', block: 'poco', filt: 'pend', q: '' };
+    }
     return { screen: 'lista', block: ctx === 'eta' || ctx === 'ete' ? ctx : 'poco', filt: 'todos', q: '' };
   }
 
@@ -642,6 +666,33 @@
     c500: ['Colorímetro', '500 Pt-Co', 500], c100: ['Colorímetro', '100 Pt-Co', 100], c10: ['Colorímetro', '10 Pt-Co', 10], c0: ['Colorímetro', '0 Pt-Co', 0],
     p4: ['pHmetro', 'pH 4', 4], p7: ['pHmetro', 'pH 7', 7], p10: ['pHmetro', 'pH 10', 10], slope: ['pHmetro', 'Average slope', 100]
   };
+
+  // Tolerâncias da calibração: turbidez e cor 5%; padrão 0 Pt-Co até 1 Pt-Co; pH ±0,1; slope 90% a 110%.
+  // Devolve { alerta, txt (para embaixo do campo), curto (para o resumo) }.
+  function regraCal(k, v) {
+    var pd = PADROES_CAL[k];
+    if (!pd || v == null) return { alerta: false };
+    var ref = pd[2], fim = ' O recomendado é iniciar uma nova calibração.';
+    if (k === 'c0') {
+      return v > 1 ? { alerta: true, curto: 'acima de 1 Pt-Co', txt: 'Leitura acima de 1 Pt-Co para o padrão 0.' + fim } : { alerta: false };
+    }
+    if (k === 'p4' || k === 'p7' || k === 'p10') {
+      var dif = Math.abs(v - ref);
+      return dif > 0.1 + 1e-9
+        ? { alerta: true, curto: 'diferença de ' + br(Math.round(dif * 100) / 100), txt: 'Diferença de ' + br(Math.round(dif * 100) / 100) + ' em relação ao pH ' + ref + ' (máximo de 0,1).' + fim }
+        : { alerta: false };
+    }
+    var lim = k === 'slope' ? 10 : 5;
+    var d = Math.abs(v - ref) / ref * 100;
+    if (d <= lim + 1e-9) return { alerta: false };
+    return {
+      alerta: true, curto: 'desvio de ' + br(Math.round(d * 10) / 10) + '%',
+      txt: (k === 'slope' ? 'Slope fora da faixa de 90% a 110%.' : 'Desvio de ' + br(Math.round(d * 10) / 10) + '% em relação ao padrão de ' + pd[1] + ' (máximo de 5%).') + fim
+    };
+  }
+
+  // Estoque da ETA: produto e ETA de cada grupo de reservatórios.
+  var GRUPO_ETA = { pac1: ['PAC', 'ETA 1'], pac2: ['PAC', 'ETA 2'], flu1: ['Flúor', 'ETA 1'], flu2: ['Flúor', 'ETA 2'] };
 
   function inserir(tabela, linha) { return q(sb.from(tabela).insert(linha)); }
   async function alterar(tabela, id, campos) {
@@ -703,9 +754,11 @@
         v.p.prevTxt = fmt(last.tot);
         v.p.vazPrevTxt = fmt1(last.vaz);
         v.p.lastTxt = quando(last.at) + ', ' + last.who;
-        v.neg = hasCur && vol < 0;
-        v.volTxt = hasCur && !v.neg ? fmt(vol) : '—';
-        v.vazMedTxt = hasCur && !v.neg && hrs > 0 ? fmt1(vol / hrs) : '—';
+        var menor = hasCur && vol < 0;
+        // O aviso de totalizador menor só aparece depois que a pessoa sai do campo (ou tenta registrar).
+        v.neg = menor && !!st.totTocado;
+        v.volTxt = hasCur && !menor ? fmt(vol) : '—';
+        v.vazMedTxt = hasCur && !menor && hrs > 0 ? fmt1(vol / hrs) : '—';
         v.hrsTxt = h + ' h ' + pad(m) + ' min';
       } else {
         v.p.prevTxt = '—'; v.p.vazPrevTxt = '—'; v.p.lastTxt = 'primeira leitura deste ponto';
@@ -714,6 +767,57 @@
     } else if (v.p) {
       v.p.lastTxt = 'carregando…';
     }
+    if (v.on && typeof v.on.tot === 'function') {
+      var digitarTot = v.on.tot;
+      v.on.tot = function (ev) { digitarTot(ev); comp.setState({ totTocado: false }); };
+      v.on.totSair = function () { comp.setState({ totTocado: true }); };
+    }
+
+    // Calibração: aviso de desvio só depois de sair do campo.
+    (v.calEquip || []).forEach(function (q2) {
+      (q2.fields || []).forEach(function (f) {
+        var k = String(f.id).replace(/^cal-/, '');
+        var r = regraCal(k, dec((st.calv || {})[k]));
+        f.alerta = r.alerta && !!(st.calTocado || {})[k];
+        f.alertaTxt = r.txt || '';
+        var digitar = f.set;
+        f.set = function (ev) { digitar(ev); comp.setState({ calTocado: Object.assign({}, comp.state.calTocado, { [k]: false }) }); };
+        f.sair = function () { comp.setState({ calTocado: Object.assign({}, comp.state.calTocado, { [k]: true }) }); };
+      });
+    });
+
+    // DQO: padrão de 500 mg/L, desvio máximo de 10%; aviso só depois de sair do campo.
+    (v.eteAn || []).forEach(function (g) {
+      if (String(g.name).indexOf('DQO') !== 0) { g.alerta = false; return; }
+      var pdq = dec((st.anv || {})['an-dqo-p']);
+      var dd = pdq == null ? 0 : Math.abs(pdq - 500) / 500 * 100;
+      g.alerta = pdq != null && dd > 10 && !!st.dqoTocado;
+      g.alertaTxt = 'Padrão com desvio de ' + br(Math.round(dd * 10) / 10) + '% em relação a 500 mg/L (máximo de 10%). A análise de DQO está comprometida: o recomendado é refazer o padrão.';
+      (g.fields || []).forEach(function (f) {
+        if (f.id !== 'an-dqo-p') return;
+        var digitar = f.set;
+        f.set = function (ev) { digitar(ev); comp.setState({ dqoTocado: false }); };
+        f.sair = function () { comp.setState({ dqoTocado: true }); };
+      });
+    });
+
+    // Estoque da ETA: aviso se o volume subir em relação ao último registro sem descarregamento hoje.
+    (v.stockGroups || []).forEach(function (g) {
+      (g.res || []).forEach(function (r) {
+        var key = String(r.id).replace(/^st-/, '');
+        var grupo = GRUPO_ETA[key.split('-')[0]];
+        var antes = (st.dbEtaPrev || {})[key];
+        var agora = num((st.lev || {})[key]);
+        var descarregou = grupo && (st.descHoje || []).some(function (d) { return d.produto === grupo[0] && d.eta === grupo[1]; });
+        var tocado = !!(st.levTocado || {})[key];
+        r.alerta = !!st.dbOk && antes != null && agora != null && agora > Number(antes) && !descarregou && tocado;
+        r.over = !!r.over && tocado; // "passa da capacidade" também só depois de sair do campo
+        r.alertaTxt = grupo ? 'O volume está maior que o último registro (' + fmt(Number(antes)) + ' L), mas não há descarregamento de ' + grupo[0] + ' na ' + grupo[1] + ' hoje. Confira antes de registrar.' : '';
+        var digitar = r.set;
+        r.set = function (ev) { digitar(ev); comp.setState({ levTocado: Object.assign({}, comp.state.levTocado, { [key]: false }) }); };
+        r.sair = function () { comp.setState({ levTocado: Object.assign({}, comp.state.levTocado, { [key]: true }) }); };
+      });
+    });
 
     var p = v.p, op = operador();
 
@@ -730,15 +834,20 @@
       // O campo de observações não fica no estado do app: lê antes de a tela mudar.
       var el = document.getElementById('obs');
       return el && el.value.trim() ? el.value.trim().slice(0, 1000) : null;
-    }, function (s) {
-      // Na confirmação, o volume usa a leitura anterior real (do banco).
-      var tot = num(s.tot), last = (s.dbLast || {})[p.id];
-      var txt = !last ? 'Primeira leitura do ponto' : tot - last.tot < 0 ? 'Conferir leitura' : fmt(tot - last.tot) + ' m³';
+    }, function () {
+      // Na confirmação, só a vazão e o totalizador digitados.
       var cur = comp.state.last;
       if (cur && cur.rows) {
-        comp.state.last = Object.assign({}, cur, { rows: cur.rows.map(function (r) {
-          return r.k === 'Volume no intervalo' ? { k: r.k, v: txt } : r;
-        }) });
+        comp.state.last = Object.assign({}, cur, { rows: cur.rows.filter(function (r) { return r.k !== 'Volume no intervalo' && r.v !== 'Não informado'; }) });
+      }
+    }, {
+      // O totalizador nunca pode ser menor que a leitura anterior.
+      validar: function (s) {
+        var tot = num(s.tot), last = (s.dbLast || {})[p.id];
+        if (last && tot != null && tot < last.tot) {
+          comp.setState({ totTocado: true });
+          return 'O totalizador não pode ser menor que a leitura anterior (' + fmt(last.tot) + ' m³).';
+        }
       }
     });
 
@@ -758,22 +867,38 @@
     aoSalvar(comp, v.on, 'saveCal', foiParaConfirmacao, function (s) {
       return inserir('calibracoes_eta', { leituras: soPreenchidos(s.calv, dec), operador: op });
     }, null, function (s) {
-      // Resumo com cada leitura preenchida e o desvio em relação ao padrão.
+      // Resumo com cada leitura preenchida, marcando as que estão fora da tolerância.
       var rows = [];
       Object.keys(PADROES_CAL).forEach(function (k) {
         var val = dec((s.calv || {})[k]);
         if (val == null) return;
-        var pd = PADROES_CAL[k], ref = pd[2];
-        var desvio = ref > 0 ? Math.abs(val - ref) / ref * 100 : 0;
-        rows.push({ k: pd[0] + ' · ' + pd[1], v: br(val) + (desvio > 10 ? ' (desvio de ' + Math.round(desvio) + '%)' : ''), alerta: desvio > 10 });
+        var pd = PADROES_CAL[k], r = regraCal(k, val);
+        rows.push({ k: pd[0] + ' · ' + pd[1], v: br(val) + (r.alerta ? ' (' + r.curto + ')' : ''), alerta: r.alerta });
       });
       comp.state.last = Object.assign({}, comp.state.last, { rows: rows });
-    }, { limpar: { calv: {} } });
+    }, { limpar: { calv: {}, calTocado: {} } });
 
     aoSalvar(comp, v.on, 'saveEtaStock', foiParaConfirmacao, function (s) {
       var niveis = Object.assign({}, s.dbEtaPrev || {}, soPreenchidos(s.lev, num));
+      // Sacos de sal usados no turno: vale só para este registro (não vem do anterior).
+      delete niveis.sal_sacos_usados;
+      var sal = num(s.salUsed);
+      if (sal != null) niveis.sal_sacos_usados = sal;
       return inserir('estoque_eta', { niveis_l: niveis, operador: op });
-    }, null, null, { limpar: { lev: {} } });
+    }, null, null, { limpar: { lev: {}, levTocado: {}, salUsed: '' } });
+
+    // Descarregamento nos poços: uma linha por destino, todas com o mesmo lote.
+    aoSalvar(comp, v.on, 'savePocoDesc', foiParaConfirmacao, function (s) {
+      var lote = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+      if (!lote) throw new Error('navegador sem suporte para gerar o lote');
+      var linhas = (s.pd || []).map(function (r) {
+        return {
+          lote_id: lote, produto: r.tipo, quantidade_l: num(r.qtd),
+          ponto_id: r.dest, ponto_nome: r.destNome || r.dest, operador: op
+        };
+      });
+      return inserir('descarregamentos_pocos', linhas);
+    }, null, null, { limpar: { pd: null } });
 
     aoSalvar(comp, v.on, 'saveDesc', foiParaConfirmacao, function (s) {
       return inserir('descarregamentos_quimicos', {
@@ -865,6 +990,7 @@
       comp.setState({
         acc: blocosLiberados(null),
         done: {}, etaDone: {}, eteDone: {}, descLast: null, dbLast: {}, dbEtaPrev: {}, alertas: [],
+        estDone: {}, pdLast: null, descHoje: [],
         colPend: [], colDone: { eta: 0, sj: 0, mor: 0, pac: 0 }, colHist: [],
         dscRun: [], dscToday: [], dscMonthN: 0, dscMonthVol: 0
       });
@@ -895,6 +1021,14 @@
       return v;
     };
   }
+
+  // Virou o dia com o app aberto: recarrega (tudo volta a "pendente") e os filtros dos macros voltam para Pendentes.
+  setInterval(function () {
+    if (!atual || !perfil || !atual.state.diaCarregado) return;
+    if (dayStart(0).toISOString() === atual.state.diaCarregado) return;
+    atual.setState({ filt: atual.state.block === 'poco' ? 'pend' : atual.state.filt, etaFilt: 'pend' });
+    atualizar(atual);
+  }, 60000);
 
   // Ao voltar para o app (outra aba, celular desbloqueado), busca o que outros operadores lançaram.
   document.addEventListener('visibilitychange', function () {
