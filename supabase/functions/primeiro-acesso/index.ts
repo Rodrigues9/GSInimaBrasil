@@ -4,7 +4,7 @@
 // POST { acao: "criar", login, senha }     -> { ok: true }  (cria a conta no Auth e liga ao perfil)
 // POST { acao: "redefinir", perfil_id }    -> { ok: true }  (só administrador: apaga a conta e o perfil
 //                                                             volta a aguardar o primeiro acesso)
-// POST { acao: "excluir", perfil_id }      -> { ok: true }  (só administrador: apaga a conta e o perfil)
+// POST { acao: "excluir", perfil_id }      -> { ok: true }  (quem tem "Excluir usuário": apaga a conta e o perfil)
 //
 // Roda sem login (verify_jwt desligado), por isso só cria conta para perfis ativos que ainda não têm uma;
 // "redefinir" e "excluir" conferem o token de quem chamou.
@@ -79,16 +79,17 @@ Deno.serve(async (req) => {
   return resposta({ ok: true });
 });
 
-// Confere o token de quem chamou: devolve o id da conta se for administrador ativo, ou a resposta de erro.
-async function administradorQueChamou(admin: SupabaseClient, req: Request, oQue: string): Promise<string | Response> {
+// Confere o token de quem chamou: devolve o id da conta se ela estiver ativa e tiver a permissão pedida
+// (padrão: "admin" = gerenciar usuários e permissões), ou a resposta de erro.
+async function administradorQueChamou(admin: SupabaseClient, req: Request, oQue: string, permissao = "admin"): Promise<string | Response> {
   const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   const { data: quem } = token ? await admin.auth.getUser(token) : { data: { user: null } };
   if (!quem?.user) return resposta({ erro: `Entre de novo para ${oQue}.` }, 401);
 
   const { data: eu } = await admin
     .from("perfis").select("ativo, permissoes").eq("usuario_id", quem.user.id).maybeSingle();
-  if (!eu || !eu.ativo || String(eu.permissoes?.web?.admin) !== "true") {
-    return resposta({ erro: `Só administradores podem ${oQue}.` }, 403);
+  if (!eu || !eu.ativo || String(eu.permissoes?.web?.[permissao]) !== "true") {
+    return resposta({ erro: `Sua conta não tem permissão para ${oQue}.` }, 403);
   }
   return quem.user.id;
 }
@@ -96,13 +97,18 @@ async function administradorQueChamou(admin: SupabaseClient, req: Request, oQue:
 // Excluir conta: apaga o login (conta de Auth, se já existir) e o perfil.
 // Os lançamentos antigos ficam (usuario_id deles vira vazio; o nome do operador continua gravado).
 async function excluir(admin: SupabaseClient, req: Request, perfilId: string) {
-  const eu = await administradorQueChamou(admin, req, "excluir contas");
+  const eu = await administradorQueChamou(admin, req, "excluir usuários", "excluir");
   if (eu instanceof Response) return eu;
 
   const { data: alvo } = await admin
-    .from("perfis").select("id, usuario_id").eq("id", perfilId).maybeSingle();
+    .from("perfis").select("id, usuario_id, papel, permissoes").eq("id", perfilId).maybeSingle();
   if (!alvo) return resposta({ erro: "Usuário não encontrado." }, 404);
   if (alvo.usuario_id === eu) return resposta({ erro: "Você não pode excluir a sua própria conta." }, 400);
+  // Quem não gerencia permissões não pode excluir um administrador.
+  if (alvo.papel === "admin" || String(alvo.permissoes?.web?.admin) === "true") {
+    const { data: quem } = await admin.from("perfis").select("permissoes").eq("usuario_id", eu).maybeSingle();
+    if (String(quem?.permissoes?.web?.admin) !== "true") return resposta({ erro: "Só quem gerencia usuários e permissões pode excluir um administrador." }, 403);
+  }
 
   // Primeiro a conta de Auth (o perfil fica sem vínculo), depois o perfil.
   // Se o segundo passo falhar, a pessoa aparece como "Aguardando 1º acesso" e dá para tentar de novo.

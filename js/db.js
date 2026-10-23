@@ -30,7 +30,8 @@
   // O login (ex.: felipe.altafini) vira um e-mail interno no Supabase Auth; nenhum e-mail é enviado.
   var DOMINIO_LOGIN = 'usuarios.gsinima.local';
   var BLOCOS = ['eta', 'ete', 'poco', 'coleta', 'descarga'];
-  var PAPEIS = { operador_volante: 'Operador Volante', operador_eta: 'Operador de ETA', analista: 'Analista de Laboratório', supervisor: 'Supervisor', coordenador: 'Coordenador', admin: 'Administrador' };
+  var PAPEIS = { operador_volante: 'Operador Volante', operador_eta: 'Operador de ETA', analista: 'Analista de Laboratório', supervisor: 'Supervisor', coordenador: 'Coordenador', gerente: 'Gerente', diretor: 'Diretor', admin: 'Administrador' };
+  function podeNaWeb(acao) { return !!(perfil && perfil.permissoes && perfil.permissoes.web && perfil.permissoes.web[acao]); }
   var perfil = null;
 
   function operador() { return perfil ? perfil.nome : 'Operador'; }
@@ -1285,9 +1286,10 @@
       // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
       if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas') return false;
       var t = (perfil.permissoes && perfil.permissoes.telas) || {};
-      return TELAS[nome] ? t[TELAS[nome]] !== false : true;
+      return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela só aparece se estiver marcada
     }
     if (nome === 'MobileHome') return !!cel;
+    if (nome === 'WebAdmin') return podeNaWeb('admin') || podeNaWeb('cadastrar') || podeNaWeb('excluir');
     return true;
   }
   function inicio(cel) {
@@ -1503,9 +1505,9 @@
   // ---------- tela "Usuários e permissões" ----------
   function permCompleta(p) {
     var x = JSON.parse(JSON.stringify(p || {}));
-    x.web = Object.assign({ painelVer: false, painelExp: false, imp: false, exp: false, admin: false }, x.web || {});
+    x.web = Object.assign({ painelVer: false, painelExp: false, imp: false, exp: false, admin: false, cadastrar: false, excluir: false }, x.web || {});
     delete x.web.acesso;
-    x.telas = Object.assign({ painel: true, quimicos: true, coletas: true, descargas: true, operacao: true }, x.telas || {});
+    x.telas = Object.assign({ painel: false, quimicos: false, coletas: false, descargas: false, operacao: false }, x.telas || {});
     return x;
   }
   function carregarUsuarios(comp, selecionar) {
@@ -1528,12 +1530,14 @@
 
   // "Cadastrar usuário": nome, login e cargo; sem senha (a pessoa cria no primeiro acesso).
   var CARGOS = [
-    ['operador_volante', 'Operador Volante', 'Poços, ETEs, coletas e descargas'],
-    ['operador_eta', 'Operador de ETA', 'Operação das ETAs'],
-    ['analista', 'Analista de Laboratório', 'Análises e calibrações'],
-    ['supervisor', 'Supervisor', 'Corrige e exporta'],
-    ['coordenador', 'Coordenador', 'Acompanha, importa e exporta'],
-    ['admin', 'Administrador', 'Acesso total']
+    ['operador_eta', 'Operador de ETA', 'Operador'],
+    ['operador_volante', 'Operador Volante', 'Operador'],
+    ['analista', 'Analista de Laboratório', 'Analista'],
+    ['supervisor', 'Supervisor', 'Gestor'],
+    ['coordenador', 'Coordenador', 'Gestor'],
+    ['gerente', 'Gerente', 'Gestor'],
+    ['diretor', 'Diretor', 'Gestor'],
+    ['admin', 'Administrador', 'Administrador']
   ];
   function formCadastro(comp) {
     if (!comp.state.dbUsers) { toast('Aguarde a lista de usuários carregar.'); return; }
@@ -1552,9 +1556,11 @@
       '<span style="font-size:13px;color:#52627A;margin-top:-4px">Letras minúsculas, números, ponto, hífen ou sublinhado (3 a 40).</span>' +
       '<label for="cu-cargo" style="' + rot + '">Cargo</label>' +
       '<select id="cu-cargo" style="' + campoF + '">' +
-      CARGOS.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + ' — ' + c[2] + '</option>'; }).join('') +
+      ['Operador', 'Analista', 'Gestor', 'Administrador'].map(function (g) {
+        return '<optgroup label="' + g + '">' + CARGOS.filter(function (c) { return c[2] === g; }).map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</optgroup>';
+      }).join('') +
       '</select>' +
-      '<span style="font-size:13px;color:#52627A;margin-top:-4px">O cargo preenche as permissões; depois você pode ajustá-las na tela.</span>' +
+      '<span style="font-size:13px;color:#52627A;margin-top:-4px">A conta começa sem permissões; marque-as depois na tela.</span>' +
       '<p id="cu-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
       '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">' +
       '<button type="button" id="cu-cancel" style="height:46px;padding:0 18px;border:1.5px solid #C7D4E2;border-radius:12px;background:#fff;color:#0A2E5C;font-size:15px;font-weight:700;cursor:pointer">Cancelar</button>' +
@@ -1649,14 +1655,15 @@
     cls.prototype.renderVals = function () {
       var comp = this, v = render.call(this);
       v.cadastrar = function () { formCadastro(comp); };
+      v.podeCadastrar = podeNaWeb('cadastrar');
       // "Redefinir senha": apaga a conta da pessoa e o perfil volta a aguardar o primeiro acesso
       // (ela cria uma senha nova ao entrar). Não vale para a própria conta nem para quem ainda não entrou.
       var sel = comp.state.users.find(function (u) { return u.id === comp.state.sel; });
       if (v.cur) {
-        v.cur.podeRedefinir = !!(comp.state.dbUsers && sel && !sel.pendente && !(perfil && sel.id === perfil.id));
+        v.cur.podeRedefinir = podeNaWeb('admin') && !!(comp.state.dbUsers && sel && !sel.pendente && !(perfil && sel.id === perfil.id));
         v.cur.redefinir = function () { redefinirSenha(comp, sel); };
         // "Excluir conta": vale também para quem ainda não fez o primeiro acesso; nunca para a própria conta.
-        v.cur.podeExcluir = !!(comp.state.dbUsers && sel && sel.id !== '_' && !(perfil && sel.id === perfil.id));
+        v.cur.podeExcluir = podeNaWeb('excluir') && !!(comp.state.dbUsers && sel && sel.id !== '_' && !(perfil && sel.id === perfil.id));
         v.cur.excluir = function () { excluirConta(comp, sel); };
       }
       var salvar = v.save;
