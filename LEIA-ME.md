@@ -23,6 +23,7 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Coleta de campo e análises | `coletas` |
 | Descargas de rede | `descargas_rede` |
 | Operação ETA (computador) | `operacao_eta` — ETA Pardo I ou II, horário, até 3 operadores (primeiro nome das contas "Operador de ETA", função `operadores_eta()`), medições por etapa em `dados` (captacao, bruta, pac, coagulada, decantada, filtrada, tratada) e observações |
+| Capacidades dos poços (computador, Produtos químicos) | `capacidades_pocos` — capacidade de hipoclorito e ácido por poço e se o flúor é diluído 50%; a visão `estoque_poco_real` dá o volume real de ácido (metade nos poços diluídos) para consumo e exportação |
 
 ## Site único: celular x computador
 - Um só endereço. Tela menor que **1024 px** = celular; 1024 px ou mais (tablet deitado, computador) = computador.

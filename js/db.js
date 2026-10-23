@@ -281,7 +281,7 @@
     leit: [{ aba: 'Macromedidores', tabela: 'leituras_macromedidor', sem: ['cloro_mg_l', 'fluor_mg_l'] }],
     res: [{ aba: 'Residuais', tabela: 'leituras_macromedidor', so: ['criado_em', 'ponto_nome', 'grupo', 'cloro_mg_l', 'fluor_mg_l', 'operador'], filtro: function (r) { return r.cloro_mg_l != null || r.fluor_mg_l != null; } }],
     est: [
-      { aba: 'Estoque poços', tabela: 'estoque_poco' },
+      { aba: 'Estoque poços', tabela: 'estoque_poco_real' }, // com o volume real do ácido (metade se o flúor é diluído)
       { aba: 'Estoque ETAs', tabela: 'estoque_eta' },
       { aba: 'Descarreg. ETAs', tabela: 'descarregamentos_quimicos' },
       { aba: 'Descarreg. poços', tabela: 'descarregamentos_pocos' }
@@ -301,7 +301,8 @@
     produto: 'Produto', eta: 'ETA', quantidade_kg: 'Quantidade (kg)', quantidade_l: 'Quantidade (L)', endereco: 'Endereço', bairro: 'Bairro',
     sistema: 'Sistema', dn_mm: 'DN (mm)', status: 'Situação', ph: 'pH', cor_uh: 'Cor (uH)', turbidez_ut: 'Turbidez (UT)',
     coliformes_totais: 'Coliformes totais', coliformes_termotolerantes: 'Coliformes termotolerantes', coletor: 'Coletor', analista: 'Analista',
-    ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores'
+    ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores',
+    fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)'
   };
   // Operação ETA: "dados.captacao.vazao_m3h" -> "Captação: vazão total (m³/h)".
   var ETAPAS_OPETA = { captacao: 'Captação', bruta: 'Água bruta', pac: 'Aplicação de PAC', coagulada: 'Água coagulada', decantada: 'Água decantada', filtrada: 'Água filtrada', tratada: 'Água tratada' };
@@ -457,12 +458,14 @@
       '<form role="dialog" aria-modal="true" aria-labelledby="cap-tit" style="width:100%;max-width:560px;max-height:calc(100vh - 32px);overflow-y:auto;background:#fff;border-radius:22px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">' +
       '<h2 id="cap-tit" style="margin:0;font-size:22px;font-weight:800;color:#0A2E5C">Capacidades dos poços</h2>' +
       '<p style="margin:0;color:#52627A;font-size:14px">Capacidade total, em litros, dos reservatórios de cada poço. O app usa esses valores para mostrar a porcentagem do estoque.</p>' +
-      '<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:8px 10px;align-items:center">' +
-      '<span></span><span style="font-size:12px;font-weight:700;color:#52627A">Hipoclorito (L)</span><span style="font-size:12px;font-weight:700;color:#52627A">Ácido fluossilícico (L)</span>' +
+      '<p style="margin:0;color:#52627A;font-size:14px"><b style="color:#0A2E5C">Flúor diluído:</b> marque os poços em que o ácido fluossilícico é diluído 50% com água. O operador continua lançando o volume total; no controle de consumo e na exportação vale a metade.</p>' +
+      '<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px 10px;align-items:center">' +
+      '<span></span><span style="font-size:12px;font-weight:700;color:#52627A">Hipoclorito (L)</span><span style="font-size:12px;font-weight:700;color:#52627A">Ácido fluossilícico (L)</span><span style="font-size:12px;font-weight:700;color:#52627A">Flúor diluído</span>' +
       POCOS_CAPACIDADE.map(function (p) {
         return '<span style="font-weight:700;color:#0A2E5C;font-size:14px">' + p[1] + '</span>' +
           '<input data-p="' + p[0] + '" data-c="hip" inputmode="numeric" aria-label="' + p[1] + ': hipoclorito (L)" placeholder="1.000" style="' + campoC + '">' +
-          '<input data-p="' + p[0] + '" data-c="aci" inputmode="numeric" aria-label="' + p[1] + ': ácido fluossilícico (L)" placeholder="500" style="' + campoC + '">';
+          '<input data-p="' + p[0] + '" data-c="aci" inputmode="numeric" aria-label="' + p[1] + ': ácido fluossilícico (L)" placeholder="500" style="' + campoC + '">' +
+          '<label style="display:flex;justify-content:center;cursor:pointer"><input type="checkbox" data-dil="' + p[0] + '" aria-label="' + p[1] + ': flúor diluído 50%" style="width:22px;height:22px;accent-color:#0057A8;margin:0"></label>';
       }).join('') +
       '</div>' +
       '<p id="cap-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
@@ -473,16 +476,20 @@
     document.body.appendChild(fundo);
     var msg = fundo.querySelector('#cap-msg');
     var campos = Array.prototype.slice.call(fundo.querySelectorAll('input[data-p]'));
+    var diluido = function (p) { return fundo.querySelector('input[data-dil="' + p + '"]'); };
     var fechar = function () { fundo.remove(); };
     fundo.querySelector('#cap-cancel').addEventListener('click', fechar);
     fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
     // Preenche com o que já está definido.
-    sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l').then(function (r) {
+    sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l,fluor_diluido').then(function (r) {
       (r.data || []).forEach(function (c) {
         campos.forEach(function (el) {
           if (el.getAttribute('data-p') !== c.ponto_id) return;
-          el.value = fmt(el.getAttribute('data-c') === 'hip' ? c.hipoclorito_l : c.acido_fluossilicico_l);
+          var v = el.getAttribute('data-c') === 'hip' ? c.hipoclorito_l : c.acido_fluossilicico_l;
+          el.value = v == null ? '' : fmt(v);
         });
+        var cx = diluido(c.ponto_id);
+        if (cx) cx.checked = !!c.fluor_diluido;
       });
     });
     campos[0].focus();
@@ -491,13 +498,13 @@
       var linhas = [], erro = '';
       POCOS_CAPACIDADE.forEach(function (p) {
         var h = fundo.querySelector('input[data-p="' + p[0] + '"][data-c="hip"]').value, a = fundo.querySelector('input[data-p="' + p[0] + '"][data-c="aci"]').value;
-        if (!String(h).trim() && !String(a).trim()) return; // poço sem capacidade definida: o app usa o padrão
+        var dil = !!(diluido(p[0]) && diluido(p[0]).checked);
+        var vazio = !String(h).trim() && !String(a).trim(); // sem capacidade definida: o app usa o padrão
         var hn = num(h), an = num(a);
-        if (!(hn > 0) || !(an > 0)) { erro = erro || 'Preencha as duas capacidades de ' + p[1] + ' (números maiores que zero).'; return; }
-        linhas.push({ ponto_id: p[0], ponto_nome: p[1], hipoclorito_l: hn, acido_fluossilicico_l: an, atualizado_em: new Date().toISOString(), atualizado_por: operador() });
+        if (!vazio && (!(hn > 0) || !(an > 0))) { erro = erro || 'Preencha as duas capacidades de ' + p[1] + ' (números maiores que zero), ou deixe as duas em branco.'; return; }
+        linhas.push({ ponto_id: p[0], ponto_nome: p[1], hipoclorito_l: vazio ? null : hn, acido_fluossilicico_l: vazio ? null : an, fluor_diluido: dil, atualizado_em: new Date().toISOString(), atualizado_por: operador() });
       });
       if (erro) { msg.textContent = erro; return; }
-      if (!linhas.length) { fechar(); return; }
       var b = fundo.querySelector('button[type=submit]');
       b.disabled = true; b.textContent = 'Salvando…'; msg.textContent = '';
       q(sb.from('capacidades_pocos').upsert(linhas, { onConflict: 'ponto_id' }).select('ponto_id')).then(function () {
@@ -738,7 +745,12 @@
     ]);
     var estPoco = res[10], colPositivas = res[11], descHoje = res[12], pdRecentes = res[13];
     var capPocos = {};
-    (res[14] || []).forEach(function (c) { capPocos[c.ponto_id] = { hip: Number(c.hipoclorito_l), aci: Number(c.acido_fluossilicico_l) }; });
+    (res[14] || []).forEach(function (c) {
+      var cap = {};
+      if (c.hipoclorito_l != null) cap.hip = Number(c.hipoclorito_l);
+      if (c.acido_fluossilicico_l != null) cap.aci = Number(c.acido_fluossilicico_l);
+      capPocos[c.ponto_id] = cap;
+    });
 
     // Estoque dos poços lançado hoje (por ponto).
     var estDone = {};
