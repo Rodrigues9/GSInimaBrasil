@@ -443,6 +443,73 @@
     return { arquivo: nomes.length > 1 ? nomes.length + ' arquivos CSV' : nomes[0], linhas: total };
   }
 
+  // ---------- capacidades dos reservatórios dos poços (tela Produtos químicos) ----------
+  // Mesmos códigos dos poços usados no app (estoque_poco.ponto_id) e na mesma ordem da lista de estoque.
+  var POCOS_CAPACIDADE = [['m3', 'Poço Diamantes'], ['m7', 'Poço São João'], ['m8', 'Poço Pacaembu'], ['m11', 'Poço Moradas'],
+    ['m15', 'Poço Ville de France'], ['e0', 'Poço Esmeralda'], ['m21', 'Poço Nova Alcântara']];
+  function abrirCapacidades() {
+    if (document.getElementById('cap-fundo')) return;
+    var fundo = document.createElement('div');
+    fundo.id = 'cap-fundo';
+    fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Inter\',system-ui,sans-serif';
+    var campoC = 'height:42px;border:1.5px solid #C7D4E2;border-radius:10px;padding:0 10px;font-size:15px;font-family:inherit;width:100%;box-sizing:border-box;background:#fff';
+    fundo.innerHTML =
+      '<form role="dialog" aria-modal="true" aria-labelledby="cap-tit" style="width:100%;max-width:560px;max-height:calc(100vh - 32px);overflow-y:auto;background:#fff;border-radius:22px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">' +
+      '<h2 id="cap-tit" style="margin:0;font-size:22px;font-weight:800;color:#0A2E5C">Capacidades dos poços</h2>' +
+      '<p style="margin:0;color:#52627A;font-size:14px">Capacidade total, em litros, dos reservatórios de cada poço. O app usa esses valores para mostrar a porcentagem do estoque.</p>' +
+      '<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:8px 10px;align-items:center">' +
+      '<span></span><span style="font-size:12px;font-weight:700;color:#52627A">Hipoclorito (L)</span><span style="font-size:12px;font-weight:700;color:#52627A">Ácido fluossilícico (L)</span>' +
+      POCOS_CAPACIDADE.map(function (p) {
+        return '<span style="font-weight:700;color:#0A2E5C;font-size:14px">' + p[1] + '</span>' +
+          '<input data-p="' + p[0] + '" data-c="hip" inputmode="numeric" aria-label="' + p[1] + ': hipoclorito (L)" placeholder="1.000" style="' + campoC + '">' +
+          '<input data-p="' + p[0] + '" data-c="aci" inputmode="numeric" aria-label="' + p[1] + ': ácido fluossilícico (L)" placeholder="500" style="' + campoC + '">';
+      }).join('') +
+      '</div>' +
+      '<p id="cap-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end">' +
+      '<button type="button" id="cap-cancel" style="height:44px;padding:0 18px;border:1.5px solid #C7D4E2;border-radius:12px;background:#fff;color:#0A2E5C;font-size:15px;font-weight:700;cursor:pointer">Cancelar</button>' +
+      '<button type="submit" style="height:44px;padding:0 18px;border:0;border-radius:12px;background:#0057A8;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Salvar</button>' +
+      '</div></form>';
+    document.body.appendChild(fundo);
+    var msg = fundo.querySelector('#cap-msg');
+    var campos = Array.prototype.slice.call(fundo.querySelectorAll('input[data-p]'));
+    var fechar = function () { fundo.remove(); };
+    fundo.querySelector('#cap-cancel').addEventListener('click', fechar);
+    fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+    // Preenche com o que já está definido.
+    sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l').then(function (r) {
+      (r.data || []).forEach(function (c) {
+        campos.forEach(function (el) {
+          if (el.getAttribute('data-p') !== c.ponto_id) return;
+          el.value = fmt(el.getAttribute('data-c') === 'hip' ? c.hipoclorito_l : c.acido_fluossilicico_l);
+        });
+      });
+    });
+    campos[0].focus();
+    fundo.querySelector('form').addEventListener('submit', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var linhas = [], erro = '';
+      POCOS_CAPACIDADE.forEach(function (p) {
+        var h = fundo.querySelector('input[data-p="' + p[0] + '"][data-c="hip"]').value, a = fundo.querySelector('input[data-p="' + p[0] + '"][data-c="aci"]').value;
+        if (!String(h).trim() && !String(a).trim()) return; // poço sem capacidade definida: o app usa o padrão
+        var hn = num(h), an = num(a);
+        if (!(hn > 0) || !(an > 0)) { erro = erro || 'Preencha as duas capacidades de ' + p[1] + ' (números maiores que zero).'; return; }
+        linhas.push({ ponto_id: p[0], ponto_nome: p[1], hipoclorito_l: hn, acido_fluossilicico_l: an, atualizado_em: new Date().toISOString(), atualizado_por: operador() });
+      });
+      if (erro) { msg.textContent = erro; return; }
+      if (!linhas.length) { fechar(); return; }
+      var b = fundo.querySelector('button[type=submit]');
+      b.disabled = true; b.textContent = 'Salvando…'; msg.textContent = '';
+      q(sb.from('capacidades_pocos').upsert(linhas, { onConflict: 'ponto_id' }).select('ponto_id')).then(function () {
+        fechar();
+        toast('Capacidades salvas. O app passa a usar os novos valores.', 'ok');
+      }).catch(function (err) {
+        b.disabled = false; b.textContent = 'Salvar';
+        msg.textContent = /row-level security/i.test(String(err && err.message)) ? 'Só quem está acima de operador pode alterar as capacidades.' : 'Não foi possível salvar (' + erroTxt(err) + ').';
+      });
+    });
+  }
+
   // ---------- confirmação genérica no centro da tela (no lugar do confirm do navegador) ----------
   // opcoes: { titulo, texto, sim, nao, perigo }. Devolve uma promessa com true (confirmou) ou false.
   function confirmarAcao(opcoes) {
@@ -666,9 +733,12 @@
       q(sb.from('coletas').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
         .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
       q(sb.from('descarregamentos_quimicos').select('produto,eta').gte('criado_em', t0)),
-      q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em').order('criado_em', { ascending: false }).limit(50))
+      q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em').order('criado_em', { ascending: false }).limit(50)),
+      q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; })
     ]);
     var estPoco = res[10], colPositivas = res[11], descHoje = res[12], pdRecentes = res[13];
+    var capPocos = {};
+    (res[14] || []).forEach(function (c) { capPocos[c.ponto_id] = { hip: Number(c.hipoclorito_l), aci: Number(c.acido_fluossilicico_l) }; });
 
     // Estoque dos poços lançado hoje (por ponto).
     var estDone = {};
@@ -769,7 +839,7 @@
     });
 
     return {
-      alertas: alertas, estDone: estDone, pdLast: pdLast, descHoje: descHoje, diaCarregado: t0,
+      alertas: alertas, estDone: estDone, pdLast: pdLast, descHoje: descHoje, diaCarregado: t0, capPocos: capPocos,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, descLast: descLast,
       colPend: pend, colDone: colDone, colHist: hist,
@@ -836,13 +906,13 @@
     var ctx = feito.okCtx;
     if (ctx === 'etamac') return { screen: 'eta', block: 'eta', etaMode: 'mac', etaFilt: 'pend' };
     if (ctx === 'coleta') return { screen: 'coleta' };
-    if (ctx === 'descarga') return { screen: 'descarga' };
-    if (ctx === 'pocosDesc') return { screen: 'lista', block: 'pocos', filt: 'todos', q: '' };
+    if (ctx === 'descarga') return { screen: 'home' };
+    if (ctx === 'pocosDesc') return { screen: 'lista', block: 'pocos', filt: 'pend', q: '' };
     if (ctx === 'poco') {
-      return feito.tab === 'estoque' ? { screen: 'lista', block: 'pocoEst', filt: 'todos', q: '' }
+      return feito.tab === 'estoque' ? { screen: 'lista', block: 'pocoEst', filt: 'pend', q: '' }
         : { screen: 'lista', block: 'poco', filt: 'pend', q: '' };
     }
-    return { screen: 'lista', block: ctx === 'eta' || ctx === 'ete' ? ctx : 'poco', filt: 'todos', q: '' };
+    return { screen: 'lista', block: ctx === 'eta' || ctx === 'ete' ? ctx : 'poco', filt: 'pend', q: '' };
   }
 
   // Janela de confirmação com o resumo dos dados preenchidos.
@@ -992,6 +1062,7 @@
         var menor = hasCur && vol < 0;
         // O aviso de totalizador menor só aparece depois que a pessoa sai do campo (ou tenta registrar).
         v.neg = menor && !!st.totTocado;
+        if (menor) { v.saveOff = true; v.saveOp = 0.45; v.saveHint = 'Corrija o totalizador: ele não pode ser menor que a leitura anterior.'; }
         v.volTxt = hasCur && !menor ? fmt(vol) : '—';
         v.vazMedTxt = hasCur && !menor && hrs > 0 ? fmt1(vol / hrs) : '—';
         v.hrsTxt = h + ' h ' + pad(m) + ' min';
@@ -1120,7 +1191,13 @@
       var sal = num(s.salUsed);
       if (sal != null) niveis.sal_sacos_usados = sal;
       return inserir('estoque_eta', { niveis_l: niveis, operador: op });
-    }, null, null, { limpar: { lev: {}, levTocado: {}, salUsed: '' } });
+    }, null, null, {
+      validar: function (s) {
+        var falta = (v.stockGroups || []).some(function (g) { return (g.res || []).some(function (r) { return num((s.lev || {})[String(r.id).replace(/^st-/, '')]) == null; }); });
+        if (falta || num(s.salUsed) == null) return 'Preencha o volume de todos os reservatórios e os sacos de sal usados.';
+      },
+      limpar: { lev: {}, levTocado: {}, salUsed: '' }
+    });
 
     // Descarregamento nos poços: uma linha por destino, todas com o mesmo lote.
     aoSalvar(comp, v.on, 'savePocoDesc', foiParaConfirmacao, function (s) {
@@ -1260,7 +1337,7 @@
   setInterval(function () {
     if (!atual || !perfil || !atual.state.diaCarregado) return;
     if (dayStart(0).toISOString() === atual.state.diaCarregado) return;
-    atual.setState({ filt: atual.state.block === 'poco' ? 'pend' : atual.state.filt, etaFilt: 'pend' });
+    atual.setState({ filt: 'pend', etaFilt: 'pend' });
     atualizar(atual);
   }, 60000);
 
@@ -1409,7 +1486,8 @@
             trocarFoto: trocarFoto, fotoPadrao: fotoPadrao,
             alterarSenha: alterarSenha, trocandoSenha: trocandoSenha, senhaTxt: trocandoSenha ? 'Salvando…' : 'Salvar nova senha',
             menuFoto: abrirMenuFoto, senhaAberta: senhaAberta, senhaFechada: !senhaAberta, abrirSenha: abrirSenha, fecharSenha: fecharSenha,
-            painelNome: eOperador() ? 'Início' : 'Painel'
+            painelNome: eOperador() ? 'Início' : 'Painel',
+            podeCapacidades: !!perfil && !eOperador(), capacidades: abrirCapacidades
           });
           return v;
         };
