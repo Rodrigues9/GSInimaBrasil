@@ -274,6 +274,204 @@
     }).then(function () { trocandoSenha = false; redesenhar(); });
   }
 
+  // ---------- exportar dados (tela "Importar e exportar") ----------
+  // Cada conjunto escolhido vira uma ou mais abas (Excel) ou arquivos (CSV), com os lançamentos do período.
+  var CONJUNTOS = {
+    leit: [{ aba: 'Macromedidores', tabela: 'leituras_macromedidor', sem: ['cloro_mg_l', 'fluor_mg_l'] }],
+    res: [{ aba: 'Residuais', tabela: 'leituras_macromedidor', so: ['criado_em', 'ponto_nome', 'grupo', 'cloro_mg_l', 'fluor_mg_l', 'operador'], filtro: function (r) { return r.cloro_mg_l != null || r.fluor_mg_l != null; } }],
+    est: [
+      { aba: 'Estoque poços', tabela: 'estoque_poco' },
+      { aba: 'Estoque ETAs', tabela: 'estoque_eta' },
+      { aba: 'Descarreg. ETAs', tabela: 'descarregamentos_quimicos' },
+      { aba: 'Descarreg. poços', tabela: 'descarregamentos_pocos' }
+    ],
+    eta: [{ aba: 'Calibrações ETA', tabela: 'calibracoes_eta' }],
+    ope: [{ aba: 'Operação ETA', tabela: 'operacao_eta' }],
+    ete: [{ aba: 'ETEs', tabela: 'visitas_ete' }],
+    col: [{ aba: 'Coletas', tabela: 'coletas', data: 'coletada_em' }],
+    dsc: [{ aba: 'Descargas de rede', tabela: 'descargas_rede' }]
+  };
+  var SEM_EXPORTAR = { id: 1, usuario_id: 1, lote_id: 1 };
+  var NOMES_COLUNA = {
+    criado_em: 'Data e hora', coletada_em: 'Coletada em', concluida_em: 'Concluída em', inicio_em: 'Início', fim_em: 'Fim',
+    ponto_id: 'Código do ponto', ponto_nome: 'Ponto', grupo: 'Grupo', vazao_m3h: 'Vazão (m³/h)', totalizador_m3: 'Totalizador (m³)',
+    volume_m3: 'Volume (m³)', cloro_mg_l: 'Cloro (mg/L)', fluor_mg_l: 'Flúor (mg/L)', foto_anexada: 'Foto anexada', operador: 'Lançado por',
+    observacao: 'Observação', observacoes: 'Observações', hipoclorito_l: 'Hipoclorito (L)', acido_fluossilicico_l: 'Ácido fluossilícico (L)',
+    produto: 'Produto', eta: 'ETA', quantidade_kg: 'Quantidade (kg)', quantidade_l: 'Quantidade (L)', endereco: 'Endereço', bairro: 'Bairro',
+    sistema: 'Sistema', dn_mm: 'DN (mm)', status: 'Situação', ph: 'pH', cor_uh: 'Cor (uH)', turbidez_ut: 'Turbidez (UT)',
+    coliformes_totais: 'Coliformes totais', coliformes_termotolerantes: 'Coliformes termotolerantes', coletor: 'Coletor', analista: 'Analista',
+    ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores'
+  };
+  // Operação ETA: "dados.captacao.vazao_m3h" -> "Captação: vazão total (m³/h)".
+  var ETAPAS_OPETA = { captacao: 'Captação', bruta: 'Água bruta', pac: 'Aplicação de PAC', coagulada: 'Água coagulada', decantada: 'Água decantada', filtrada: 'Água filtrada', tratada: 'Água tratada' };
+  var CAMPOS_OPETA = {
+    nivel_rio_m: 'nível do rio (m)', vazao_m3h: 'vazão total (m³/h)', bombas: 'bombas em operação', turbidez: 'turbidez (NTU)', cor: 'cor aparente (uH)', ph: 'pH',
+    pac_vazao_mlmin: 'vazão de PAC (mL/min)', pac_concentracao_mgl: 'concentração de PAC (mg/L)', flocos: 'tamanho dos flocos',
+    cloro_dosagem_lh: 'dosagem de cloro (L/h)', pre_cloro_mgl: 'pré-cloro (mg/L)', cloro_mgl: 'cloro (mg/L)', fluor_dosagem_mlmin: 'dosagem de flúor (mL/min)', fluor_mgl: 'flúor (mg/L)',
+    'lavagem.filtros': 'filtros lavados', 'lavagem.inicio': 'início da lavagem', 'lavagem.fim': 'fim da lavagem', lavagem: 'lavagem de filtros'
+  };
+  function nomeOpeta(c) {
+    var m = /^dados\.([a-z]+)\.(.+)$/.exec(c);
+    if (!m || !ETAPAS_OPETA[m[1]]) return null;
+    var campo = m[2], txt = CAMPOS_OPETA[campo];
+    if (!txt) {
+      var d = /^dec(\d)_(turbidez|cor)$/.exec(campo), f = /^filtro(\d)_turbidez$/.exec(campo);
+      if (d) txt = 'decantador ' + d[1] + ' – ' + CAMPOS_OPETA[d[2]];
+      else if (f) txt = 'filtro ' + f[1] + ' – turbidez (NTU)';
+      else txt = campo.replace(/_/g, ' ');
+    }
+    return ETAPAS_OPETA[m[1]] + ': ' + txt;
+  }
+  function nomeColuna(c) {
+    if (NOMES_COLUNA[c]) return NOMES_COLUNA[c];
+    var op = nomeOpeta(c);
+    if (op) return op;
+    var t = c.replace(/^dados\./, '').replace(/[._]/g, ' ').replace(/\s+/g, ' ').trim();
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  function dataHoraBr(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  // Achata colunas jsonb (ex.: dados.captacao.vazao_m3h) e listas (ex.: operadores).
+  function achatar(obj, pref, out) {
+    Object.keys(obj || {}).forEach(function (k) {
+      var v = obj[k], chave = pref ? pref + '.' + k : k;
+      if (v && typeof v === 'object' && !Array.isArray(v)) achatar(v, chave, out);
+      else if (Array.isArray(v)) out[chave] = v.map(function (x) { return x && typeof x === 'object' ? JSON.stringify(x) : x; }).join(', ');
+      else out[chave] = v;
+    });
+    return out;
+  }
+  async function buscarTudo(tabela, campoData, de, ate) {
+    var linhas = [], passo = 1000;
+    for (var ini = 0; ; ini += passo) {
+      var r = await q(sb.from(tabela).select('*').gte(campoData, de).lt(campoData, ate).order(campoData, { ascending: true }).range(ini, ini + passo - 1));
+      linhas = linhas.concat(r || []);
+      if (!r || r.length < passo) break;
+    }
+    return linhas;
+  }
+  function carregarXlsx() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise(function (resolve, reject) {
+      var sc = document.createElement('script');
+      sc.src = '/vendor/xlsx.js';
+      sc.onload = function () { resolve(window.XLSX); };
+      sc.onerror = function () { reject(new Error('não foi possível carregar o gerador de planilhas')); };
+      document.head.appendChild(sc);
+    });
+  }
+  function baixar(nome, blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  // opcoes: { conjuntos: ['leit', ...], de: 'AAAA-MM-DD', ate: 'AAAA-MM-DD', formato: 'xlsx'|'csv', volume: bool }
+  async function exportarDados(opcoes) {
+    var de = new Date(opcoes.de + 'T00:00:00'), ate = new Date(opcoes.ate + 'T00:00:00');
+    ate.setDate(ate.getDate() + 1); // inclui o dia final inteiro
+    var abas = [], total = 0;
+    for (var i = 0; i < opcoes.conjuntos.length; i++) {
+      var partes = CONJUNTOS[opcoes.conjuntos[i]] || [];
+      for (var j = 0; j < partes.length; j++) {
+        var p = partes[j], campoData = p.data || 'criado_em';
+        var linhas = await buscarTudo(p.tabela, campoData, de.toISOString(), ate.toISOString());
+        if (p.filtro) linhas = linhas.filter(p.filtro);
+        // Macromedidores: intervalo em horas desde a leitura anterior do mesmo ponto (para conferir o volume).
+        if (p.tabela === 'leituras_macromedidor' && !p.so && opcoes.volume) {
+          var ultima = {};
+          linhas.forEach(function (r) {
+            var ant = ultima[r.ponto_id];
+            r.intervalo_h = ant ? Math.round((Date.parse(r.criado_em) - Date.parse(ant)) / 36e5 * 100) / 100 : null;
+            ultima[r.ponto_id] = r.criado_em;
+          });
+        }
+        var cols = [], vistas = {};
+        var planas = linhas.map(function (r) {
+          var o = {};
+          Object.keys(r).forEach(function (c) {
+            if (SEM_EXPORTAR[c] || (p.sem && p.sem.indexOf(c) >= 0) || (p.so && p.so.indexOf(c) < 0)) return;
+            if (c === 'volume_m3' && p.tabela === 'leituras_macromedidor' && !opcoes.volume) return;
+            var v = r[c];
+            if (v != null && typeof v === 'object' && !Array.isArray(v)) achatar(v, c, o);
+            else if (Array.isArray(v)) o[c] = v.join(', ');
+            else if (typeof v === 'string' && /_em$/.test(c)) o[c] = dataHoraBr(v);
+            else if (typeof v === 'boolean') o[c] = v ? 'Sim' : 'Não';
+            else if (c === 'eta' && p.tabela === 'operacao_eta') o[c] = v === 'pardo2' ? 'ETA Pardo II' : 'ETA Pardo I';
+            else if (c === 'horario' && typeof v === 'string') o[c] = v.slice(0, 5);
+            else o[c] = v;
+          });
+          Object.keys(o).forEach(function (c) { if (!vistas[c]) { vistas[c] = 1; cols.push(c); } });
+          return o;
+        });
+        if (cols.indexOf('intervalo_h') >= 0) { cols.splice(cols.indexOf('intervalo_h'), 1); cols.push('intervalo_h'); }
+        NOMES_COLUNA.intervalo_h = 'Intervalo desde a leitura anterior (h)';
+        total += planas.length;
+        abas.push({ nome: p.aba, cols: cols, linhas: planas });
+      }
+    }
+    var periodo = opcoes.de.split('-').reverse().join('-') + '_a_' + opcoes.ate.split('-').reverse().join('-');
+    var base = 'GSInima_' + periodo;
+    if (opcoes.formato === 'xlsx') {
+      var X = await carregarXlsx();
+      var wb = X.utils.book_new();
+      abas.forEach(function (a) {
+        var dados = [a.cols.map(nomeColuna)].concat(a.linhas.map(function (o) { return a.cols.map(function (c) { return o[c] == null ? '' : o[c]; }); }));
+        var ws = X.utils.aoa_to_sheet(a.linhas.length ? dados : [['Nenhum lançamento no período']]);
+        ws['!cols'] = (a.cols.length ? a.cols : ['x']).map(function (c) { return { wch: Math.min(40, Math.max(12, nomeColuna(c).length + 2)) }; });
+        X.utils.book_append_sheet(wb, ws, a.nome.slice(0, 31));
+      });
+      X.writeFile(wb, base + '.xlsx');
+      return { arquivo: base + '.xlsx', linhas: total };
+    }
+    // CSV no padrão brasileiro do Excel: separador ";", vírgula decimal e acentos preservados.
+    var csv = function (v) {
+      if (v == null) return '';
+      var t = typeof v === 'number' ? String(v).replace('.', ',') : String(v);
+      return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+    };
+    var nomes = [];
+    abas.forEach(function (a, n) {
+      var texto = [a.cols.map(nomeColuna).map(csv).join(';')].concat(a.linhas.map(function (o) { return a.cols.map(function (c) { return csv(o[c]); }).join(';'); })).join('\r\n');
+      var nome = base + '_' + a.nome.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_') + '.csv';
+      setTimeout(function () { baixar(nome, new Blob(['﻿' + texto], { type: 'text/csv;charset=utf-8' })); }, n * 400);
+      nomes.push(nome);
+    });
+    return { arquivo: nomes.length > 1 ? nomes.length + ' arquivos CSV' : nomes[0], linhas: total };
+  }
+
+  // ---------- confirmação genérica no centro da tela (no lugar do confirm do navegador) ----------
+  // opcoes: { titulo, texto, sim, nao, perigo }. Devolve uma promessa com true (confirmou) ou false.
+  function confirmarAcao(opcoes) {
+    opcoes = opcoes || {};
+    return new Promise(function (resolve) {
+      var fundo = document.createElement('div');
+      fundo.style.cssText = 'position:fixed;inset:0;background:rgba(10,46,92,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9998;font-family:\'Inter\',system-ui,sans-serif';
+      var cor = opcoes.perigo ? '#B42318' : '#0057A8';
+      fundo.innerHTML =
+        '<div role="alertdialog" aria-modal="true" aria-labelledby="ca-tit" aria-describedby="ca-txt" style="width:100%;max-width:400px;background:#fff;border-radius:22px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;text-align:center">' +
+        '<h2 id="ca-tit" style="margin:0;font-size:21px;font-weight:800;color:#0A2E5C"></h2>' +
+        '<p id="ca-txt" style="margin:0;color:#52627A;font-size:15px"></p>' +
+        '<div style="display:flex;gap:10px;margin-top:6px">' +
+        '<button type="button" id="ca-nao" style="flex:1;height:46px;border:1.5px solid #C7D4E2;border-radius:12px;background:#fff;color:#0A2E5C;font:700 15px \'Inter\',sans-serif;cursor:pointer"></button>' +
+        '<button type="button" id="ca-sim" style="flex:1;height:46px;border:0;border-radius:12px;background:' + cor + ';color:#fff;font:700 15px \'Inter\',sans-serif;cursor:pointer"></button>' +
+        '</div></div>';
+      fundo.querySelector('#ca-tit').textContent = opcoes.titulo || 'Confirmar?';
+      fundo.querySelector('#ca-txt').textContent = opcoes.texto || '';
+      fundo.querySelector('#ca-nao').textContent = opcoes.nao || 'Cancelar';
+      fundo.querySelector('#ca-sim').textContent = opcoes.sim || 'Confirmar';
+      document.body.appendChild(fundo);
+      var fim = function (v) { fundo.remove(); resolve(v); };
+      fundo.querySelector('#ca-nao').addEventListener('click', function () { fim(false); });
+      fundo.querySelector('#ca-sim').addEventListener('click', function () { fim(true); });
+      fundo.addEventListener('click', function (e) { if (e.target === fundo) fim(false); });
+      fundo.addEventListener('keydown', function (e) { if (e.key === 'Escape') fim(false); });
+      fundo.querySelector('#ca-nao').focus();
+    });
+  }
+
   // ---------- sair com confirmação no centro da tela ----------
   function confirmarSaida() {
     if (document.getElementById('cs-fundo')) return;
@@ -1450,11 +1648,6 @@
     var render = cls.prototype.renderVals;
     cls.prototype.renderVals = function () {
       var comp = this, v = render.call(this);
-      // Quem foi cadastrado e ainda não criou a senha aparece como "Aguardando 1º acesso".
-      (v.users || []).forEach(function (vu, i) {
-        var u = comp.state.users[i];
-        if (u && u.pendente && u.active) { vu.status = 'Aguardando 1º acesso'; vu.stBg = '#FDF0DC'; vu.stFg = '#8A3C06'; }
-      });
       v.cadastrar = function () { formCadastro(comp); };
       // "Redefinir senha": apaga a conta da pessoa e o perfil volta a aguardar o primeiro acesso
       // (ela cria uma senha nova ao entrar). Não vale para a própria conta nem para quem ainda não entrou.
@@ -1472,7 +1665,7 @@
         if (!st.dbUsers) return;
         // Proteção: ninguém tira de si mesmo o acesso de administrador nem desativa a própria conta.
         var eu = perfil && st.users.find(function (u) { return u.id === perfil.id; });
-        if (eu && (!eu.active || !st.perms[eu.id].web.admin || !st.perms[eu.id].web.acesso)) {
+        if (eu && (!eu.active || !st.perms[eu.id].web.admin)) {
           toast('Você não pode tirar o seu próprio acesso de administrador nem desativar a sua conta.');
           return;
         }
@@ -1506,6 +1699,8 @@
     inicio: inicio, podeAbrir: podeAbrir, menuPermitido: menuPermitido,
     // Operação ETA (computador): confirmação e gravação do lançamento.
     confirmarEnvio: confirmarEnvio,
+    confirmarAcao: confirmarAcao,
+    exportarDados: exportarDados,
     salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); },
     operadoresEta: function () {
       return q(sb.rpc('operadores_eta')).then(function (rows) {

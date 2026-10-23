@@ -4,7 +4,7 @@
 |---|---|
 | `index.html` | Site único: entrada (login), app do operador e telas do sistema (painel, químicos, coletas, descargas, Operação ETA, dados, usuários). O layout muda pelo tamanho da tela |
 | `js/db.js` | Liga os formulários do app ao Supabase (grava e carrega os dados) |
-| `scripts/build.js` | Gera o site em `dist/`, com as chaves do Supabase lidas do `.env` |
+| `scripts/build.js` | Gera o site em `dist/`, com as chaves do Supabase lidas do `.env`; copia o supabase-js e o xlsx (SheetJS, instalado do CDN oficial) para `dist/vendor/` |
 | `scripts/serve.js` | Servidor local para testar `dist/` |
 | `supabase/migrations/` | Estrutura do banco (tabelas e regras de acesso), já aplicada no projeto "gsinima-app" |
 | `prototipo-fonte/` | Telas-fonte do protótipo original — só referência, não vão para o site |
@@ -69,6 +69,7 @@ Endereços do site:
 - `/` — entrada única (as telas internas usam `#`, ex.: `/#WebQuimicos`)
 
 ## Pontos de atenção
-- **Telas do sistema web** (painel, químicos, coletas, descargas, dados, usuários) ainda mostram dados de exemplo; só o app do operador usa o banco.
+- **Telas do sistema web** (painel, químicos, coletas, descargas) ainda mostram dados de exemplo. Já usam o banco: o app do operador, a Operação ETA, Usuários e permissões e a **exportação** (Importar e exportar → Exportar: cada conjunto vira uma aba do Excel ou um arquivo CSV com `;` e vírgula decimal).
+- **Importação** ainda não funciona: o botão de enviar planilha está desativado de propósito.
 - **Autenticação**: ficou para depois. A biblioteca `@supabase/ssr` já está instalada para quando o login for implementado.
 - **Leitura automática por foto**: ficou para uma etapa futura. O botão "Tirar foto do macromedidor" só marca que a foto foi tirada; a imagem não é enviada.

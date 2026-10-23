@@ -1,6 +1,6 @@
 // Monta o site publicado em dist/:
 // - copia as páginas e o js/
-// - copia o supabase-js (versão para navegador) para dist/vendor/
+// - copia o supabase-js (versão para navegador) e o xlsx (planilhas) para dist/vendor/
 // - gera dist/env.js com as variáveis NEXT_PUBLIC_* (do .env local ou das variáveis da Vercel)
 const fs = require('fs');
 const path = require('path');
@@ -35,6 +35,8 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out);
 ['index.html', 'favicon.png', 'js'].forEach((p) => copy(p));
 copy('node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'vendor/supabase.js');
+// Biblioteca de planilhas (só é carregada quando alguém exporta em Excel).
+copy('node_modules/xlsx/dist/xlsx.full.min.js', 'vendor/xlsx.js');
 fs.writeFileSync(path.join(out, 'env.js'),
   'window.ENV = ' + JSON.stringify({ SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');
 
