@@ -1437,9 +1437,7 @@
     var html = tpl.slice(a, b)
       .replace(/<sc-if value="\{\{ s\.login \}\}"[^>]*>/, '')
       .replace(/<\/sc-if>\s*$/, '')
-      .replace('onClick="{{ nav.home }}"', 'id="lg-btn"')
-      .replace('Operação em campo', 'Operação e acompanhamento')
-      .replace('Leituras, análises e estoque de cada unidade, num só lugar.', 'Lançamentos, painéis e acompanhamento, num só lugar.');
+      .replace('onClick="{{ nav.home }}"', 'id="lg-btn"');
     if (/\{\{/.test(html) || html.indexOf('lg-pass') < 0) return null;
     return html;
   }
@@ -1452,7 +1450,7 @@
     shell.innerHTML = cel
       ? '<div style="position:relative;width:100%;height:100dvh;min-height:560px;overflow:hidden;background:#EEF3F7;font-family:\'Inter\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' + html + '</div>'
       : '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box;background:#DCE6EF">' +
-      '<div style="position:relative;width:420px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:640px;border-radius:28px;overflow:hidden;background:#EEF3F7;box-shadow:0 30px 80px rgba(10,46,92,.18);font-family:\'Inter\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' +
+      '<div style="position:relative;width:420px;max-width:100%;height:min(560px,calc(100vh - 48px));min-height:520px;border-radius:28px;overflow:hidden;background:#EEF3F7;box-shadow:0 30px 80px rgba(10,46,92,.18);font-family:\'Inter\',system-ui,sans-serif;color:#0F1E2E;font-size:15px;line-height:1.4">' +
       html + '</div></div>';
     var u = shell.querySelector('#lg-user'), s = shell.querySelector('#lg-pass'), b = shell.querySelector('#lg-btn');
     if (aviso) toast(aviso);
@@ -1478,7 +1476,7 @@
       '<p style="margin:0;color:' + COR.texto + '">Entre com seu login e senha.</p>' +
       '<form id="wl-form" style="display:flex;flex-direction:column;gap:12px">' +
       '<label for="wl-user" style="font-weight:700;font-size:14px;color:' + COR.marinho + '">Login</label>' +
-      '<input id="wl-user" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Ex.: nome.sobrenome" style="' + campo + '">' +
+      '<input id="wl-user" autocomplete="username" autocapitalize="none" spellcheck="false" style="' + campo + '">' +
       '<label for="wl-pass" style="font-weight:700;font-size:14px;color:' + COR.marinho + '">Senha</label>' +
       '<input id="wl-pass" type="password" autocomplete="current-password" style="' + campo + '">' +
       '<p id="wl-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
