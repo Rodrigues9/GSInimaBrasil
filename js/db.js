@@ -286,7 +286,7 @@
       { aba: 'Descarreg. ETAs', tabela: 'descarregamentos_quimicos' },
       { aba: 'Descarreg. poços', tabela: 'descarregamentos_pocos' }
     ],
-    eta: [{ aba: 'Calibrações ETA', tabela: 'calibracoes_eta' }],
+    eta: [{ aba: 'Calibrações', tabela: 'ourinhos_calibracoes' }],
     ope: [{ aba: 'Operação ETA', tabela: 'operacao_eta' }],
     ete: [{ aba: 'ETEs', tabela: 'visitas_ete' }],
     col: [{ aba: 'Coletas', tabela: 'coletas', data: 'coletada_em' }],
@@ -302,7 +302,7 @@
     sistema: 'Sistema', dn_mm: 'DN (mm)', status: 'Situação', ph: 'pH', cor_uh: 'Cor (uH)', turbidez_ut: 'Turbidez (UT)',
     coliformes_totais: 'Coliformes totais', coliformes_termotolerantes: 'Coliformes termotolerantes', coletor: 'Coletor', analista: 'Analista',
     ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores',
-    fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)'
+    fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno'
   };
   // Operação ETA: "dados.captacao.vazao_m3h" -> "Captação: vazão total (m³/h)".
   var ETAPAS_OPETA = { captacao: 'Captação', bruta: 'Água bruta', pac: 'Aplicação de PAC', coagulada: 'Água coagulada', decantada: 'Água decantada', filtrada: 'Água filtrada', tratada: 'Água tratada' };
@@ -326,6 +326,8 @@
   }
   function nomeColuna(c) {
     if (NOMES_COLUNA[c]) return NOMES_COLUNA[c];
+    var pc = /^leituras\.(.+)$/.exec(c);
+    if (pc && PADROES_CAL[pc[1]]) return PADROES_CAL[pc[1]][1];
     var op = nomeOpeta(c);
     if (op) return op;
     var t = c.replace(/^dados\./, '').replace(/[._]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -727,7 +729,7 @@
     var m0 = monthStart().toISOString();
     var res = await Promise.all([
       q(sb.from('leituras_macromedidor').select('ponto_id,ponto_nome,criado_em,vazao_m3h,totalizador_m3,cloro_mg_l,fluor_mg_l,operador').order('criado_em', { ascending: false }).limit(1000)),
-      q(sb.from('calibracoes_eta').select('criado_em').gte('criado_em', t0).order('criado_em', { ascending: false }).limit(1)),
+      q(sb.from('ourinhos_calibracoes').select('criado_em').gte('criado_em', t0).order('criado_em', { ascending: false }).limit(1)),
       q(sb.from('estoque_eta').select('criado_em,niveis_l').order('criado_em', { ascending: false }).limit(1)),
       q(sb.from('visitas_ete').select('ete,criado_em').gte('criado_em', t0).order('criado_em', { ascending: true })),
       q(sb.from('descarregamentos_quimicos').select('produto,eta,quantidade_kg').order('criado_em', { ascending: false }).limit(1)),
@@ -1202,7 +1204,7 @@
     });
 
     aoSalvar(comp, v.on, 'saveCal', foiParaConfirmacao, function (s) {
-      return inserir('calibracoes_eta', { leituras: soPreenchidos(s.calv, dec), operador: op });
+      return inserir('ourinhos_calibracoes', { leituras: soPreenchidos(s.calv, dec), operador: op });
     }, null, function (s) {
       // Resumo com cada leitura preenchida, marcando as que estão fora da tolerância.
       var rows = [];
@@ -1383,7 +1385,7 @@
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
   var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebAdmin', 'WebDados']);
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebCalibracoes', 'WebAdmin', 'WebDados']);
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
   function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
@@ -1393,7 +1395,7 @@
       if (cel) return false;
       if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
       // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
-      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas') return false;
+      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes') return false;
       var t = (perfil.permissoes && perfil.permissoes.telas) || {};
       return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela só aparece se estiver marcada
     }
@@ -1815,6 +1817,11 @@
     // Operação ETA (computador): confirmação e gravação do lançamento.
     confirmarEnvio: confirmarEnvio,
     confirmarAcao: confirmarAcao,
+    // Calibrações de equipamentos desde uma data (mais recentes primeiro) e as tolerâncias de cada padrão.
+    calibracoes: function (desdeIso) {
+      return q(sb.from('ourinhos_calibracoes').select('criado_em,turno,operador,leituras').gte('criado_em', desdeIso).order('criado_em', { ascending: false }).limit(3000));
+    },
+    padroesCal: PADROES_CAL, regraCal: regraCal,
     exportarDados: exportarDados,
     salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); },
     operadoresEta: function () {
