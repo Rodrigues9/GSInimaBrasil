@@ -70,8 +70,40 @@ Depois disso, cada envio (push) para a branch `main` atualiza o site sozinho.
 Endereços do site:
 - `/` — entrada única (as telas internas usam `#`, ex.: `/#WebQuimicos`)
 
+## Backup semanal do banco
+O plano gratuito do Supabase não faz backup. O GitHub faz um por semana (`.github/workflows/backup-semanal.yml`): toda **segunda-feira às 3h** (Brasília) ele gera uma cópia completa do banco (papéis, estrutura e dados, incluindo perfis e logins), **criptografa com a senha de backup** e guarda por **90 dias** (cerca de 13 cópias). O repositório é público, por isso a cópia nunca fica legível sem a senha.
+
+Não entra no backup: as fotos de perfil (Storage) e as Edge Functions (o código delas já está em `supabase/functions/`).
+
+### Configurar (uma vez)
+1. Supabase → projeto **gsinima-app** → botão **Connect** → aba **Session pooler** → copie o endereço (começa com `postgresql://postgres.taotqeecsyuxozmnpoig:`). Troque `[YOUR-PASSWORD]` pela senha do banco. Se não lembrar, crie outra em **Database → Settings → Reset database password** (o app e o site não usam essa senha).
+2. GitHub → repositório → **Settings → Secrets and variables → Actions → New repository secret**:
+   - `SUPABASE_DB_URL`: o endereço do passo 1;
+   - `BACKUP_SENHA`: uma senha forte, com pelo menos 12 caracteres. **Guarde-a num lugar seguro**: sem ela, o backup não abre.
+3. GitHub → **Actions → Backup semanal do banco → Run workflow** para rodar a primeira vez e conferir.
+
+Atenção: em repositório público, o GitHub desliga agendamentos depois de 60 dias sem nenhuma alteração no repositório (ele avisa por e-mail; basta reativar em Actions).
+
+### Baixar e abrir um backup
+GitHub → **Actions → Backup semanal do banco** → escolha uma execução → **Artifacts** → baixe o arquivo. Descompacte o `.zip` e, num terminal com `gpg` (vem com o Git para Windows):
+
+```
+gpg --decrypt backup-gsinima-AAAA-MM-DD.tar.gz.gpg > backup.tar.gz
+tar -xzf backup.tar.gz
+```
+
+Isso gera a pasta `backup/` com `roles.sql`, `schema.sql` e `data.sql`.
+
+### Restaurar (num projeto novo do Supabase)
+Com o `psql` instalado (PostgreSQL 17) e o endereço "Session pooler" do projeto novo:
+
+```
+psql --single-transaction --variable ON_ERROR_STOP=1 --file backup/roles.sql --file backup/schema.sql --command "SET session_replication_role = replica" --file backup/data.sql --dbname "ENDERECO_DO_PROJETO_NOVO"
+```
+
+Depois, publique de novo a Edge Function `primeiro-acesso`, crie a pasta `avatares` no Storage e troque as chaves `NEXT_PUBLIC_SUPABASE_*` no `.env` e na Vercel. O guia oficial está em https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
+
 ## Pontos de atenção
 - **Telas do sistema web** (painel, químicos, coletas, descargas) ainda mostram dados de exemplo. Já usam o banco: o app do operador, a Operação ETA, Usuários e permissões e a **exportação** (Importar e exportar → Exportar: cada conjunto vira uma aba do Excel ou um arquivo CSV com `;` e vírgula decimal).
 - **Importação** ainda não funciona: o botão de enviar planilha está desativado de propósito.
-- **Autenticação**: ficou para depois. A biblioteca `@supabase/ssr` já está instalada para quando o login for implementado.
 - **Leitura automática por foto**: ficou para uma etapa futura. O botão "Tirar foto do macromedidor" só marca que a foto foi tirada; a imagem não é enviada.

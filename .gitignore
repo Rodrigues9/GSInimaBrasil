@@ -16,3 +16,6 @@ build/
 # Variáveis de ambiente e segredos
 .env
 .env.*
+
+# Planilhas para importar ao banco (dados da empresa: nunca vão para o GitHub)
+dados-importacao/
