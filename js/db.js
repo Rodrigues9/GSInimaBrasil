@@ -739,11 +739,14 @@
       q(sb.from('estoque_poco').select('ponto_id,ponto_nome,hipoclorito_l,acido_fluossilicico_l,criado_em').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('coletas').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
         .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
-      q(sb.from('descarregamentos_quimicos').select('produto,eta').gte('criado_em', t0)),
+      q(sb.from('descarregamentos_quimicos').select('produto,eta,criado_em').gte('criado_em', new Date(Date.now() - 60 * 864e5).toISOString())),
       q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em,ponto_id').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; })
     ]);
-    var estPoco = res[10], colPositivas = res[11], descHoje = res[12], pdRecentes = res[13];
+    var estPoco = res[10], colPositivas = res[11], pdRecentes = res[13];
+    // Descarregamentos nas ETAs feitos depois do último estoque da ETA (liberam volume maior que o anterior).
+    var ultEstEta = res[2] && res[2][0] && res[2][0].criado_em;
+    var descDesde = (res[12] || []).filter(function (r) { return !ultEstEta || Date.parse(r.criado_em) >= Date.parse(ultEstEta); });
     // Último estoque de cada poço e se houve descarregamento (por produto) depois dele.
     var estUlt = {}, pdDesde = {};
     estPoco.forEach(function (r) { if (!estUlt[r.ponto_id]) estUlt[r.ponto_id] = { hip: r.hipoclorito_l, aci: r.acido_fluossilicico_l, at: r.criado_em }; });
@@ -860,7 +863,7 @@
     });
 
     return {
-      alertas: alertas, estDone: estDone, pdLast: pdLast, descHoje: descHoje, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
+      alertas: alertas, estDone: estDone, pdLast: pdLast, descDesde: descDesde, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, descLast: descLast,
       colPend: pend, colDone: colDone, colHist: hist,
@@ -1128,23 +1131,27 @@
       });
     });
 
-    // Estoque da ETA: aviso se o volume subir em relação ao último registro sem descarregamento hoje.
+    // Estoque da ETA: volume maior que o último registro só com descarregamento daquele produto na ETA depois dele.
+    var etaAcima = false;
     (v.stockGroups || []).forEach(function (g) {
       (g.res || []).forEach(function (r) {
         var key = String(r.id).replace(/^st-/, '');
         var grupo = GRUPO_ETA[key.split('-')[0]];
         var antes = (st.dbEtaPrev || {})[key];
         var agora = num((st.lev || {})[key]);
-        var descarregou = grupo && (st.descHoje || []).some(function (d) { return d.produto === grupo[0] && d.eta === grupo[1]; });
+        var descarregou = grupo && (st.descDesde || []).some(function (d) { return d.produto === grupo[0] && d.eta === grupo[1]; });
         var tocado = !!(st.levTocado || {})[key];
-        r.alerta = !!st.dbOk && antes != null && agora != null && agora > Number(antes) && !descarregou && tocado;
+        var acima = !!st.dbOk && antes != null && agora != null && agora > Number(antes) && !descarregou;
+        if (acima) etaAcima = true;
+        r.alerta = acima && tocado;
         r.over = !!r.over && tocado; // "passa da capacidade" também só depois de sair do campo
-        r.alertaTxt = grupo ? 'O volume está maior que o último registro (' + fmt(Number(antes)) + ' L), mas não há descarregamento de ' + grupo[0] + ' na ' + grupo[1] + ' hoje. Confira antes de registrar.' : '';
+        r.alertaTxt = grupo ? 'Maior que o último estoque (' + fmt(Number(antes)) + ' L). Só é possível com descarregamento de ' + grupo[0] + ' na ' + grupo[1] + ' registrado depois desse estoque.' : '';
         var digitar = r.set;
         r.set = function (ev) { digitar(ev); comp.setState({ levTocado: Object.assign({}, comp.state.levTocado, { [key]: false }) }); };
         r.sair = function () { comp.setState({ levTocado: Object.assign({}, comp.state.levTocado, { [key]: true }) }); };
       });
     });
+    if (etaAcima) { v.estOff = true; v.estOp = 0.45; }
 
     var p = v.p, op = operador();
 
@@ -1219,6 +1226,7 @@
       validar: function (s) {
         var falta = (v.stockGroups || []).some(function (g) { return (g.res || []).some(function (r) { return num((s.lev || {})[String(r.id).replace(/^st-/, '')]) == null; }); });
         if (falta || num(s.salUsed) == null) return 'Preencha o volume de todos os reservatórios e os sacos de sal usados.';
+        if (etaAcima) return 'Há reservatório com volume maior que o último estoque sem descarregamento registrado depois dele. Confira os valores.';
       },
       limpar: { lev: {}, levTocado: {}, salUsed: '' }
     });
@@ -1326,7 +1334,7 @@
       comp.setState({
         acc: blocosLiberados(null),
         done: {}, etaDone: {}, eteDone: {}, descLast: null, dbLast: {}, dbEtaPrev: {}, alertas: [],
-        estDone: {}, pdLast: null, descHoje: [],
+        estDone: {}, pdLast: null, descDesde: [],
         colPend: [], colDone: { eta: 0, sj: 0, mor: 0, pac: 0 }, colHist: [],
         dscRun: [], dscToday: [], dscMonthN: 0, dscMonthVol: 0
       });
