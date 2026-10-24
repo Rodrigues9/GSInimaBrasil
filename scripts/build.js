@@ -33,7 +33,7 @@ if (!url || !key) {
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out);
-['index.html', 'favicon.png', 'js'].forEach((p) => copy(p));
+['index.html', 'favicon.png', 'img', 'js'].forEach((p) => copy(p));
 copy('node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'vendor/supabase.js');
 // Biblioteca de planilhas (só é carregada quando alguém exporta em Excel).
 copy('node_modules/xlsx/dist/xlsx.full.min.js', 'vendor/xlsx.js');
