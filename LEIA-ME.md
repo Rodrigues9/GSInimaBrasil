@@ -82,6 +82,8 @@ Não entra no backup: as fotos de perfil (Storage) e as Edge Functions (o códig
    - `BACKUP_SENHA`: uma senha forte, com pelo menos 12 caracteres. **Guarde-a num lugar seguro**: sem ela, o backup não abre.
 3. GitHub → **Actions → Backup semanal do banco → Run workflow** para rodar a primeira vez e conferir.
 
+**Agendamento desligado por enquanto** (período de teste, sem os segredos cadastrados): o backup só roda pelo botão **Run workflow**. Para religar, tire o `#` das linhas `schedule` e `cron` no arquivo do workflow.
+
 Atenção: em repositório público, o GitHub desliga agendamentos depois de 60 dias sem nenhuma alteração no repositório (ele avisa por e-mail; basta reativar em Actions).
 
 ### Baixar e abrir um backup

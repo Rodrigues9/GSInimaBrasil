@@ -13,8 +13,10 @@
 name: Backup semanal do banco
 
 on:
-  schedule:
-    - cron: "0 6 * * 1" # segunda-feira, 06:00 UTC = 03:00 em Brasília
+  # Agendamento desligado durante o período de teste (os segredos ainda não foram cadastrados).
+  # Para religar, tire o "#" das duas linhas abaixo.
+  # schedule:
+  #   - cron: "0 6 * * 1" # segunda-feira, 06:00 UTC = 03:00 em Brasília
   workflow_dispatch: # permite rodar na hora, pelo botão "Run workflow"
 
 permissions:
