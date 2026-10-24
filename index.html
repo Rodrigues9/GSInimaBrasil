@@ -2085,22 +2085,26 @@ class Component extends DCLogic {
       const iN = POCOS_EST.findIndex((x) => x.name === 'Poço Nova Alcântara'), iE = POCOS_EST.findIndex((x) => x.name === 'Poço Esmeralda');
       if (iN >= 0 && iE >= 0) { const t = POCOS_EST[iN]; POCOS_EST[iN] = POCOS_EST[iE]; POCOS_EST[iE] = t; }
     }
-    const pmDone = PTS.filter((x) => st.done[x.id]).length;
+    // Nova Alcântara (poço e reservatórios): não é lido todo dia; opcional, não conta como pendente.
+    const OPCIONAL = { m21: true, m22: true, m23: true };
+    const chipOpc = (id, t) => (OPCIONAL[id] && !t ? { status: 'Opcional', chipBg: '#EEF3F7', chipFg: '#52627A', noCount: true } : Object.assign(chipOf(t), { noCount: !!OPCIONAL[id] }));
+    const PTS_DIA = PTS.filter((x) => !OPCIONAL[x.id]), POCOS_DIA = POCOS_EST.filter((x) => !OPCIONAL[x.id]);
+    const pmDone = PTS_DIA.filter((x) => st.done[x.id]).length;
     const peDone = POCOS_EST.filter((x) => (st.estDone || {})[x.id]).length;
-    const paDone = POCOS_EST.filter((x) => (st.anDone || {})[x.id]).length;
+    const paDone = POCOS_DIA.filter((x) => (st.anDone || {})[x.id]).length;
     const pocoItems = POCO_OPTS.map((o) => {
       const base = { id: o.k, name: o.name, sub: o.sub, pick: () => openPocos(o.k) };
       if (o.k === 'desc') return Object.assign(base, { noCount: true, t: undefined, status: '', chipBg: '#EEF3F7', chipFg: '#52627A' });
       // Estoque dos poços não é diário: sem "x de 7 lançados".
       if (o.k === 'est') return Object.assign(base, { noCount: true, t: undefined, status: '', chipBg: '#EEF3F7', chipFg: '#52627A' });
-      const tot = o.k === 'mac' ? PTS.length : POCOS_EST.length, d = o.k === 'mac' ? pmDone : o.k === 'an' ? paDone : peDone, all = d === tot;
+      const tot = o.k === 'mac' ? PTS_DIA.length : o.k === 'an' ? POCOS_DIA.length : POCOS_EST.length, d = o.k === 'mac' ? pmDone : o.k === 'an' ? paDone : peDone, all = d === tot;
       return Object.assign(base, { t: all ? now : undefined, status: d + ' de ' + tot + ' lançados', chipBg: all ? '#E2F4EE' : '#FDF0DC', chipFg: all ? '#0B6B57' : '#8A3C06' });
     });
     const B = {
       pocos: { title: 'Poços', sub: 'Escolha o tipo de lançamento', items: pocoItems },
-      pocoAn: { title: 'Análises dos Poços', sub: 'Poços', items: POCOS_EST.map((x) => Object.assign({ id: x.id, name: x.name, sub: 'Cloro, flúor e dosadoras', t: (st.anDone || {})[x.id], pick: () => openAn(x.id) }, chipOf((st.anDone || {})[x.id]))) },
+      pocoAn: { title: 'Análises dos Poços', sub: 'Poços', items: POCOS_EST.map((x) => Object.assign({ id: x.id, name: x.name, sub: 'Cloro, flúor e dosadoras', t: (st.anDone || {})[x.id], pick: () => openAn(x.id) }, chipOpc(x.id, (st.anDone || {})[x.id]))) },
       pocoEst: { title: 'Estoque de Produtos Químicos', sub: 'Poços', items: POCOS_EST.map((x) => Object.assign({ id: x.id, name: x.name, sub: 'Hipoclorito e ácido fluossilícico', t: (st.estDone || {})[x.id], pick: () => openEst(x.id) }, (st.estDone || {})[x.id] ? chipOf((st.estDone || {})[x.id]) : { status: '', chipBg: '', chipFg: '' })) },
-      poco: { title: 'Leitura de Macromedidores', sub: 'Poços, reservatórios e recalque', items: PTS.map((p) => Object.assign({ id: p.id, name: p.name, sub: p.sub, t: st.done[p.id], pick: () => { this.setState({ block: 'poco' }); openPoint(p.id); } }, chipOf(st.done[p.id]))) },
+      poco: { title: 'Leitura de Macromedidores', sub: 'Poços, reservatórios e recalque', items: PTS.map((p) => Object.assign({ id: p.id, name: p.name, sub: p.sub, t: st.done[p.id], pick: () => { this.setState({ block: 'poco' }); openPoint(p.id); } }, chipOpc(p.id, st.done[p.id]))) },
       eta: { title: 'ETAs', sub: 'Escolha o tipo de lançamento', items: etaItems },
       ete: { title: 'ETEs', sub: 'Checklist e análises', items: ETES.map((n) => Object.assign({ id: n, name: n, sub: 'Checklist e análises', t: st.eteDone[n], pick: () => openEte(n) }, chipOf(st.eteDone[n]))) }
     };
@@ -2135,7 +2139,7 @@ class Component extends DCLogic {
     // Análises do poço: cloro e flúor; o ajuste de cada dosadora é informado só quando foi feito.
     const anVal = (v) => isFinite(dec(v)) && dec(v) >= 0 && String(v).trim() !== '';
     const ajOk = (on, a, n) => !on || (anVal(a) && anVal(n));
-    const anTem = anVal(st.cl) || anVal(st.fl) || !!st.ajCl || !!st.ajFl;
+    const anTem = anVal(st.cl) && anVal(st.fl);
     const canSaveAn = anTem && ajOk(st.ajCl, st.clAnt, st.clNov) && ajOk(st.ajFl, st.flAnt, st.flNov);
     const aj = (k, on, ant, nov) => {
       const cS = opt(on), cN = opt(!on);
@@ -2395,7 +2399,7 @@ class Component extends DCLogic {
       showAnalise: st.tab === 'analise',
       ajCl: aj('Cl', st.ajCl, st.clAnt, st.clNov), ajFl: aj('Fl', st.ajFl, st.flAnt, st.flNov),
       anOff: !canSaveAn, anOp: canSaveAn ? 1 : 0.45,
-      anHint: canSaveAn ? 'Data, hora e operador são registrados ao salvar.' : !anTem ? 'Informe o cloro, o flúor ou o ajuste de uma dosadora.' : 'Preencha o tempo antes e depois do ajuste.',
+      anHint: canSaveAn ? 'Data, hora e operador são registrados ao salvar.' : !anTem ? 'Informe o cloro e o flúor para registrar.' : 'Preencha o tempo antes e depois do ajuste.',
       t: { leit: set({ tab: 'leitura' }), est: set({ tab: 'estoque' }), lOn: st.tab === 'leitura', eOn: st.tab === 'estoque', lBg: tL.bg, lFg: tL.fg, eBg: tE.bg, eFg: tE.fg },
       tot: st.tot, vaz: st.vaz, cl: st.cl, fl: st.fl, hip: st.hip, aci: st.aci,
       volTxt: hasCur && !neg ? fmt(vol) : '—',
