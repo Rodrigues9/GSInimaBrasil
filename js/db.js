@@ -740,10 +740,19 @@
       q(sb.from('coletas').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
         .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
       q(sb.from('descarregamentos_quimicos').select('produto,eta').gte('criado_em', t0)),
-      q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em').order('criado_em', { ascending: false }).limit(50)),
+      q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em,ponto_id').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; })
     ]);
     var estPoco = res[10], colPositivas = res[11], descHoje = res[12], pdRecentes = res[13];
+    // Último estoque de cada poço e se houve descarregamento (por produto) depois dele.
+    var estUlt = {}, pdDesde = {};
+    estPoco.forEach(function (r) { if (!estUlt[r.ponto_id]) estUlt[r.ponto_id] = { hip: r.hipoclorito_l, aci: r.acido_fluossilicico_l, at: r.criado_em }; });
+    pdRecentes.forEach(function (r) {
+      var u = estUlt[r.ponto_id];
+      if (!u || Date.parse(r.criado_em) < Date.parse(u.at)) return;
+      var k = /^Hipoclorito/i.test(r.produto) ? 'hip' : /^Ácido/i.test(r.produto) ? 'aci' : null;
+      if (k) (pdDesde[r.ponto_id] = pdDesde[r.ponto_id] || {})[k] = true;
+    });
     var capPocos = {};
     (res[14] || []).forEach(function (c) {
       var cap = {};
@@ -851,7 +860,7 @@
     });
 
     return {
-      alertas: alertas, estDone: estDone, pdLast: pdLast, descHoje: descHoje, diaCarregado: t0, capPocos: capPocos,
+      alertas: alertas, estDone: estDone, pdLast: pdLast, descHoje: descHoje, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, descLast: descLast,
       colPend: pend, colDone: colDone, colHist: hist,
@@ -1178,6 +1187,9 @@
       // O estoque começa em branco em cada poço: exige os dois volumes.
       validar: function (s) {
         if (dec(s.hip) == null || dec(s.aci) == null) return 'Informe o volume atual de hipoclorito e de ácido fluossilícico.';
+        var u = (s.estUlt || {})[p.id], dd = (s.pdDesde || {})[p.id] || {};
+        if (u && u.hip != null && dec(s.hip) > Number(u.hip) && !dd.hip) return 'O hipoclorito não pode passar do último estoque (' + fmt(Number(u.hip)) + ' L) sem um descarregamento registrado depois dele.';
+        if (u && u.aci != null && dec(s.aci) > Number(u.aci) && !dd.aci) return 'O ácido não pode passar do último estoque (' + fmt(Number(u.aci)) + ' L) sem um descarregamento registrado depois dele.';
       },
       limpar: { hip: '', aci: '' }
     });
