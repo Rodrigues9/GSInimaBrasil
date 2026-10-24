@@ -278,8 +278,8 @@
   // ---------- exportar dados (tela "Importar e exportar") ----------
   // Cada conjunto escolhido vira uma ou mais abas (Excel) ou arquivos (CSV), com os lançamentos do período.
   var CONJUNTOS = {
-    leit: [{ aba: 'Macromedidores', tabela: 'leituras_macromedidor', sem: ['cloro_mg_l', 'fluor_mg_l'] }],
-    res: [{ aba: 'Residuais', tabela: 'leituras_macromedidor', so: ['criado_em', 'ponto_nome', 'grupo', 'cloro_mg_l', 'fluor_mg_l', 'operador'], filtro: function (r) { return r.cloro_mg_l != null || r.fluor_mg_l != null; } }],
+    leit: [{ aba: 'Macromedidores', tabela: 'ourinhos_macros' }],
+    res: [{ aba: 'Análises poços', tabela: 'ourinhos_analises_pocos' }],
     est: [
       { aba: 'Estoque poços', tabela: 'estoque_poco_real' }, // com o volume real do ácido (metade se o flúor é diluído)
       { aba: 'Estoque ETAs', tabela: 'estoque_eta' },
@@ -302,7 +302,8 @@
     sistema: 'Sistema', dn_mm: 'DN (mm)', status: 'Situação', ph: 'pH', cor_uh: 'Cor (uH)', turbidez_ut: 'Turbidez (UT)',
     coliformes_totais: 'Coliformes totais', coliformes_termotolerantes: 'Coliformes termotolerantes', coletor: 'Coletor', analista: 'Analista',
     ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores',
-    fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno'
+    fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno',
+    dosagem_cloro_s: 'Dosagem de cloro (s)', dosagem_fluor_s: 'Dosagem de flúor (s)', origem: 'Origem', linha_planilha: 'Linha da planilha'
   };
   // Operação ETA: "dados.captacao.vazao_m3h" -> "Captação: vazão total (m³/h)".
   var ETAPAS_OPETA = { captacao: 'Captação', bruta: 'Água bruta', pac: 'Aplicação de PAC', coagulada: 'Água coagulada', decantada: 'Água decantada', filtrada: 'Água filtrada', tratada: 'Água tratada' };
@@ -384,7 +385,7 @@
         var linhas = await buscarTudo(p.tabela, campoData, de.toISOString(), ate.toISOString());
         if (p.filtro) linhas = linhas.filter(p.filtro);
         // Macromedidores: intervalo em horas desde a leitura anterior do mesmo ponto (para conferir o volume).
-        if (p.tabela === 'leituras_macromedidor' && !p.so && opcoes.volume) {
+        if (p.tabela === 'ourinhos_macros' && opcoes.volume) {
           var ultima = {};
           linhas.forEach(function (r) {
             var ant = ultima[r.ponto_id];
@@ -397,7 +398,7 @@
           var o = {};
           Object.keys(r).forEach(function (c) {
             if (SEM_EXPORTAR[c] || (p.sem && p.sem.indexOf(c) >= 0) || (p.so && p.so.indexOf(c) < 0)) return;
-            if (c === 'volume_m3' && p.tabela === 'leituras_macromedidor' && !opcoes.volume) return;
+            if (c === 'volume_m3' && p.tabela === 'ourinhos_macros' && !opcoes.volume) return;
             var v = r[c];
             if (v != null && typeof v === 'object' && !Array.isArray(v)) achatar(v, c, o);
             else if (Array.isArray(v)) o[c] = v.join(', ');
@@ -728,7 +729,7 @@
     var t0 = dayStart(0).toISOString();
     var m0 = monthStart().toISOString();
     var res = await Promise.all([
-      q(sb.from('leituras_macromedidor').select('ponto_id,ponto_nome,criado_em,vazao_m3h,totalizador_m3,cloro_mg_l,fluor_mg_l,operador').order('criado_em', { ascending: false }).limit(1000)),
+      q(sb.from('ourinhos_macros').select('ponto_id,ponto_nome,criado_em,vazao_m3h,totalizador_m3,operador').order('criado_em', { ascending: false }).limit(1000)),
       q(sb.from('ourinhos_calibracoes').select('criado_em').gte('criado_em', t0).order('criado_em', { ascending: false }).limit(1)),
       q(sb.from('estoque_eta').select('criado_em,niveis_l').order('criado_em', { ascending: false }).limit(1)),
       q(sb.from('visitas_ete').select('ete,criado_em').gte('criado_em', t0).order('criado_em', { ascending: true })),
@@ -743,7 +744,8 @@
         .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
       q(sb.from('descarregamentos_quimicos').select('produto,eta,criado_em').gte('criado_em', new Date(Date.now() - 60 * 864e5).toISOString())),
       q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em,ponto_id').order('criado_em', { ascending: false }).limit(300)),
-      q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; })
+      q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; }),
+      q(sb.from('ourinhos_analises_pocos').select('ponto_id,ponto_nome,criado_em,cloro_mg_l,fluor_mg_l').gte('criado_em', t0).order('criado_em', { ascending: false }))
     ]);
     var estPoco = res[10], colPositivas = res[11], pdRecentes = res[13];
     // Descarregamentos nas ETAs feitos depois do último estoque da ETA (liberam volume maior que o anterior).
@@ -840,7 +842,7 @@
     // "Precisa de atenção": residuais fora da faixa hoje, estoque baixo nos poços, coliformes presentes no mês.
     var alertas = [];
     var vistoHoje = {};
-    leit.forEach(function (r) {
+    res[15].forEach(function (r) {
       if (Date.parse(r.criado_em) < hoje || vistoHoje[r.ponto_id]) return;
       vistoHoje[r.ponto_id] = true;
       var cl = r.cloro_mg_l == null ? null : Number(r.cloro_mg_l);
@@ -1013,6 +1015,11 @@
   // Estoque da ETA: produto e ETA de cada grupo de reservatórios.
   var GRUPO_ETA = { pac1: ['PAC', 'ETA 1'], pac2: ['PAC', 'ETA 2'], flu1: ['Flúor', 'ETA 1'], flu2: ['Flúor', 'ETA 2'] };
 
+  // Medidores cujo visor mostra m³ ÷ 10 (Poço Diamantes, Poço Nova Alcântara e os 2 reservatórios da Nova Alcântara):
+  // o operador digita o visor e o banco guarda os m³ reais (x10).
+  var MEDIDOR_X10 = { m3: 1, m21: 1, m22: 1, m23: 1 };
+  function fatorMedidor(id) { return MEDIDOR_X10[id] ? 10 : 1; }
+
   function inserir(tabela, linha) { return q(sb.from(tabela).insert(linha)); }
   async function alterar(tabela, id, campos) {
     var rows = await q(sb.from(tabela).update(campos).eq('id', id).select('id'));
@@ -1075,14 +1082,15 @@
     }
 
     // Formulário de macromedidor: leitura anterior vem do banco.
+    // Medidores que mostram m³ ÷ 10: o operador digita o visor; comparação e volume em m³ reais.
     if (v.p && st.dbOk) {
-      var last = (st.dbLast || {})[v.p.id];
+      var last = (st.dbLast || {})[v.p.id], fx = fatorMedidor(v.p.id);
       var cur = num(st.tot), hasCur = cur != null && cur > 0;
       if (last) {
-        var vol = cur - last.tot;
+        var vol = cur * fx - last.tot;
         var hrs = (Date.now() - Date.parse(last.at)) / 3600000;
         var h = Math.floor(hrs), m = Math.round((hrs - h) * 60);
-        v.p.prevTxt = fmt(last.tot);
+        v.p.prevTxt = fmt(last.tot / fx);
         v.p.vazPrevTxt = fmt1(last.vaz);
         v.p.lastTxt = quando(last.at) + ', ' + last.who;
         var menor = hasCur && vol < 0;
@@ -1159,12 +1167,16 @@
 
     aoSalvar(comp, v.on, 'saveLeitura', foiParaConfirmacao, function (s, obs) {
       var tot = num(s.tot), last = (s.dbLast || {})[p.id];
-      return inserir('leituras_macromedidor', {
+      var real = tot * fatorMedidor(p.id), cl = p.poco ? dec(s.cl) : null, fl = p.poco ? dec(s.fl) : null;
+      return inserir('ourinhos_macros', {
         ponto_id: p.id, ponto_nome: p.name, grupo: p.grp,
-        vazao_m3h: dec(s.vaz), totalizador_m3: tot,
-        volume_m3: last ? tot - last.tot : null,
-        cloro_mg_l: p.poco ? dec(s.cl) : null, fluor_mg_l: p.poco ? dec(s.fl) : null,
-        foto_anexada: false, observacao: obs, operador: op
+        vazao_m3h: dec(s.vaz), totalizador_m3: real,
+        volume_m3: last ? real - last.tot : null,
+        observacao: obs, operador: op
+      }).then(function () {
+        // Cloro e flúor do poço ficam nas análises dos poços.
+        if (cl == null && fl == null) return;
+        return inserir('ourinhos_analises_pocos', { ponto_id: p.id, ponto_nome: p.name, grupo: p.grp, cloro_mg_l: cl, fluor_mg_l: fl, operador: op });
       });
     }, function () {
       // O campo de observações não fica no estado do app: lê antes de a tela mudar.
@@ -1179,10 +1191,10 @@
     }, {
       // O totalizador nunca pode ser menor que a leitura anterior.
       validar: function (s) {
-        var tot = num(s.tot), last = (s.dbLast || {})[p.id];
-        if (last && tot != null && tot < last.tot) {
+        var tot = num(s.tot), last = (s.dbLast || {})[p.id], fx = fatorMedidor(p.id);
+        if (last && tot != null && tot * fx < last.tot) {
           comp.setState({ totTocado: true });
-          return 'O totalizador não pode ser menor que a leitura anterior (' + fmt(last.tot) + ' m³).';
+          return 'O totalizador não pode ser menor que a leitura anterior (' + fmt(last.tot / fx) + ' m³).';
         }
       }
     });
