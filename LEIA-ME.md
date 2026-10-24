@@ -15,7 +15,8 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Formulário | Tabela |
 |---|---|
 | Leitura de macromedidor (poços, reservatórios, ETAs) | `ourinhos_macros` — vazão, totalizador e volume; nos medidores que mostram m³ ÷ 10 (Poço Diamantes, Poço Nova Alcântara e os 2 reservatórios da Nova Alcântara) o operador digita o visor e o banco guarda x10 |
-| Cloro e flúor dos poços (no mesmo formulário do poço) | `ourinhos_analises_pocos` — cloro e flúor (mg/L) e tempo de dosagem de cada produto (segundos) |
+| Análises dos Poços (item próprio no bloco Poços) | `ourinhos_analises_pocos` — cloro e flúor (mg/L) e, só quando a bomba dosadora foi ajustada, o tempo entre pulsos antes e depois (`pulso_cloro_anterior_s`/`pulso_cloro_novo_s`, idem flúor, em segundos) |
+| Volumes (computador) | tela `WebVolumes`: produzidos (captações das ETAs e poços) e distribuídos (áreas, mesma composição das abas "Volumes Produzidos/Distribuídos" da planilha), calculados de `ourinhos_macros.volume_m3` |
 | Estoque de insumos do poço | `estoque_poco` |
 | Calibrações da ETA | `ourinhos_calibracoes` |
 | Estoque de produtos químicos da ETA | `estoque_eta` |

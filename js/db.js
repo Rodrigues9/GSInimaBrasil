@@ -303,7 +303,8 @@
     coliformes_totais: 'Coliformes totais', coliformes_termotolerantes: 'Coliformes termotolerantes', coletor: 'Coletor', analista: 'Analista',
     ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores',
     fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno',
-    dosagem_cloro_s: 'Dosagem de cloro (s)', dosagem_fluor_s: 'Dosagem de flúor (s)', origem: 'Origem', linha_planilha: 'Linha da planilha'
+    pulso_cloro_anterior_s: 'Pulso do cloro antes do ajuste (s)', pulso_cloro_novo_s: 'Pulso do cloro ajustado (s)',
+    pulso_fluor_anterior_s: 'Pulso do flúor antes do ajuste (s)', pulso_fluor_novo_s: 'Pulso do flúor ajustado (s)', origem: 'Origem', linha_planilha: 'Linha da planilha'
   };
   // Operação ETA: "dados.captacao.vazao_m3h" -> "Captação: vazão total (m³/h)".
   var ETAPAS_OPETA = { captacao: 'Captação', bruta: 'Água bruta', pac: 'Aplicação de PAC', coagulada: 'Água coagulada', decantada: 'Água decantada', filtrada: 'Água filtrada', tratada: 'Água tratada' };
@@ -769,7 +770,8 @@
     });
 
     // Estoque dos poços lançado hoje (por ponto).
-    var estDone = {};
+    var estDone = {}, anDone = {};
+    res[15].forEach(function (r) { if (!anDone[r.ponto_id]) anDone[r.ponto_id] = hhmm(r.criado_em); });
     estPoco.forEach(function (r) { if (!estDone[r.ponto_id] && Date.parse(r.criado_em) >= Date.parse(t0)) estDone[r.ponto_id] = hhmm(r.criado_em); });
     // Último descarregamento nos poços (o lote mais recente, somado por produto).
     var pdLast = null;
@@ -867,7 +869,7 @@
     });
 
     return {
-      alertas: alertas, estDone: estDone, pdLast: pdLast, descDesde: descDesde, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
+      alertas: alertas, estDone: estDone, anDone: anDone, pdLast: pdLast, descDesde: descDesde, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, descLast: descLast,
       colPend: pend, colDone: colDone, colHist: hist,
@@ -936,8 +938,10 @@
     if (ctx === 'coleta') return { screen: 'coleta' };
     if (ctx === 'descarga') return { screen: 'home' };
     if (ctx === 'pocosDesc') return { screen: 'lista', block: 'pocos', filt: 'pend', q: '' };
+    if (ctx === 'pocoAn') return { screen: 'lista', block: 'pocoAn', filt: 'pend', q: '' };
     if (ctx === 'poco') {
       return feito.tab === 'estoque' ? { screen: 'lista', block: 'pocoEst', filt: 'pend', q: '' }
+        : feito.tab === 'analise' ? { screen: 'lista', block: 'pocoAn', filt: 'pend', q: '' }
         : { screen: 'lista', block: 'poco', filt: 'pend', q: '' };
     }
     return { screen: 'lista', block: ctx === 'eta' || ctx === 'ete' ? ctx : 'poco', filt: 'pend', q: '' };
@@ -1167,16 +1171,12 @@
 
     aoSalvar(comp, v.on, 'saveLeitura', foiParaConfirmacao, function (s, obs) {
       var tot = num(s.tot), last = (s.dbLast || {})[p.id];
-      var real = tot * fatorMedidor(p.id), cl = p.poco ? dec(s.cl) : null, fl = p.poco ? dec(s.fl) : null;
+      var real = tot * fatorMedidor(p.id);
       return inserir('ourinhos_macros', {
         ponto_id: p.id, ponto_nome: p.name, grupo: p.grp,
         vazao_m3h: dec(s.vaz), totalizador_m3: real,
         volume_m3: last ? real - last.tot : null,
         observacao: obs, operador: op
-      }).then(function () {
-        // Cloro e flúor do poço ficam nas análises dos poços.
-        if (cl == null && fl == null) return;
-        return inserir('ourinhos_analises_pocos', { ponto_id: p.id, ponto_nome: p.name, grupo: p.grp, cloro_mg_l: cl, fluor_mg_l: fl, operador: op });
       });
     }, function () {
       // O campo de observações não fica no estado do app: lê antes de a tela mudar.
@@ -1198,6 +1198,20 @@
         }
       }
     });
+
+    // Análises do poço: cloro, flúor e, quando houve ajuste, o tempo entre pulsos antes e depois.
+    aoSalvar(comp, v.on, 'saveAnalise', foiParaConfirmacao, function (s, obs) {
+      return inserir('ourinhos_analises_pocos', {
+        ponto_id: p.id, ponto_nome: p.name, grupo: 'poco',
+        cloro_mg_l: dec(s.cl), fluor_mg_l: dec(s.fl),
+        pulso_cloro_anterior_s: s.ajCl ? dec(s.clAnt) : null, pulso_cloro_novo_s: s.ajCl ? dec(s.clNov) : null,
+        pulso_fluor_anterior_s: s.ajFl ? dec(s.flAnt) : null, pulso_fluor_novo_s: s.ajFl ? dec(s.flNov) : null,
+        observacao: obs, operador: op
+      });
+    }, function () {
+      var el = document.getElementById('obsAn');
+      return el && el.value.trim() ? el.value.trim().slice(0, 1000) : null;
+    }, null, { limpar: { cl: '', fl: '', ajCl: false, ajFl: false, clAnt: '', clNov: '', flAnt: '', flNov: '' } });
 
     aoSalvar(comp, v.on, 'saveEstoque', foiParaConfirmacao, function (s) {
       return inserir('estoque_poco', {
@@ -1348,7 +1362,7 @@
       comp.setState({
         acc: blocosLiberados(null),
         done: {}, etaDone: {}, eteDone: {}, descLast: null, dbLast: {}, dbEtaPrev: {}, alertas: [],
-        estDone: {}, pdLast: null, descDesde: [],
+        estDone: {}, anDone: {}, pdLast: null, descDesde: [],
         colPend: [], colDone: { eta: 0, sj: 0, mor: 0, pac: 0 }, colHist: [],
         dscRun: [], dscToday: [], dscMonthN: 0, dscMonthVol: 0
       });
@@ -1397,7 +1411,7 @@
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
   var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebCalibracoes', 'WebAdmin', 'WebDados']);
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados']);
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
   function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
@@ -1407,7 +1421,7 @@
       if (cel) return false;
       if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
       // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
-      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes') return false;
+      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes' || nome === 'WebVolumes') return false;
       var t = (perfil.permissoes && perfil.permissoes.telas) || {};
       return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela só aparece se estiver marcada
     }
@@ -1834,6 +1848,16 @@
       return q(sb.from('ourinhos_calibracoes').select('criado_em,turno,operador,leituras').gte('criado_em', desdeIso).order('criado_em', { ascending: false }).limit(3000));
     },
     padroesCal: PADROES_CAL, regraCal: regraCal,
+    // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
+    volumes: async function (desdeIso) {
+      var linhas = [], passo = 1000;
+      for (var ini = 0; ; ini += passo) {
+        var r = await q(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3').gte('criado_em', desdeIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
+        linhas = linhas.concat(r || []);
+        if (!r || r.length < passo) break;
+      }
+      return linhas;
+    },
     exportarDados: exportarDados,
     salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); },
     operadoresEta: function () {
