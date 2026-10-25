@@ -1252,7 +1252,7 @@ class Component extends DCLogic {
       { titulo: 'Vazão média', valor: vaz.length ? br(media(vaz)) + ' m³/h' : '—', sub: vaz.length + ' leituras de vazão' },
       { titulo: 'Análises no período', valor: br(comAn.length, 0), sub: comAn.filter((r) => r.analises.fosforo_b != null || Object.keys(r.analises).some((k) => /^(fosforo|nitrato|nitrito|namon|ntotal|sulfato|sulfeto)-/.test(k))).length + ' com análise completa' },
       { titulo: 'Eficiência média de DQO', valor: efs.length ? br(media(efs) * 100, 0) + '%' : '—', sub: efs.length + ' análises com DQO bruto e tratado' },
-      { titulo: 'Checklist', valor: nc ? nc + (nc > 1 ? ' não conformidades' : ' não conformidade') : 'Sem não conformidades', sub: rows.filter((r) => r.checklist && Object.keys(r.checklist).length).length + ' visitas com checklist' }
+      { titulo: 'Checklist', valor: nc ? nc + (nc > 1 ? ' não conformidades' : ' não conformidade') : 'Sem não conformidades', sub: ((n) => n + (n === 1 ? ' visita' : ' visitas') + ' com checklist')(rows.filter((r) => r.checklist && Object.keys(r.checklist).length).length) }
     ];
 
     // ----- vazão por dia -----
