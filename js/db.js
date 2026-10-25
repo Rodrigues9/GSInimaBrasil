@@ -1943,7 +1943,7 @@
     volumes: async function (desdeIso, ateIso) {
       var linhas = [], passo = 1000;
       for (var ini = 0; ; ini += passo) {
-        var r = await q(ate(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
+        var r = await q(ate(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3,vazao_m3h').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
         linhas = linhas.concat(r || []);
         if (!r || r.length < passo) break;
       }
