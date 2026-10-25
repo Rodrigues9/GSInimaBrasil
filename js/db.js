@@ -766,8 +766,15 @@
       q(sb.from('ourinhos_descarregamentos').select('produto,ponto_nome,criado_em').eq('local', 'eta').gte('criado_em', new Date(Date.now() - 60 * 864e5).toISOString())),
       q(sb.from('ourinhos_descarregamentos').select('lote_id,produto,quantidade,criado_em,ponto_id').eq('local', 'poco').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; }),
-      q(sb.from('ourinhos_analises_pocos').select('ponto_id,ponto_nome,criado_em,cloro_mg_l,fluor_mg_l').gte('criado_em', t0).order('criado_em', { ascending: false }))
+      q(sb.from('ourinhos_analises_pocos').select('ponto_id,ponto_nome,criado_em,cloro_mg_l,fluor_mg_l').gte('criado_em', t0).order('criado_em', { ascending: false })),
+      // Coletas de tratamento das últimas semanas e o último lançamento dos itens que podem ficar "Atrasados".
+      q(sb.from('ourinhos_coletas_tratamento').select('*').gte('criado_em', new Date(Date.now() - 40 * 864e5).toISOString()).order('criado_em', { ascending: false })),
+      q(sb.from('ourinhos_analises_agua').select('criado_em').order('criado_em', { ascending: false }).limit(1)),
+      q(sb.from('ourinhos_analises_esgoto').select('criado_em').order('criado_em', { ascending: false }).limit(1)),
+      q(sb.from('ourinhos_medicoes_pocos').select('ponto_id,criado_em').order('criado_em', { ascending: false }).limit(300))
     ]);
+    var nivUlt = {};
+    (res[19] || []).forEach(function (r) { if (!nivUlt[r.ponto_id]) nivUlt[r.ponto_id] = r.criado_em; });
     var estPoco = res[10], colPositivas = res[11], pdRecentes = res[13];
     // Descarregamentos nas ETAs feitos depois do último estoque da ETA (liberam volume maior que o anterior).
     var ultEstEta = res[2] && res[2][0] && res[2][0].criado_em;
@@ -841,7 +848,7 @@
         ct: c.coliformes_totais || '', cte: c.coliformes_termotolerantes || ''
       };
     }).filter(function (c) { return c.a >= 0; });
-    var colDone = { eta: 0, sj: 0, mor: 0, pac: 0 };
+    var colDone = { eta: 0, sj: 0, mor: 0, bv: 0, pac: 0, na: 0 };
     colMes.forEach(function (c) { colDone[c.sistema] = (colDone[c.sistema] || 0) + 1; });
 
     // Descargas de rede
@@ -898,6 +905,7 @@
       alertas: alertas, estDone: estDone, anDone: anDone, pdLast: pdLast, descDesde: descDesde, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, adDone: adDone, descLast: descLast,
+      ctRows: res[16] || [], aqUlt: ((res[17] || [])[0] || {}).criado_em || null, amUlt: ((res[18] || [])[0] || {}).criado_em || null, nivUlt: nivUlt,
       colPend: pend, colDone: colDone, colHist: hist,
       dscRun: dscRun, dscToday: dscToday, dscMonthN: dscMes.length, dscMonthVol: dscMonthVol
     };
@@ -970,7 +978,8 @@
         : feito.tab === 'analise' ? { screen: 'lista', block: 'pocoAn', filt: 'pend', q: '' }
         : { screen: 'lista', block: 'poco', filt: 'pend', q: '' };
     }
-    if (ctx === 'form') return { screen: 'lista', block: feito.formK === 'niv' ? 'pocos' : feito.formK === 'aq' ? 'eta' : 'ete', filt: 'pend', q: '' };
+    if (ctx === 'form') return { screen: 'lista', block: feito.formK === 'niv' ? 'pocoNiv' : feito.formK === 'aq' ? 'eta' : 'ete', filt: 'pend', q: '' };
+    if (ctx === 'ct') return { screen: 'lista', block: 'colTrat', filt: 'pend', q: '' };
     if (ctx === 'ete') return { screen: 'lista', block: 'eteChk', filt: 'pend', q: '' };
     return { screen: 'lista', block: ctx === 'eta' ? ctx : 'poco', filt: 'pend', q: '' };
   }
@@ -1070,6 +1079,9 @@
     v.opTrocarFoto = trocarFoto; v.opFotoPadrao = fotoPadrao; v.opMenuFoto = abrirMenuFoto;
     v.opSenhaAberta = senhaAberta; v.opSenhaFechada = !senhaAberta; v.opAbrirSenha = abrirSenha; v.opFecharSenha = fecharSenha;
     v.opOperador = eOperador();
+    // Quem não é operador tem o Painel de Gestão (tela de acompanhamento do celular) logo abaixo de "O que temos para hoje?".
+    v.opGestor = !!perfil && !eOperador();
+    if (v.nav) v.nav.gestao = function () { if (window.DCRoute) window.DCRoute('MobileHome'); };
     // Foto do canto superior direito: Perfil, Configurações e Sair (como no sistema web).
     v.opMenu = function (ev) {
       abrirMenuConta(ev, {
@@ -1258,7 +1270,7 @@
     });
 
     aoSalvar(comp, v.on, 'saveCal', foiParaConfirmacao, function (s) {
-      return inserir('ourinhos_calibracoes', { leituras: soPreenchidos(s.calv, dec), operador: op });
+      return inserir('ourinhos_calibracoes', { leituras: soPreenchidos(s.calv, dec), observacao: (s.calObs || '').trim().slice(0, 1000) || null, operador: op });
     }, null, function (s) {
       // Resumo com cada leitura preenchida, marcando as que estão fora da tolerância.
       var rows = [];
@@ -1269,7 +1281,7 @@
         rows.push({ k: pd[0] + ' · ' + pd[1], v: br(val) + (r.alerta ? ' (' + r.curto + ')' : ''), alerta: r.alerta });
       });
       comp.state.last = Object.assign({}, comp.state.last, { rows: rows });
-    }, { limpar: { calv: {}, calTocado: {} } });
+    }, { limpar: { calv: {}, calTocado: {}, calObs: '' } });
 
     aoSalvar(comp, v.on, 'saveEtaStock', foiParaConfirmacao, function (s) {
       var niveis = Object.assign({}, s.dbEtaPrev || {}, soPreenchidos(s.lev, num));
@@ -1312,6 +1324,7 @@
       Object.keys(s.chk || {}).forEach(function (k) {
         if (s.chk[k] === 'nc' && s.chkObs && s.chkObs[k]) obs[k] = String(s.chkObs[k]).slice(0, 500);
       });
+      if ((s.eteObs || '').trim()) obs.geral = s.eteObs.trim().slice(0, 1000);
       return inserir('ourinhos_operacao_etes', {
         ete: s.selEte, vazao_m3h: dec(s.eteVaz), checklist: s.chk, observacoes: obs,
         analises_realizadas: false, analises: null, operador: op
@@ -1333,9 +1346,23 @@
         if (s.formK === 'aq') return inserir('ourinhos_analises_agua', Object.assign({ observacao: obsF, operador: op }, val));
         if (s.formK === 'am') return inserir('ourinhos_analises_esgoto', { ete: fx.eteOk, analises: val, observacao: obsF, operador: op });
         // Análise diária: uma linha só com as análises, na mesma tabela do checklist.
-        return inserir('ourinhos_operacao_etes', { ete: fx.eteOk, analises: val, analises_realizadas: true, operador: op });
+        return inserir('ourinhos_operacao_etes', { ete: fx.eteOk, analises: val, analises_realizadas: true, observacoes: obsF ? { geral: obsF } : {}, operador: op });
       }, null, null, { limpar: { fxv: {}, fxLq: {}, anv: {}, fxObs: '', dqoTocado: false } });
     }
+
+    // Coleta de tratamento (ETA 1, ETA 2 e poços): cloro e flúor na hora; o restante pode ser completado depois.
+    aoSalvar(comp, v.on, 'saveCt', foiParaConfirmacao, function (s) {
+      var c = s.ctv || {};
+      var campos = {
+        cloro_mg_l: dec(c.cl), fluor_mg_l: dec(c.fl), turbidez_ntu: dec(c.tur), cor_ptco: dec(c.cor), ph: dec(c.ph),
+        coliformes_totais: c.ct || null, coliformes_termotolerantes: c.cte || null, observacao: (c.obs || '').trim().slice(0, 1000) || null
+      };
+      var completa = ['turbidez_ntu', 'cor_ptco', 'ph', 'coliformes_totais', 'coliformes_termotolerantes'].every(function (k) { return campos[k] != null; });
+      if (completa) campos.status = 'concluida';
+      if (s.ctId) return alterar('ourinhos_coletas_tratamento', s.ctId, campos);
+      if (completa) { campos.analista = op; campos.concluida_em = new Date().toISOString(); }
+      return inserir('ourinhos_coletas_tratamento', Object.assign({ ponto_id: s.ctSel, ponto_nome: s.ctNome, operador: op }, campos));
+    }, null, null, { limpar: { ctv: {}, ctId: null, ctData: null } });
 
     if (v.col) {
       aoSalvar(comp, v.col.cn, 'save', foiParaConfirmacao, function (s) {
@@ -1469,7 +1496,7 @@
     return true;
   }
   function inicio(cel) {
-    if (cel) return eOperador() ? 'Main' : 'MobileHome';
+    if (cel) return 'Main';
     for (var i = 0; i < ORDEM_TELAS.length; i++) if (podeAbrir(ORDEM_TELAS[i], false)) return ORDEM_TELAS[i];
     return 'WebPerfil';
   }
