@@ -286,6 +286,7 @@
     ],
     eta: [{ aba: 'Calibrações', tabela: 'ourinhos_calibracoes' }, { aba: 'Análises quinzenais', tabela: 'ourinhos_analises_agua' }],
     ope: [{ aba: 'Operação ETAs', tabela: 'ourinhos_operacao_etas' }],
+    cal: [{ aba: 'Calibrações', tabela: 'ourinhos_calibracoes' }], // botão Exportar da tela Calibrações
     ete: [{ aba: 'Operação ETEs', tabela: 'ourinhos_operacao_etes' }, { aba: 'Análises mensais ETEs', tabela: 'ourinhos_analises_esgoto' }],
     col: [{ aba: 'Coletas', tabela: 'ourinhos_coletas_campo', data: 'coletada_em' }],
     dsc: [{ aba: 'Descargas de rede', tabela: 'descargas_rede' }]
@@ -394,7 +395,7 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
   }
-  // opcoes: { conjuntos: ['leit', ...], de: 'AAAA-MM-DD', ate: 'AAAA-MM-DD', formato: 'xlsx'|'csv', volume: bool }
+  // opcoes: { conjuntos: ['leit', ...], de: 'AAAA-MM-DD', ate: 'AAAA-MM-DD', formato: 'xlsx'|'csv', volume: bool, prefixo: nome do arquivo }
   async function exportarDados(opcoes) {
     var de = new Date(opcoes.de + 'T00:00:00'), ate = new Date(opcoes.ate + 'T00:00:00');
     ate.setDate(ate.getDate() + 1); // inclui o dia final inteiro
@@ -439,7 +440,7 @@
       }
     }
     var periodo = opcoes.de.split('-').reverse().join('-') + '_a_' + opcoes.ate.split('-').reverse().join('-');
-    var base = 'GSInima_' + periodo;
+    var base = (opcoes.prefixo || 'GSInima') + '_' + periodo;
     if (opcoes.formato === 'xlsx') {
       var X = await carregarXlsx();
       var wb = X.utils.book_new();
@@ -1934,6 +1935,7 @@
       return linhas;
     },
     exportarDados: exportarDados,
+    aviso: function (msg, tipo) { toast(msg, tipo); },
     salvarOperacaoEta: function (registro) { return inserir('ourinhos_operacao_etas', registro); },
     operadoresEta: function () {
       return q(sb.rpc('operadores_eta')).then(function (rows) {
