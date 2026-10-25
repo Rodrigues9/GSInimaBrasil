@@ -747,6 +747,16 @@
   }
   // Limita a consulta até uma data (período personalizado das telas com gráficos).
   function ate(req, ateIso) { return ateIso ? req.lt('criado_em', ateIso) : req; }
+  // Busca no período em páginas de 1.000 linhas, da mais antiga para a mais recente.
+  async function paginado(tabela, campos, desdeIso, ateIso) {
+    var linhas = [], passo = 1000;
+    for (var ini = 0; ; ini += passo) {
+      var r = await q(ate(sb.from(tabela).select(campos).gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
+      linhas = linhas.concat(r || []);
+      if (!r || r.length < passo) break;
+    }
+    return linhas;
+  }
 
   // ---------- leitura dos dados ----------
   async function carregar(comp) {
@@ -1477,11 +1487,11 @@
   // ---------- telas permitidas (site único: celular x computador) ----------
   // Operador no celular: só o app. Operador no computador: as telas marcadas em "Telas no computador",
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
-  var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
+  var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao', WebEtas: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebOperacaoEtes', 'WebPocos', 'WebEsgoto', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados', 'WebVersaoApp']);
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebEtas', 'WebOperacaoEtes', 'WebPocos', 'WebEsgoto', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados', 'WebVersaoApp']);
   // Grupos do menu lateral: somem quando nenhuma das telas deles pode ser aberta.
-  var GRUPOS_MENU = { ops: ['WebOperacaoEta', 'WebPocos', 'WebOperacaoEtes'], qual: ['WebColetas', 'WebEsgoto', 'WebCalibracoes'], vol: ['WebVolumes', 'WebDescargas'] };
+  var GRUPOS_MENU = { ops: ['WebEtas', 'WebOperacaoEta', 'WebPocos', 'WebOperacaoEtes'], qual: ['WebColetas', 'WebEsgoto', 'WebCalibracoes'], vol: ['WebVolumes', 'WebDescargas'] };
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
   function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
@@ -1924,6 +1934,11 @@
       });
       return linhas.sort(function (a, b) { return Date.parse(b.criado_em) - Date.parse(a.criado_em); });
     },
+    // Painel dos poços: análises de cloro e flúor no período e todas as medições de nível (são poucas).
+    analisesPocos: function (desdeIso, ateIso) { return paginado('ourinhos_analises_pocos', 'ponto_id,criado_em,cloro_mg_l,fluor_mg_l', desdeIso, ateIso); },
+    niveisPocos: function () { return q(sb.from('ourinhos_medicoes_pocos').select('ponto_id,criado_em,nivel_estatico_m,nivel_dinamico_m').order('criado_em', { ascending: true }).limit(5000)); },
+    // Painel das ETAs: lançamentos do formulário da operação no período.
+    operacaoEtas: function (desdeIso, ateIso) { return paginado('ourinhos_operacao_etas', 'criado_em,eta,horario,dados', desdeIso, ateIso); },
     // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
     volumes: async function (desdeIso, ateIso) {
       var linhas = [], passo = 1000;
