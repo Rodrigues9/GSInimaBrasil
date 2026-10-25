@@ -1448,12 +1448,14 @@
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
   var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebOperacaoEtes', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados']);
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebOperacaoEtes', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados', 'WebVersaoApp']);
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
   function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
     if (!perfil) return false;
     if (nome === 'Main') return true;
+    // Versão Aplicativo (o app dentro de um celular): só administrador e só no computador.
+    if (nome === 'WebVersaoApp') return !cel && perfil.papel === 'admin';
     if (eOperador()) {
       if (cel) return false;
       if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;

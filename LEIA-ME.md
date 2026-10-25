@@ -36,6 +36,7 @@ Os formulários do app gravam no Supabase, e o app mostra o que já foi lançado
 - **Operador no celular**: o app de sempre, em tela cheia, sem barra inferior; o cartão **Painel** (ainda vazio) fica logo abaixo de "O que temos para hoje?".
 - **Operador no computador**: por enquanto só **Início** (o painel, com outro nome no menu) e **Operação ETAs**, conforme marcado em **Usuários e permissões → No computador**. As demais telas voltam para o operador depois.
 - **Outros cargos no computador**: todas as telas, como antes.
+- **Versão Aplicativo** (só administrador, só no computador): item no rodapé do menu lateral que abre o app do celular dentro de um iPhone no centro da tela, com o menu ao lado. É o app de verdade (mesma conta): serve para testar e também para lançamentos reais. Botões acima do celular: Início do app, Tela inicial do gestor e Recarregar.
 - **Outros cargos no celular**: uma tela inicial com atalhos para cada tela do sistema (que se ajustam à largura do celular) e, mais abaixo, **Fazer um lançamento** (abre o app).
 - **Sessão**: continua aberta ao fechar a aba ou o navegador. Só é encerrada depois de **1 hora sem atividade** (clique, toque, tecla ou rolagem), em qualquer aparelho e cargo. O campo de login começa sempre em branco.
 
