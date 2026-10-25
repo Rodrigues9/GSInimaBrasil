@@ -37,10 +37,12 @@ Os formulários do app gravam no Supabase, e o app mostra o que já foi lançado
 - **Operador no celular**: o app de sempre, em tela cheia, sem barra inferior; o cartão **Painel** (ainda vazio) fica logo abaixo de "O que temos para hoje?".
 - **Operador no computador**: por enquanto só **Início** (o painel, com outro nome no menu) e **Operação ETAs**, conforme marcado em **Usuários e permissões → No computador**. As demais telas voltam para o operador depois.
 - **Outros cargos no computador**: todas as telas, como antes.
+- **Menu lateral (computador)**: Página Inicial; Operações (ETAs, Poços, ETEs); Qualidade (Água = Coleta de campo, Esgoto, Calibrações); Químicos; Volumes (Visão geral, Descargas de rede). No rodapé: Importar e exportar, Usuários e permissões e Versão Aplicativo. Os grupos abrem e fecham na setinha; o grupo some se a pessoa não pode abrir nenhuma tela dele. Poços e Esgoto ainda são páginas "Em breve".
+- **Período personalizado**: em Volumes, Operação ETEs e Calibrações, o botão **Personalizado** abre datas de início e fim, com os atalhos **Mês atual** e **Ano atual** (até hoje).
 - **Versão Aplicativo** (só administrador, só no computador): item no rodapé do menu lateral que abre o app do celular dentro de uma moldura de celular no centro da tela, com o menu ao lado. O app é desenhado com 412 pontos de largura (celular Android 20:9 comum) e reduzido para caber, mostrando o mesmo tanto de tela que um celular real. É o app de verdade (mesma conta): serve para testar e também para lançamentos reais.
-- **Status "Atrasado"** (vermelho, continua em Pendentes): Análises Quinzenais (mais de 15 dias), Análises Mensais e Medições de Níveis (mais de um mês), Estoque dos poços (mais de 4 dias) e coletas de tratamento.
+- **Status "Atrasado"** (vermelho, continua em Pendentes): Análises Quinzenais (mais de 15 dias), Análises Mensais (mais de um mês sem análise em alguma ETE; a ETE Pacaembu, paralisada, não conta) e Medições de Níveis (mais de um mês), Estoque dos poços (mais de 4 dias) e coletas de tratamento.
 - **Outros cargos no celular**: uma tela inicial com atalhos para cada tela do sistema (que se ajustam à largura do celular) e, mais abaixo, **Fazer um lançamento** (abre o app).
-- **Sessão**: continua aberta ao fechar a aba ou o navegador. Só é encerrada depois de **1 hora sem atividade** (clique, toque, tecla ou rolagem), em qualquer aparelho e cargo. O campo de login começa sempre em branco.
+- **Sessão**: continua aberta ao fechar a aba ou o navegador. Só é encerrada depois de **1 hora sem atividade** (clique, toque, tecla ou rolagem), em qualquer aparelho e cargo, voltando direto para a tela de entrada (sem aviso). O campo de login começa sempre em branco.
 
 ## Login e permissões
 - Cada pessoa entra com **login e senha** (Supabase Auth). O login vira o e-mail interno `<login>@usuarios.gsinima.local`; nenhum e-mail é enviado.

@@ -744,6 +744,8 @@
     if (r.error) throw r.error;
     return r.data;
   }
+  // Limita a consulta até uma data (período personalizado das telas com gráficos).
+  function ate(req, ateIso) { return ateIso ? req.lt('criado_em', ateIso) : req; }
 
   // ---------- leitura dos dados ----------
   async function carregar(comp) {
@@ -1109,7 +1111,6 @@
         entrarOuPrimeiroAcesso(u ? u.value : '', s ? s.value : '').then(function (p) {
           if (s) s.value = '';
           if (toastEl) toastEl.hidden = true;
-          esconderAvisoAmarelo();
           comp.setState({ acc: blocosLiberados(p) });
           home.apply(self, args);
           atualizar(comp);
@@ -1477,7 +1478,9 @@
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
   var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebOperacaoEtes', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados', 'WebVersaoApp']);
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebOperacaoEtes', 'WebPocos', 'WebEsgoto', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados', 'WebVersaoApp']);
+  // Grupos do menu lateral: somem quando nenhuma das telas deles pode ser aberta.
+  var GRUPOS_MENU = { ops: ['WebOperacaoEta', 'WebPocos', 'WebOperacaoEtes'], qual: ['WebColetas', 'WebEsgoto', 'WebCalibracoes'], vol: ['WebVolumes', 'WebDescargas'] };
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
   function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
@@ -1489,7 +1492,7 @@
       if (cel) return false;
       if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
       // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
-      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes' || nome === 'WebVolumes' || nome === 'WebOperacaoEtes') return false;
+      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes' || nome === 'WebVolumes' || nome === 'WebOperacaoEtes' || nome === 'WebPocos' || nome === 'WebEsgoto') return false;
       var t = (perfil.permissoes && perfil.permissoes.telas) || {};
       return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela só aparece se estiver marcada
     }
@@ -1506,8 +1509,11 @@
   var estiloMenu = null;
   function menuPermitido(cel) {
     if (!estiloMenu) { estiloMenu = document.createElement('style'); document.head.appendChild(estiloMenu); }
-    estiloMenu.textContent = TODAS_TELAS.filter(function (n) { return !podeAbrir(n, cel); })
-      .map(function (n) { return 'a[href="#' + n + '"]'; }).join(',') + (TODAS_TELAS.some(function (n) { return !podeAbrir(n, cel); }) ? '{display:none!important}' : '');
+    var esconder = TODAS_TELAS.filter(function (n) { return !podeAbrir(n, cel); }).map(function (n) { return 'a[href="#' + n + '"]'; });
+    Object.keys(GRUPOS_MENU).forEach(function (g) {
+      if (!GRUPOS_MENU[g].some(function (n) { return podeAbrir(n, cel); })) esconder.push('details[data-grupo="' + g + '"]');
+    });
+    estiloMenu.textContent = esconder.length ? esconder.join(',') + '{display:none!important}' : '';
   }
 
   // ---------- sistema web: entrada e controle de acesso ----------
@@ -1619,7 +1625,6 @@
         };
       });
     }
-    esconderAvisoAmarelo();
     vigiarInatividade(iniciar);
     iniciar();
   }
@@ -1629,7 +1634,6 @@
   // O horário da última atividade fica no aparelho, então reabrir o navegador depois de 1 hora também pede login.
   var LIMITE_INATIVO = 60 * 60 * 1000;
   var ATIVIDADE_KEY = 'gsinima.web.atividade';
-  var MSG_INATIVO = 'Sessão encerrada após 1 hora sem atividade. Por segurança, entre novamente para continuar.';
   var EVENTOS_ATIVIDADE = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
   var vigia = null;
 
@@ -1653,7 +1657,7 @@
       if (Date.now() - ultimaGravacao > 5000) { ultimaGravacao = Date.now(); marcarAtividade(); }
     };
     EVENTOS_ATIVIDADE.forEach(function (ev) { document.addEventListener(ev, aoAgir, true); });
-    // Se a pessoa saiu da frente da tela, a sessão já se encerra sozinha (o aviso estará lá quando voltar).
+    // Se a pessoa saiu da frente da tela, a sessão já se encerra sozinha (sem aviso: volta direto para a entrada).
     var relogio = setInterval(function () { if (inativoDemais()) encerrarPorInatividade(iniciar); }, 30000);
     var aoVoltar = function () { if (document.visibilityState === 'visible' && inativoDemais()) encerrarPorInatividade(iniciar); };
     document.addEventListener('visibilitychange', aoVoltar);
@@ -1667,28 +1671,8 @@
 
   function encerrarPorInatividade(iniciar) {
     pararVigia();
-    sair().then(function () {
-      telaLogin(iniciar);
-      mostrarAvisoAmarelo(MSG_INATIVO);
-    });
+    sair().then(function () { telaLogin(iniciar); });
   }
-
-  var avisoEl = null;
-  function mostrarAvisoAmarelo(texto) {
-    if (!avisoEl) {
-      avisoEl = document.createElement('div');
-      avisoEl.setAttribute('role', 'alert');
-      avisoEl.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 32px));box-sizing:border-box;' +
-        'background:#FEF3C7;color:#78350F;border:1.5px solid #F59E0B;border-radius:14px;padding:14px 16px;z-index:9999;' +
-        'font:500 15px/1.4 \'Inter\',system-ui,sans-serif;box-shadow:0 8px 24px rgba(10,46,92,.18);display:flex;gap:10px;align-items:flex-start';
-      document.body.appendChild(avisoEl);
-    }
-    avisoEl.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:1px">' +
-      '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M9 2h6"/></svg><span></span>';
-    avisoEl.querySelector('span').textContent = texto;
-    avisoEl.hidden = false;
-  }
-  function esconderAvisoAmarelo() { if (avisoEl) avisoEl.hidden = true; }
 
   function guardWeb(iniciar) {
     cartao('<p style="margin:0;color:' + COR.texto + '">Carregando…</p>');
@@ -1696,10 +1680,7 @@
       if (!p) return telaLogin(iniciar);
       // Sessão guardada, mas sem atividade há mais de 1 hora: pede login de novo.
       if (inativoDemais()) {
-        return sair().then(function () {
-          telaLogin(iniciar);
-          mostrarAvisoAmarelo(MSG_INATIVO);
-        });
+        return sair().then(function () { telaLogin(iniciar); });
       }
       sb.rpc('registrar_acesso').then(function () {}, function () {});
       abrirWeb(iniciar);
@@ -1911,21 +1892,21 @@
     // Operação ETA (computador): confirmação e gravação do lançamento.
     confirmarEnvio: confirmarEnvio,
     confirmarAcao: confirmarAcao,
-    // Calibrações de equipamentos desde uma data (mais recentes primeiro) e as tolerâncias de cada padrão.
-    calibracoes: function (desdeIso) {
-      return q(sb.from('ourinhos_calibracoes').select('criado_em,turno,operador,leituras').gte('criado_em', desdeIso).order('criado_em', { ascending: false }).limit(3000));
+    // Calibrações de equipamentos desde uma data (e, no período personalizado, até outra) (mais recentes primeiro) e as tolerâncias de cada padrão.
+    calibracoes: function (desdeIso, ateIso) {
+      return q(ate(sb.from('ourinhos_calibracoes').select('criado_em,turno,operador,leituras').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: false }).limit(3000));
     },
     padroesCal: PADROES_CAL, regraCal: regraCal,
     // Operação das ETEs desde a data, da mais recente para a mais antiga (em páginas de 1.000 linhas).
-    operacaoEtes: async function (desdeIso) {
+    operacaoEtes: async function (desdeIso, ateIso) {
       var linhas = [], passo = 1000;
       for (var ini = 0; ; ini += passo) {
-        var r = await q(sb.from('ourinhos_operacao_etes').select('criado_em,turno,ete,vazao_m3h,checklist,analises,operador').gte('criado_em', desdeIso).order('criado_em', { ascending: false }).range(ini, ini + passo - 1));
+        var r = await q(ate(sb.from('ourinhos_operacao_etes').select('criado_em,turno,ete,vazao_m3h,checklist,analises,operador').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: false }).range(ini, ini + passo - 1));
         linhas = linhas.concat(r || []);
         if (!r || r.length < passo) break;
       }
       // Análises mensais (ourinhos_analises_esgoto): entram na linha da mesma ETE e do mesmo dia, ou numa linha própria.
-      var mensais = await q(sb.from('ourinhos_analises_esgoto').select('criado_em,ete,analises,operador').gte('criado_em', desdeIso));
+      var mensais = await q(ate(sb.from('ourinhos_analises_esgoto').select('criado_em,ete,analises,operador').gte('criado_em', desdeIso), ateIso));
       var dia = function (iso) { return new Date(iso).toDateString(); };
       (mensais || []).forEach(function (m) {
         var alvo = linhas.find(function (l) { return l.ete === m.ete && dia(l.criado_em) === dia(m.criado_em); });
@@ -1935,10 +1916,10 @@
       return linhas.sort(function (a, b) { return Date.parse(b.criado_em) - Date.parse(a.criado_em); });
     },
     // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
-    volumes: async function (desdeIso) {
+    volumes: async function (desdeIso, ateIso) {
       var linhas = [], passo = 1000;
       for (var ini = 0; ; ini += passo) {
-        var r = await q(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3').gte('criado_em', desdeIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
+        var r = await q(ate(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
         linhas = linhas.concat(r || []);
         if (!r || r.length < passo) break;
       }
