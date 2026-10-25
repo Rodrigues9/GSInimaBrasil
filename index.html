@@ -2326,7 +2326,7 @@ class Component extends DCLogic {
       Object.assign({ id: 'ad', name: 'Análises Diárias', sub: 'pH, temperatura, OD, sólidos e DQO de uma ETE por dia', pick: () => openForm('ad'), t: adHoje ? adHoje.t : undefined },
         adHoje ? { status: 'Lançada às ' + adHoje.t + ' (' + adHoje.ete.replace('ETE ', '') + ')', chipBg: '#E2F4EE', chipFg: '#0B6B57' }
           : domingo ? { noCount: true, status: '', chipBg: '', chipFg: '' } : chipOf(undefined)),
-      Object.assign({ id: 'am', name: 'Análises Mensais', sub: 'Fósforo, nitrato, nitrito, nitrogênio, sulfato e sulfeto', pick: () => openForm('am') }, atrasoSe(passouMes(st.amUlt)))
+      Object.assign({ id: 'am', name: 'Análises Mensais', sub: 'Fósforo, nitrato, nitrito, nitrogênio, sulfato e sulfeto', pick: () => openForm('am') }, atrasoSe(ETES.some((n) => passouMes((st.amUlt || {})[n]))))
     ];
     // Coletas de Campo: Tratamento (ETA 1 e ETA 2 às quartas e domingos; poços aos domingos) e Distribuição.
     const CT_PTS = [{ id: 'eta1', name: 'ETA 1', dows: [3, 0] }, { id: 'eta2', name: 'ETA 2', dows: [3, 0] }]

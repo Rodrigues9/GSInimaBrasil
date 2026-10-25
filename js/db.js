@@ -770,10 +770,12 @@
       // Coletas de tratamento das últimas semanas e o último lançamento dos itens que podem ficar "Atrasados".
       q(sb.from('ourinhos_coletas_tratamento').select('*').gte('criado_em', new Date(Date.now() - 40 * 864e5).toISOString()).order('criado_em', { ascending: false })),
       q(sb.from('ourinhos_analises_agua').select('criado_em').order('criado_em', { ascending: false }).limit(1)),
-      q(sb.from('ourinhos_analises_esgoto').select('criado_em').order('criado_em', { ascending: false }).limit(1)),
+      q(sb.from('ourinhos_analises_esgoto').select('ete,criado_em').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('ourinhos_medicoes_pocos').select('ponto_id,criado_em').order('criado_em', { ascending: false }).limit(300))
     ]);
-    var nivUlt = {};
+    var nivUlt = {}, amUlt = {};
+    // Última análise mensal de cada ETE (cada uma fica "Atrasada" sozinha).
+    (res[18] || []).forEach(function (r) { if (!amUlt[r.ete]) amUlt[r.ete] = r.criado_em; });
     (res[19] || []).forEach(function (r) { if (!nivUlt[r.ponto_id]) nivUlt[r.ponto_id] = r.criado_em; });
     var estPoco = res[10], colPositivas = res[11], pdRecentes = res[13];
     // Descarregamentos nas ETAs feitos depois do último estoque da ETA (liberam volume maior que o anterior).
@@ -905,7 +907,7 @@
       alertas: alertas, estDone: estDone, anDone: anDone, pdLast: pdLast, descDesde: descDesde, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
       eteDone: eteDone, adDone: adDone, descLast: descLast,
-      ctRows: res[16] || [], aqUlt: ((res[17] || [])[0] || {}).criado_em || null, amUlt: ((res[18] || [])[0] || {}).criado_em || null, nivUlt: nivUlt,
+      ctRows: res[16] || [], aqUlt: ((res[17] || [])[0] || {}).criado_em || null, amUlt: amUlt, nivUlt: nivUlt,
       colPend: pend, colDone: colDone, colHist: hist,
       dscRun: dscRun, dscToday: dscToday, dscMonthN: dscMes.length, dscMonthVol: dscMonthVol
     };
