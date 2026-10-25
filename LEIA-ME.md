@@ -2,7 +2,7 @@
 
 | Pasta / arquivo | Conteúdo |
 |---|---|
-| `index.html` | Site único: entrada (login), app do operador e telas do sistema (painel, químicos, coletas, descargas, Operação ETA, dados, usuários). O layout muda pelo tamanho da tela |
+| `index.html` | Site único: entrada (login), app do operador e telas do sistema (painel, químicos, coletas, descargas, Operação ETAs, Operação ETEs, dados, usuários). O layout muda pelo tamanho da tela |
 | `js/db.js` | Liga os formulários do app ao Supabase (grava e carrega os dados) |
 | `scripts/build.js` | Gera o site em `dist/`, com as chaves do Supabase lidas do `.env`; copia o supabase-js e o xlsx (SheetJS, instalado do CDN oficial) para `dist/vendor/` |
 | `scripts/serve.js` | Servidor local para testar `dist/` |
@@ -17,21 +17,21 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 | Leitura de macromedidor (poços, reservatórios, ETAs) | `ourinhos_macros` — vazão, totalizador e volume; nos medidores que mostram m³ ÷ 10 (Poço Diamantes, Poço Nova Alcântara e os 2 reservatórios da Nova Alcântara) o operador digita o visor e o banco guarda x10 |
 | Análises dos Poços (item próprio no bloco Poços) | `ourinhos_analises_pocos` — cloro e flúor (mg/L) e, só quando a bomba dosadora foi ajustada, o tempo entre pulsos antes e depois (`pulso_cloro_anterior_s`/`pulso_cloro_novo_s`, idem flúor, em segundos) |
 | Volumes (computador) | tela `WebVolumes`: produzidos (captações das ETAs e poços) e distribuídos (áreas, mesma composição das abas "Volumes Produzidos/Distribuídos" da planilha), calculados de `ourinhos_macros.volume_m3` |
-| Estoque de insumos do poço | `estoque_poco` |
+| Estoque de insumos do poço | `ourinhos_estoque_quimicos` com `local = poco` — hipoclorito e ácido fluossilícico (L) por poço |
 | Calibrações da ETA | `ourinhos_calibracoes` |
-| Estoque de produtos químicos da ETA | `estoque_eta` |
+| Estoque de produtos químicos da ETA | `ourinhos_estoque_quimicos` com `local = eta` — níveis por reservatório em `niveis_l` (PAC ETA 1 R1–R3, PAC ETA 2 R1–R2, flúor ETA 1 R1–R4, flúor ETA 2, sacos de sal); zero = tanque vazio |
 | Descarregamento de produtos químicos | `descarregamentos_quimicos` |
-| Visita à ETE (checklist e análises) | `visitas_ete` |
+| Operação das ETEs (app e computador) | `ourinhos_operacao_etes` — uma linha por ETE e dia: vazão (m³/h), checklist, observações e análises em `analises` (pH, temperatura, OD, sólidos, DQO bruto/tratado/padrão e laboratoriais; ">LQ" guardado como texto). Tela `WebOperacaoEtes` no computador |
 | Coleta de campo e análises | `coletas` |
 | Descargas de rede | `descargas_rede` |
-| Operação ETA (computador) | `operacao_eta` — ETA Pardo I ou II, horário, até 3 operadores (primeiro nome das contas "Operador de ETA", função `operadores_eta()`), medições por etapa em `dados` (captacao, bruta, pac, coagulada, decantada, filtrada, tratada) e observações |
-| Capacidades dos poços (computador, Produtos químicos) | `capacidades_pocos` — capacidade de hipoclorito e ácido por poço e se o flúor é diluído 50%; a visão `estoque_poco_real` dá o volume real de ácido (metade nos poços diluídos) para consumo e exportação |
+| Operação ETAs (computador) | `operacao_eta` — ETA Pardo I ou II, horário, até 3 operadores (primeiro nome das contas "Operador de ETA", função `operadores_eta()`), medições por etapa em `dados` (captacao, bruta, pac, coagulada, decantada, filtrada, tratada) e observações |
+| Capacidades dos poços (computador, Produtos químicos) | `capacidades_pocos` — capacidade de hipoclorito e ácido por poço e se o flúor é diluído 50%; a visão `ourinhos_estoque_quimicos_real` dá o volume real de ácido (metade nos poços diluídos) para consumo e exportação |
 
 ## Site único: celular x computador
 - Um só endereço. Tela menor que **1024 px** = celular; 1024 px ou mais (tablet deitado, computador) = computador.
 - "Operador" abaixo = Operador Volante ou Operador de ETA.
 - **Operador no celular**: o app de sempre, em tela cheia, sem barra inferior; o cartão **Painel** (ainda vazio) fica logo abaixo de "O que temos para hoje?".
-- **Operador no computador**: por enquanto só **Início** (o painel, com outro nome no menu) e **Operação ETA**, conforme marcado em **Usuários e permissões → No computador**. As demais telas voltam para o operador depois.
+- **Operador no computador**: por enquanto só **Início** (o painel, com outro nome no menu) e **Operação ETAs**, conforme marcado em **Usuários e permissões → No computador**. As demais telas voltam para o operador depois.
 - **Outros cargos no computador**: todas as telas, como antes.
 - **Outros cargos no celular**: uma tela inicial com atalhos para cada tela do sistema (que se ajustam à largura do celular) e, mais abaixo, **Fazer um lançamento** (abre o app).
 - **Sessão**: continua aberta ao fechar a aba ou o navegador. Só é encerrada depois de **1 hora sem atividade** (clique, toque, tecla ou rolagem), em qualquer aparelho e cargo. O campo de login começa sempre em branco.
@@ -108,6 +108,6 @@ psql --single-transaction --variable ON_ERROR_STOP=1 --file backup/roles.sql --f
 Depois, publique de novo a Edge Function `primeiro-acesso`, crie a pasta `avatares` no Storage e troque as chaves `NEXT_PUBLIC_SUPABASE_*` no `.env` e na Vercel. O guia oficial está em https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
 
 ## Pontos de atenção
-- **Telas do sistema web** (painel, químicos, coletas, descargas) ainda mostram dados de exemplo. Já usam o banco: o app do operador, a Operação ETA, Usuários e permissões e a **exportação** (Importar e exportar → Exportar: cada conjunto vira uma aba do Excel ou um arquivo CSV com `;` e vírgula decimal).
+- **Telas do sistema web** (painel, químicos, coletas, descargas) ainda mostram dados de exemplo. Já usam o banco: o app do operador, a Operação ETAs, Operação ETEs, Usuários e permissões e a **exportação** (Importar e exportar → Exportar: cada conjunto vira uma aba do Excel ou um arquivo CSV com `;` e vírgula decimal).
 - **Importação** ainda não funciona: o botão de enviar planilha está desativado de propósito.
 - **Leitura automática por foto**: ficou para uma etapa futura. O botão "Tirar foto do macromedidor" só marca que a foto foi tirada; a imagem não é enviada.

@@ -281,14 +281,13 @@
     leit: [{ aba: 'Macromedidores', tabela: 'ourinhos_macros' }],
     res: [{ aba: 'Análises poços', tabela: 'ourinhos_analises_pocos' }],
     est: [
-      { aba: 'Estoque poços', tabela: 'estoque_poco_real' }, // com o volume real do ácido (metade se o flúor é diluído)
-      { aba: 'Estoque ETAs', tabela: 'estoque_eta' },
+      { aba: 'Estoques', tabela: 'ourinhos_estoque_quimicos_real' }, // ETAs e poços; ácido real nos poços (metade se o flúor é diluído)
       { aba: 'Descarreg. ETAs', tabela: 'descarregamentos_quimicos' },
       { aba: 'Descarreg. poços', tabela: 'descarregamentos_pocos' }
     ],
     eta: [{ aba: 'Calibrações', tabela: 'ourinhos_calibracoes' }],
-    ope: [{ aba: 'Operação ETA', tabela: 'operacao_eta' }],
-    ete: [{ aba: 'ETEs', tabela: 'visitas_ete' }],
+    ope: [{ aba: 'Operação ETAs', tabela: 'operacao_eta' }],
+    ete: [{ aba: 'Operação ETEs', tabela: 'ourinhos_operacao_etes' }],
     col: [{ aba: 'Coletas', tabela: 'coletas', data: 'coletada_em' }],
     dsc: [{ aba: 'Descargas de rede', tabela: 'descargas_rede' }]
   };
@@ -302,7 +301,7 @@
     sistema: 'Sistema', dn_mm: 'DN (mm)', status: 'Situação', ph: 'pH', cor_uh: 'Cor (uH)', turbidez_ut: 'Turbidez (UT)',
     coliformes_totais: 'Coliformes totais', coliformes_termotolerantes: 'Coliformes termotolerantes', coletor: 'Coletor', analista: 'Analista',
     ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores',
-    fluor_diluido: 'Flúor diluído (50%)', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno',
+    fluor_diluido: 'Flúor diluído (50%)', local: 'Local', linha_planilha_analises: 'Linha da planilha (análises)', analises_realizadas: 'Análises realizadas', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno',
     pulso_cloro_anterior_s: 'Pulso do cloro antes do ajuste (s)', pulso_cloro_novo_s: 'Pulso do cloro ajustado (s)',
     pulso_fluor_anterior_s: 'Pulso do flúor antes do ajuste (s)', pulso_fluor_novo_s: 'Pulso do flúor ajustado (s)', origem: 'Origem', linha_planilha: 'Linha da planilha'
   };
@@ -326,8 +325,21 @@
     }
     return ETAPAS_OPETA[m[1]] + ': ' + txt;
   }
+  var GRUPOS_NIVEL = { pac1: 'PAC ETA 1', pac2: 'PAC ETA 2', flu1: 'Flúor ETA 1', flu2: 'Flúor ETA 2' };
+  var ANALISE_ETE = { ph: 'pH', temp: 'temperatura (°C)', od: 'OD (mg/L)', sol: 'sólidos sedimentáveis (mL/L)', dqo: 'DQO (mg/L)',
+    fosforo: 'fósforo (mg/L)', nitrato: 'nitrato (mg/L)', nitrito: 'nitrito (mg/L)', namon: 'nitrogênio amoniacal (mg/L)',
+    ntotal: 'nitrogênio total (mg/L)', sulfato: 'sulfato (mg/L)', sulfeto: 'sulfeto (mg/L)' };
+  var LADO_ETE = { b: 'bruto', t: 'tratado', p: 'padrão' };
+  var CHECKLIST_ETE = { grades: 'limpeza das grades', elev: 'elevatória', sopr: 'sopradores', reciclo: 'reciclo de lodo', areia: 'limpeza da caixa de areia', dist: 'limpeza da caixa de distribuição' };
   function nomeColuna(c) {
     if (NOMES_COLUNA[c]) return NOMES_COLUNA[c];
+    var nv = /^niveis_l\.(\w+)-(R\d)$/.exec(c);
+    if (nv && GRUPOS_NIVEL[nv[1]]) return GRUPOS_NIVEL[nv[1]] + ' ' + nv[2] + ' (L)';
+    if (c === 'niveis_l.sal_sacos_usados') return 'Sal usado no turno (sacos)';
+    var an = /^analises\.(\w+)-([bpt])$/.exec(c);
+    if (an && ANALISE_ETE[an[1]]) { var t0 = ANALISE_ETE[an[1]]; return t0.charAt(0).toUpperCase() + t0.slice(1) + ' ' + LADO_ETE[an[2]]; }
+    var ck = /^(checklist|observacoes)\.(\w+)$/.exec(c);
+    if (ck && CHECKLIST_ETE[ck[2]]) return (ck[1] === 'checklist' ? 'Checklist: ' : 'Obs.: ') + CHECKLIST_ETE[ck[2]];
     var pc = /^leituras\.(.+)$/.exec(c);
     if (pc && PADROES_CAL[pc[1]]) return PADROES_CAL[pc[1]][1];
     var op = nomeOpeta(c);
@@ -449,7 +461,7 @@
   }
 
   // ---------- capacidades dos reservatórios dos poços (tela Produtos químicos) ----------
-  // Mesmos códigos dos poços usados no app (estoque_poco.ponto_id) e na mesma ordem da lista de estoque.
+  // Mesmos códigos dos poços usados no app (ourinhos_estoque_quimicos.ponto_id) e na mesma ordem da lista de estoque.
   var POCOS_CAPACIDADE = [['m3', 'Poço Diamantes'], ['m7', 'Poço São João'], ['m8', 'Poço Pacaembu'], ['m11', 'Poço Moradas'],
     ['m15', 'Poço Ville de France'], ['e0', 'Poço Esmeralda'], ['m21', 'Poço Nova Alcântara']];
   function abrirCapacidades() {
@@ -732,15 +744,15 @@
     var res = await Promise.all([
       q(sb.from('ourinhos_macros').select('ponto_id,ponto_nome,criado_em,vazao_m3h,totalizador_m3,operador').order('criado_em', { ascending: false }).limit(1000)),
       q(sb.from('ourinhos_calibracoes').select('criado_em').gte('criado_em', t0).order('criado_em', { ascending: false }).limit(1)),
-      q(sb.from('estoque_eta').select('criado_em,niveis_l').order('criado_em', { ascending: false }).limit(1)),
-      q(sb.from('visitas_ete').select('ete,criado_em').gte('criado_em', t0).order('criado_em', { ascending: true })),
+      q(sb.from('ourinhos_estoque_quimicos').select('criado_em,niveis_l').eq('local', 'eta').order('criado_em', { ascending: false }).limit(1)),
+      q(sb.from('ourinhos_operacao_etes').select('ete,criado_em').gte('criado_em', t0).order('criado_em', { ascending: true })),
       q(sb.from('descarregamentos_quimicos').select('produto,eta,quantidade_kg').order('criado_em', { ascending: false }).limit(1)),
       q(sb.from('coletas').select('*').eq('status', 'pendente').order('coletada_em', { ascending: true })),
       q(sb.from('coletas').select('sistema').eq('status', 'concluida').gte('concluida_em', m0)),
       q(sb.from('coletas').select('endereco,coletada_em,concluida_em,status').or('coletada_em.gte.' + t0 + ',concluida_em.gte.' + t0)),
       q(sb.from('descargas_rede').select('*').eq('status', 'andamento').order('inicio_em', { ascending: true })),
       q(sb.from('descargas_rede').select('*').eq('status', 'concluida').gte('fim_em', m0).order('fim_em', { ascending: false })),
-      q(sb.from('estoque_poco').select('ponto_id,ponto_nome,hipoclorito_l,acido_fluossilicico_l,criado_em').order('criado_em', { ascending: false }).limit(300)),
+      q(sb.from('ourinhos_estoque_quimicos').select('ponto_id,ponto_nome,hipoclorito_l,acido_fluossilicico_l,criado_em').eq('local', 'poco').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('coletas').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
         .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
       q(sb.from('descarregamentos_quimicos').select('produto,eta,criado_em').gte('criado_em', new Date(Date.now() - 60 * 864e5).toISOString())),
@@ -1214,8 +1226,8 @@
     }, null, { limpar: { cl: '', fl: '', ajCl: false, ajFl: false, clAnt: '', clNov: '', flAnt: '', flNov: '' } });
 
     aoSalvar(comp, v.on, 'saveEstoque', foiParaConfirmacao, function (s) {
-      return inserir('estoque_poco', {
-        ponto_id: p.id, ponto_nome: p.name,
+      return inserir('ourinhos_estoque_quimicos', {
+        local: 'poco', ponto_id: p.id, ponto_nome: p.name,
         hipoclorito_l: dec(s.hip), acido_fluossilicico_l: dec(s.aci), operador: op
       });
     }, null, null, {
@@ -1249,7 +1261,7 @@
       delete niveis.sal_sacos_usados;
       var sal = num(s.salUsed);
       if (sal != null) niveis.sal_sacos_usados = sal;
-      return inserir('estoque_eta', { niveis_l: niveis, operador: op });
+      return inserir('ourinhos_estoque_quimicos', { local: 'eta', ponto_id: 'eta', ponto_nome: 'ETAs', niveis_l: niveis, operador: op });
     }, null, null, {
       validar: function (s) {
         var falta = (v.stockGroups || []).some(function (g) { return (g.res || []).some(function (r) { return num((s.lev || {})[String(r.id).replace(/^st-/, '')]) == null; }); });
@@ -1285,7 +1297,7 @@
       Object.keys(s.chk || {}).forEach(function (k) {
         if (s.chk[k] === 'nc' && s.chkObs && s.chkObs[k]) obs[k] = String(s.chkObs[k]).slice(0, 500);
       });
-      return inserir('visitas_ete', {
+      return inserir('ourinhos_operacao_etes', {
         ete: s.selEte, vazao_m3h: dec(s.eteVaz), checklist: s.chk, observacoes: obs,
         analises_realizadas: s.anal === true, analises: s.anal === true ? analises : null, operador: op
       });
@@ -1411,7 +1423,7 @@
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
   var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao' };
   var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados']);
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebOperacaoEtes', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados']);
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
   function eOperador() { return !!perfil && (perfil.papel === 'operador_volante' || perfil.papel === 'operador_eta'); }
   function podeAbrir(nome, cel) {
@@ -1421,7 +1433,7 @@
       if (cel) return false;
       if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
       // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
-      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes' || nome === 'WebVolumes') return false;
+      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes' || nome === 'WebVolumes' || nome === 'WebOperacaoEtes') return false;
       var t = (perfil.permissoes && perfil.permissoes.telas) || {};
       return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela só aparece se estiver marcada
     }
@@ -1848,6 +1860,16 @@
       return q(sb.from('ourinhos_calibracoes').select('criado_em,turno,operador,leituras').gte('criado_em', desdeIso).order('criado_em', { ascending: false }).limit(3000));
     },
     padroesCal: PADROES_CAL, regraCal: regraCal,
+    // Operação das ETEs desde a data, da mais recente para a mais antiga (em páginas de 1.000 linhas).
+    operacaoEtes: async function (desdeIso) {
+      var linhas = [], passo = 1000;
+      for (var ini = 0; ; ini += passo) {
+        var r = await q(sb.from('ourinhos_operacao_etes').select('criado_em,turno,ete,vazao_m3h,checklist,analises,operador').gte('criado_em', desdeIso).order('criado_em', { ascending: false }).range(ini, ini + passo - 1));
+        linhas = linhas.concat(r || []);
+        if (!r || r.length < passo) break;
+      }
+      return linhas;
+    },
     // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
     volumes: async function (desdeIso) {
       var linhas = [], passo = 1000;
