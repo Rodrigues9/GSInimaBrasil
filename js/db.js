@@ -1937,6 +1937,12 @@
     // Painel dos poços: análises de cloro e flúor no período e todas as medições de nível (são poucas).
     analisesPocos: function (desdeIso, ateIso) { return paginado('ourinhos_analises_pocos', 'ponto_id,criado_em,cloro_mg_l,fluor_mg_l', desdeIso, ateIso); },
     niveisPocos: function () { return q(sb.from('ourinhos_medicoes_pocos').select('ponto_id,criado_em,nivel_estatico_m,nivel_dinamico_m').order('criado_em', { ascending: true }).limit(5000)); },
+    // Químicos: leituras de estoque (ETAs e poços, com o ácido real dos poços), capacidades dos poços e descarregamentos.
+    estoques: function (desdeIso, ateIso) { return paginado('ourinhos_estoque_quimicos_real', 'criado_em,local,ponto_id,ponto_nome,niveis_l,hipoclorito_l,acido_fluossilicico_l,acido_fluossilicico_real_l,fluor_diluido', desdeIso, ateIso); },
+    capacidadesPocos: function () { return q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l,fluor_diluido')); },
+    descarregamentos: function (desdeIso, ateIso) { return paginado('ourinhos_descarregamentos', 'criado_em,local,produto,ponto_nome,quantidade,unidade,operador', desdeIso, ateIso); },
+    // Página Inicial: análises quinzenais das ETAs.
+    analisesAgua: function (desdeIso, ateIso) { return paginado('ourinhos_analises_agua', '*', desdeIso, ateIso); },
     // Painel das ETAs: lançamentos do formulário da operação no período.
     operacaoEtas: function (desdeIso, ateIso) { return paginado('ourinhos_operacao_etas', 'criado_em,eta,horario,dados', desdeIso, ateIso); },
     // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
