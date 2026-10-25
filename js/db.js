@@ -46,7 +46,7 @@
     var s = await sb.auth.getSession();
     var sessao = s.data && s.data.session;
     if (!sessao) { perfil = null; return null; }
-    var r = await sb.from('perfis').select('*').eq('usuario_id', sessao.user.id).maybeSingle();
+    var r = await sb.from('ourinhos_usuarios').select('*').eq('usuario_id', sessao.user.id).maybeSingle();
     if (r.error) throw r.error;
     perfil = r.data || null;
     if (!perfil || !perfil.ativo) {
@@ -279,16 +279,15 @@
   // Cada conjunto escolhido vira uma ou mais abas (Excel) ou arquivos (CSV), com os lançamentos do período.
   var CONJUNTOS = {
     leit: [{ aba: 'Macromedidores', tabela: 'ourinhos_macros' }],
-    res: [{ aba: 'Análises poços', tabela: 'ourinhos_analises_pocos' }],
+    res: [{ aba: 'Análises poços', tabela: 'ourinhos_analises_pocos' }, { aba: 'Medições de níveis', tabela: 'ourinhos_medicoes_pocos' }],
     est: [
       { aba: 'Estoques', tabela: 'ourinhos_estoque_quimicos_real' }, // ETAs e poços; ácido real nos poços (metade se o flúor é diluído)
-      { aba: 'Descarreg. ETAs', tabela: 'descarregamentos_quimicos' },
-      { aba: 'Descarreg. poços', tabela: 'descarregamentos_pocos' }
+      { aba: 'Descarregamentos', tabela: 'ourinhos_descarregamentos' }
     ],
-    eta: [{ aba: 'Calibrações', tabela: 'ourinhos_calibracoes' }],
-    ope: [{ aba: 'Operação ETAs', tabela: 'operacao_eta' }],
-    ete: [{ aba: 'Operação ETEs', tabela: 'ourinhos_operacao_etes' }],
-    col: [{ aba: 'Coletas', tabela: 'coletas', data: 'coletada_em' }],
+    eta: [{ aba: 'Calibrações', tabela: 'ourinhos_calibracoes' }, { aba: 'Análises quinzenais', tabela: 'ourinhos_analises_agua' }],
+    ope: [{ aba: 'Operação ETAs', tabela: 'ourinhos_operacao_etas' }],
+    ete: [{ aba: 'Operação ETEs', tabela: 'ourinhos_operacao_etes' }, { aba: 'Análises mensais ETEs', tabela: 'ourinhos_analises_esgoto' }],
+    col: [{ aba: 'Coletas', tabela: 'ourinhos_coletas_campo', data: 'coletada_em' }],
     dsc: [{ aba: 'Descargas de rede', tabela: 'descargas_rede' }]
   };
   var SEM_EXPORTAR = { id: 1, usuario_id: 1, lote_id: 1 };
@@ -303,8 +302,17 @@
     ete: 'ETE', analises_realizadas: 'Análises realizadas', horario: 'Horário', operadores: 'Operadores',
     fluor_diluido: 'Flúor diluído (50%)', local: 'Local', linha_planilha_analises: 'Linha da planilha (análises)', analises_realizadas: 'Análises realizadas', acido_fluossilicico_real_l: 'Ácido fluossilícico real (L)', turno: 'Turno',
     pulso_cloro_anterior_s: 'Pulso do cloro antes do ajuste (s)', pulso_cloro_novo_s: 'Pulso do cloro ajustado (s)',
-    pulso_fluor_anterior_s: 'Pulso do flúor antes do ajuste (s)', pulso_fluor_novo_s: 'Pulso do flúor ajustado (s)', origem: 'Origem', linha_planilha: 'Linha da planilha'
+    pulso_fluor_anterior_s: 'Pulso do flúor antes do ajuste (s)', pulso_fluor_novo_s: 'Pulso do flúor ajustado (s)', origem: 'Origem', linha_planilha: 'Linha da planilha',
+    quantidade: 'Quantidade', unidade: 'Unidade', nivel_estatico_m: 'Nível estático (m)', nivel_dinamico_m: 'Nível dinâmico (m)'
   };
+  // Análises quinzenais das ETAs: "tratada_cloro_livre_mg_l" -> "Água tratada: cloro livre (mg/L)".
+  var PARAM_AGUA = { turbidez_ntu: 'turbidez (NTU)', cor_ptco: 'cor aparente (Pt-Co)', ph: 'pH', ferro_mg_l: 'ferro total (mg/L)', manganes_mg_l: 'manganês (mg/L)',
+    alcalinidade_mg_l: 'alcalinidade (mg/L)', dureza_mg_l: 'dureza total (mg/L)', cloro_livre_mg_l: 'cloro livre (mg/L)', cloro_total_mg_l: 'cloro total (mg/L)',
+    fluoreto_mg_l: 'fluoreto (mg/L)', aluminio_mg_l: 'alumínio (mg/L)' };
+  Object.keys(PARAM_AGUA).forEach(function (k) {
+    NOMES_COLUNA['bruta_' + k] = 'Água bruta: ' + PARAM_AGUA[k];
+    NOMES_COLUNA['tratada_' + k] = 'Água tratada: ' + PARAM_AGUA[k];
+  });
   // Operação ETA: "dados.captacao.vazao_m3h" -> "Captação: vazão total (m³/h)".
   var ETAPAS_OPETA = { captacao: 'Captação', bruta: 'Água bruta', pac: 'Aplicação de PAC', coagulada: 'Água coagulada', decantada: 'Água decantada', filtrada: 'Água filtrada', tratada: 'Água tratada' };
   var CAMPOS_OPETA = {
@@ -417,7 +425,7 @@
             else if (Array.isArray(v)) o[c] = v.join(', ');
             else if (typeof v === 'string' && /_em$/.test(c)) o[c] = dataHoraBr(v);
             else if (typeof v === 'boolean') o[c] = v ? 'Sim' : 'Não';
-            else if (c === 'eta' && p.tabela === 'operacao_eta') o[c] = v === 'pardo2' ? 'ETA Pardo II' : 'ETA Pardo I';
+            else if (c === 'eta' && p.tabela === 'ourinhos_operacao_etas') o[c] = v === 'pardo2' ? 'ETA Pardo II' : 'ETA Pardo I';
             else if (c === 'horario' && typeof v === 'string') o[c] = v.slice(0, 5);
             else o[c] = v;
           });
@@ -745,25 +753,26 @@
       q(sb.from('ourinhos_macros').select('ponto_id,ponto_nome,criado_em,vazao_m3h,totalizador_m3,operador').order('criado_em', { ascending: false }).limit(1000)),
       q(sb.from('ourinhos_calibracoes').select('criado_em').gte('criado_em', t0).order('criado_em', { ascending: false }).limit(1)),
       q(sb.from('ourinhos_estoque_quimicos').select('criado_em,niveis_l').eq('local', 'eta').order('criado_em', { ascending: false }).limit(1)),
-      q(sb.from('ourinhos_operacao_etes').select('ete,criado_em').gte('criado_em', t0).order('criado_em', { ascending: true })),
-      q(sb.from('descarregamentos_quimicos').select('produto,eta,quantidade_kg').order('criado_em', { ascending: false }).limit(1)),
-      q(sb.from('coletas').select('*').eq('status', 'pendente').order('coletada_em', { ascending: true })),
-      q(sb.from('coletas').select('sistema').eq('status', 'concluida').gte('concluida_em', m0)),
-      q(sb.from('coletas').select('endereco,coletada_em,concluida_em,status').or('coletada_em.gte.' + t0 + ',concluida_em.gte.' + t0)),
+      q(sb.from('ourinhos_operacao_etes').select('ete,criado_em,vazao_m3h,checklist,analises').gte('criado_em', t0).order('criado_em', { ascending: true })),
+      q(sb.from('ourinhos_descarregamentos').select('produto,ponto_nome,quantidade').eq('local', 'eta').order('criado_em', { ascending: false }).limit(1)),
+      q(sb.from('ourinhos_coletas_campo').select('*').eq('status', 'pendente').order('coletada_em', { ascending: true })),
+      q(sb.from('ourinhos_coletas_campo').select('sistema').eq('status', 'concluida').gte('concluida_em', m0)),
+      q(sb.from('ourinhos_coletas_campo').select('endereco,coletada_em,concluida_em,status').or('coletada_em.gte.' + t0 + ',concluida_em.gte.' + t0)),
       q(sb.from('descargas_rede').select('*').eq('status', 'andamento').order('inicio_em', { ascending: true })),
       q(sb.from('descargas_rede').select('*').eq('status', 'concluida').gte('fim_em', m0).order('fim_em', { ascending: false })),
       q(sb.from('ourinhos_estoque_quimicos').select('ponto_id,ponto_nome,hipoclorito_l,acido_fluossilicico_l,criado_em').eq('local', 'poco').order('criado_em', { ascending: false }).limit(300)),
-      q(sb.from('coletas').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
+      q(sb.from('ourinhos_coletas_campo').select('endereco,concluida_em,coliformes_totais,coliformes_termotolerantes').eq('status', 'concluida').gte('concluida_em', m0)
         .or('coliformes_totais.eq.P,coliformes_termotolerantes.eq.P').order('concluida_em', { ascending: false })),
-      q(sb.from('descarregamentos_quimicos').select('produto,eta,criado_em').gte('criado_em', new Date(Date.now() - 60 * 864e5).toISOString())),
-      q(sb.from('descarregamentos_pocos').select('lote_id,produto,quantidade_l,criado_em,ponto_id').order('criado_em', { ascending: false }).limit(300)),
+      q(sb.from('ourinhos_descarregamentos').select('produto,ponto_nome,criado_em').eq('local', 'eta').gte('criado_em', new Date(Date.now() - 60 * 864e5).toISOString())),
+      q(sb.from('ourinhos_descarregamentos').select('lote_id,produto,quantidade,criado_em,ponto_id').eq('local', 'poco').order('criado_em', { ascending: false }).limit(300)),
       q(sb.from('capacidades_pocos').select('ponto_id,hipoclorito_l,acido_fluossilicico_l')).catch(function () { return []; }),
       q(sb.from('ourinhos_analises_pocos').select('ponto_id,ponto_nome,criado_em,cloro_mg_l,fluor_mg_l').gte('criado_em', t0).order('criado_em', { ascending: false }))
     ]);
     var estPoco = res[10], colPositivas = res[11], pdRecentes = res[13];
     // Descarregamentos nas ETAs feitos depois do último estoque da ETA (liberam volume maior que o anterior).
     var ultEstEta = res[2] && res[2][0] && res[2][0].criado_em;
-    var descDesde = (res[12] || []).filter(function (r) { return !ultEstEta || Date.parse(r.criado_em) >= Date.parse(ultEstEta); });
+    var descDesde = (res[12] || []).filter(function (r) { return !ultEstEta || Date.parse(r.criado_em) >= Date.parse(ultEstEta); })
+      .map(function (r) { return { produto: r.produto, eta: r.ponto_nome, criado_em: r.criado_em }; });
     // Último estoque de cada poço e se houve descarregamento (por produto) depois dele.
     var estUlt = {}, pdDesde = {};
     estPoco.forEach(function (r) { if (!estUlt[r.ponto_id]) estUlt[r.ponto_id] = { hip: r.hipoclorito_l, aci: r.acido_fluossilicico_l, at: r.criado_em }; });
@@ -793,7 +802,7 @@
         if (r.lote_id !== lote) return;
         destinos++;
         var nome = r.produto === 'Hipoclorito de sódio' ? 'cloro' : 'flúor';
-        soma[nome] = (soma[nome] || 0) + Number(r.quantidade_l);
+        soma[nome] = (soma[nome] || 0) + Number(r.quantidade);
       });
       pdLast = Object.keys(soma).map(function (k) { return fmt(soma[k]) + ' L de ' + k; }).join(' e ') + (destinos > 1 ? ', ' + destinos + ' destinos' : '');
     }
@@ -812,10 +821,15 @@
     if (cal[0]) etaDone.cal = hhmm(cal[0].criado_em);
     if (estEta[0] && Date.parse(estEta[0].criado_em) >= hoje) etaDone.est = hhmm(estEta[0].criado_em);
 
-    var eteDone = {};
-    ete.forEach(function (r) { eteDone[r.ete] = hhmm(r.criado_em); });
+    // Checklist (vazão e itens) de cada ETE e a análise diária, lançados hoje.
+    var eteDone = {}, adDone = null;
+    ete.forEach(function (r) {
+      var temChk = r.vazao_m3h != null || Object.keys(r.checklist || {}).length > 0;
+      if (temChk) eteDone[r.ete] = hhmm(r.criado_em);
+      else if (r.analises) adDone = { ete: r.ete, t: hhmm(r.criado_em) };
+    });
 
-    var descLast = desc[0] ? desc[0].produto + ' na ' + desc[0].eta + ', ' + fmt(Number(desc[0].quantidade_kg)) + ' kg' : null;
+    var descLast = desc[0] ? desc[0].produto + ' na ' + desc[0].ponto_nome + ', ' + fmt(Number(desc[0].quantidade)) + ' kg' : null;
 
     // Coletas
     var A = comp.colAddrs();
@@ -883,7 +897,7 @@
     return {
       alertas: alertas, estDone: estDone, anDone: anDone, pdLast: pdLast, descDesde: descDesde, diaCarregado: t0, capPocos: capPocos, estUlt: estUlt, pdDesde: pdDesde,
       dbOk: true, done: done, dbLast: dbLast, etaDone: etaDone, dbEtaPrev: (estEta[0] && estEta[0].niveis_l) || {},
-      eteDone: eteDone, descLast: descLast,
+      eteDone: eteDone, adDone: adDone, descLast: descLast,
       colPend: pend, colDone: colDone, colHist: hist,
       dscRun: dscRun, dscToday: dscToday, dscMonthN: dscMes.length, dscMonthVol: dscMonthVol
     };
@@ -956,7 +970,9 @@
         : feito.tab === 'analise' ? { screen: 'lista', block: 'pocoAn', filt: 'pend', q: '' }
         : { screen: 'lista', block: 'poco', filt: 'pend', q: '' };
     }
-    return { screen: 'lista', block: ctx === 'eta' || ctx === 'ete' ? ctx : 'poco', filt: 'pend', q: '' };
+    if (ctx === 'form') return { screen: 'lista', block: feito.formK === 'niv' ? 'pocos' : feito.formK === 'aq' ? 'eta' : 'ete', filt: 'pend', q: '' };
+    if (ctx === 'ete') return { screen: 'lista', block: 'eteChk', filt: 'pend', q: '' };
+    return { screen: 'lista', block: ctx === 'eta' ? ctx : 'poco', filt: 'pend', q: '' };
   }
 
   // Janela de confirmação com o resumo dos dados preenchidos.
@@ -1277,45 +1293,54 @@
       if (!lote) throw new Error('navegador sem suporte para gerar o lote');
       var linhas = (s.pd || []).map(function (r) {
         return {
-          lote_id: lote, produto: r.tipo, quantidade_l: num(r.qtd),
+          local: 'poco', lote_id: lote, produto: r.tipo, quantidade: num(r.qtd), unidade: 'L',
           ponto_id: r.dest, ponto_nome: r.destNome || r.dest, operador: op
         };
       });
-      return inserir('descarregamentos_pocos', linhas);
+      return inserir('ourinhos_descarregamentos', linhas);
     }, null, null, { limpar: { pd: null } });
 
     aoSalvar(comp, v.on, 'saveDesc', foiParaConfirmacao, function (s) {
-      return inserir('descarregamentos_quimicos', {
-        produto: s.prod, eta: s.descEta, quantidade_kg: num(s.descKg), operador: op
+      return inserir('ourinhos_descarregamentos', {
+        local: 'eta', produto: s.prod, ponto_id: s.descEta, ponto_nome: s.descEta, quantidade: num(s.descKg), unidade: 'kg', operador: op
       });
     });
 
-    var ANALISES_ETE = ['an-ph-b', 'an-ph-t', 'an-temp-b', 'an-temp-t', 'an-od-b', 'an-od-t',
-      'an-sol-b', 'an-sol-t', 'an-dqo-p', 'an-dqo-b', 'an-dqo-t'];
-    aoSalvar(comp, v.on, 'saveEte', foiParaConfirmacao, function (s, analises) {
+    // Checklist da ETE: vazão e itens (as análises têm formulários próprios).
+    aoSalvar(comp, v.on, 'saveEte', foiParaConfirmacao, function (s) {
       var obs = {};
       Object.keys(s.chk || {}).forEach(function (k) {
         if (s.chk[k] === 'nc' && s.chkObs && s.chkObs[k]) obs[k] = String(s.chkObs[k]).slice(0, 500);
       });
       return inserir('ourinhos_operacao_etes', {
         ete: s.selEte, vazao_m3h: dec(s.eteVaz), checklist: s.chk, observacoes: obs,
-        analises_realizadas: s.anal === true, analises: s.anal === true ? analises : null, operador: op
+        analises_realizadas: false, analises: null, operador: op
       });
-    }, function () {
-      // As análises da ETE não ficam no estado do app: lê dos campos antes de a tela mudar.
-      var out = {};
-      ANALISES_ETE.forEach(function (id) {
-        var el = document.getElementById(id);
-        var n = el ? dec(el.value) : null;
-        if (n != null) out[id.replace(/^an-/, '')] = n;
-      });
-      return out;
     });
+
+    // Formulários de análises e medições: o app entrega os valores já conferidos em v.fx.valores.
+    var fx = v.fx;
+    if (fx) {
+      aoSalvar(comp, v.on, 'saveForm', foiParaConfirmacao, function (s) {
+        var val = fx.valores || {}, obsF = (s.fxObs || '').trim().slice(0, 1000) || null;
+        if (s.formK === 'niv') {
+          return inserir('ourinhos_medicoes_pocos', (fx.pocos || []).filter(function (pp) {
+            return val[pp.id + '-e'] != null || val[pp.id + '-d'] != null;
+          }).map(function (pp) {
+            return { ponto_id: pp.id, ponto_nome: pp.name, nivel_estatico_m: val[pp.id + '-e'], nivel_dinamico_m: val[pp.id + '-d'], observacao: obsF, operador: op };
+          }));
+        }
+        if (s.formK === 'aq') return inserir('ourinhos_analises_agua', Object.assign({ observacao: obsF, operador: op }, val));
+        if (s.formK === 'am') return inserir('ourinhos_analises_esgoto', { ete: fx.eteOk, analises: val, observacao: obsF, operador: op });
+        // Análise diária: uma linha só com as análises, na mesma tabela do checklist.
+        return inserir('ourinhos_operacao_etes', { ete: fx.eteOk, analises: val, analises_realizadas: true, operador: op });
+      }, null, null, { limpar: { fxv: {}, fxLq: {}, anv: {}, fxObs: '', dqoTocado: false } });
+    }
 
     if (v.col) {
       aoSalvar(comp, v.col.cn, 'save', foiParaConfirmacao, function (s) {
         var ad = comp.colAddrs()[s.cn.loc];
-        return inserir('coletas', {
+        return inserir('ourinhos_coletas_campo', {
           endereco: ad.addr, bairro: ad.bairro, sistema: ad.sys,
           cloro_mg_l: dec(s.cn.cl), observacao: (s.cn.obs || '').trim() || null, coletor: op
         });
@@ -1327,10 +1352,10 @@
         };
       };
       aoSalvar(comp, v.col.an, 'savePartial', function (novo) { return novo.screen === 'coleta'; }, function (s) {
-        return alterar('coletas', s.an.id, camposAnalise(s.an));
+        return alterar('ourinhos_coletas_campo', s.an.id, camposAnalise(s.an));
       });
       aoSalvar(comp, v.col.an, 'conclude', foiParaConfirmacao, function (s) {
-        return alterar('coletas', s.an.id, Object.assign(camposAnalise(s.an), {
+        return alterar('ourinhos_coletas_campo', s.an.id, Object.assign(camposAnalise(s.an), {
           status: 'concluida', analista: op, concluida_em: new Date().toISOString()
         }));
       });
@@ -1373,7 +1398,7 @@
       // Tira os dados de exemplo e esconde os blocos até saber quem está logado.
       comp.setState({
         acc: blocosLiberados(null),
-        done: {}, etaDone: {}, eteDone: {}, descLast: null, dbLast: {}, dbEtaPrev: {}, alertas: [],
+        done: {}, etaDone: {}, eteDone: {}, adDone: null, descLast: null, dbLast: {}, dbEtaPrev: {}, alertas: [],
         estDone: {}, anDone: {}, pdLast: null, descDesde: [],
         colPend: [], colDone: { eta: 0, sj: 0, mor: 0, pac: 0 }, colHist: [],
         dscRun: [], dscToday: [], dscMonthN: 0, dscMonthVol: 0
@@ -1659,7 +1684,7 @@
     return x;
   }
   function carregarUsuarios(comp, selecionar) {
-    return sb.from('perfis').select('*').order('nome').then(function (r) {
+    return sb.from('ourinhos_usuarios').select('*').order('nome').then(function (r) {
       if (r.error) { toast('Não foi possível carregar os usuários (' + erroTxt(r.error) + ').'); return; }
       var users = r.data.map(function (p) {
         return {
@@ -1736,7 +1761,7 @@
       if (comp.state.dbUsers.some(function (p) { return p.login === l; })) { msg.textContent = 'Esse login já existe.'; login.focus(); return; }
       var b = fundo.querySelector('button[type=submit]');
       b.disabled = true; b.textContent = 'Cadastrando…'; msg.textContent = '';
-      q(sb.from('perfis').insert({ login: l, nome: n, papel: c, permissoes: permCompleta(comp.preset(c)) }).select('id')).then(function (rows) {
+      q(sb.from('ourinhos_usuarios').insert({ login: l, nome: n, papel: c, permissoes: permCompleta(comp.preset(c)) }).select('id')).then(function (rows) {
         fechar();
         toast('Usuário cadastrado. No primeiro acesso, ' + n + ' entra com o login "' + l + '" e a senha que quiser.', 'ok');
         return carregarUsuarios(comp, rows && rows[0] && rows[0].id);
@@ -1830,7 +1855,7 @@
         });
         if (!mudou.length) { salvar.apply(this, arguments); return; }
         Promise.all(mudou.map(function (u) {
-          return q(sb.from('perfis').update({ papel: u.role, ativo: u.active, permissoes: st.perms[u.id] }).eq('id', u.id).select('*'));
+          return q(sb.from('ourinhos_usuarios').update({ papel: u.role, ativo: u.active, permissoes: st.perms[u.id] }).eq('id', u.id).select('*'));
         })).then(function (res) {
           if (res.some(function (rows) { return !rows || !rows.length; })) throw new Error('só administradores podem alterar permissões');
           var dbUsers = st.dbUsers.map(function (p) {
@@ -1868,7 +1893,15 @@
         linhas = linhas.concat(r || []);
         if (!r || r.length < passo) break;
       }
-      return linhas;
+      // Análises mensais (ourinhos_analises_esgoto): entram na linha da mesma ETE e do mesmo dia, ou numa linha própria.
+      var mensais = await q(sb.from('ourinhos_analises_esgoto').select('criado_em,ete,analises,operador').gte('criado_em', desdeIso));
+      var dia = function (iso) { return new Date(iso).toDateString(); };
+      (mensais || []).forEach(function (m) {
+        var alvo = linhas.find(function (l) { return l.ete === m.ete && dia(l.criado_em) === dia(m.criado_em); });
+        if (alvo) alvo.analises = Object.assign({}, alvo.analises || {}, m.analises);
+        else linhas.push({ criado_em: m.criado_em, ete: m.ete, vazao_m3h: null, checklist: {}, analises: m.analises, operador: m.operador });
+      });
+      return linhas.sort(function (a, b) { return Date.parse(b.criado_em) - Date.parse(a.criado_em); });
     },
     // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
     volumes: async function (desdeIso) {
@@ -1881,7 +1914,7 @@
       return linhas;
     },
     exportarDados: exportarDados,
-    salvarOperacaoEta: function (registro) { return inserir('operacao_eta', registro); },
+    salvarOperacaoEta: function (registro) { return inserir('ourinhos_operacao_etas', registro); },
     operadoresEta: function () {
       return q(sb.rpc('operadores_eta')).then(function (rows) {
         return (rows || []).map(function (r) { return r.nome; }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });

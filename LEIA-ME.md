@@ -10,21 +10,24 @@
 | `prototipo-fonte/` | Telas-fonte do protótipo original — só referência, não vão para o site |
 
 ## Banco de dados (Supabase)
-Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lançado (hoje, pendências e totais do mês), vindo do banco:
+Os formulários do app gravam no Supabase, e o app mostra o que já foi lançado (hoje, pendências e totais do mês), vindo do banco:
 
 | Formulário | Tabela |
 |---|---|
 | Leitura de macromedidor (poços, reservatórios, ETAs) | `ourinhos_macros` — vazão, totalizador e volume; nos medidores que mostram m³ ÷ 10 (Poço Diamantes, Poço Nova Alcântara e os 2 reservatórios da Nova Alcântara) o operador digita o visor e o banco guarda x10 |
 | Análises dos Poços (item próprio no bloco Poços) | `ourinhos_analises_pocos` — cloro e flúor (mg/L) e, só quando a bomba dosadora foi ajustada, o tempo entre pulsos antes e depois (`pulso_cloro_anterior_s`/`pulso_cloro_novo_s`, idem flúor, em segundos) |
+| Medições de Níveis (bloco Poços, mensal, sem pendência) | `ourinhos_medicoes_pocos` — nível estático e dinâmico (m) de cada poço; um registro por poço medido. Histórico de 2025 e 2026 importado da aba "Medição Poços" (0 = não medido, fica vazio) |
 | Volumes (computador) | tela `WebVolumes`: produzidos (captações das ETAs e poços) e distribuídos (áreas, mesma composição das abas "Volumes Produzidos/Distribuídos" da planilha), calculados de `ourinhos_macros.volume_m3` |
 | Estoque de insumos do poço | `ourinhos_estoque_quimicos` com `local = poco` — hipoclorito e ácido fluossilícico (L) por poço |
 | Calibrações da ETA | `ourinhos_calibracoes` |
 | Estoque de produtos químicos da ETA | `ourinhos_estoque_quimicos` com `local = eta` — níveis por reservatório em `niveis_l` (PAC ETA 1 R1–R3, PAC ETA 2 R1–R2, flúor ETA 1 R1–R4, flúor ETA 2, sacos de sal); zero = tanque vazio |
-| Descarregamento de produtos químicos | `descarregamentos_quimicos` |
-| Operação das ETEs (app e computador) | `ourinhos_operacao_etes` — uma linha por ETE e dia: vazão (m³/h), checklist, observações e análises em `analises` (pH, temperatura, OD, sólidos, DQO bruto/tratado/padrão e laboratoriais; ">LQ" guardado como texto). Tela `WebOperacaoEtes` no computador |
-| Coleta de campo e análises | `coletas` |
+| Análises Quinzenais (bloco ETAs, sem pendência) | `ourinhos_analises_agua` — água bruta (turbidez, cor, pH, ferro, manganês, alcalinidade, dureza) e tratada (os mesmos + cloro livre e total, fluoreto e alumínio), uma coluna por parâmetro |
+| Descarregamento de produtos químicos (ETAs e poços) | `ourinhos_descarregamentos` — `local` eta ou poco; ETAs em kg (`ponto_id` ETA 1/ETA 2), poços em litros (código do poço, `lote_id` junta os destinos da mesma carga) |
+| ETEs: Checklist e Análises Diárias (app) | `ourinhos_operacao_etes` — Checklist: vazão (m³/h), itens e observações, de cada ETE todo dia. Análises Diárias: linha só com `analises` (pH, temperatura, OD, sólidos, DQO bruto/tratado/padrão) de uma ETE por dia, que já vem sugerida pelo dia da semana (seg. Ville de France, ter. Choso Misato, qua. Moradas, qui. Moradas Clube, sex. Pacaembu, sáb. Trianon; domingo não tem). Tela `WebOperacaoEtes` no computador |
+| ETEs: Análises Mensais (app, sem pendência) | `ourinhos_analises_esgoto` — fósforo, nitrato, nitrito, N amoniacal, N total, sulfato e sulfeto (mg/L) do esgoto bruto (-b) e tratado (-t) em `analises`; acima do limite de quantificação fica ">LQ". Importadas da aba "Análises ETEs" |
+| Coleta de campo e análises | `ourinhos_coletas_campo` |
 | Descargas de rede | `descargas_rede` |
-| Operação ETAs (computador) | `operacao_eta` — ETA Pardo I ou II, horário, até 3 operadores (primeiro nome das contas "Operador de ETA", função `operadores_eta()`), medições por etapa em `dados` (captacao, bruta, pac, coagulada, decantada, filtrada, tratada) e observações |
+| Operação ETAs (computador) | `ourinhos_operacao_etas` — ETA Pardo I ou II, horário, até 3 operadores (primeiro nome das contas "Operador de ETA", função `operadores_eta()`), medições por etapa em `dados` (captacao, bruta, pac, coagulada, decantada, filtrada, tratada) e observações |
 | Capacidades dos poços (computador, Produtos químicos) | `capacidades_pocos` — capacidade de hipoclorito e ácido por poço e se o flúor é diluído 50%; a visão `ourinhos_estoque_quimicos_real` dá o volume real de ácido (metade nos poços diluídos) para consumo e exportação |
 
 ## Site único: celular x computador
@@ -38,7 +41,7 @@ Os 8 formulários do app gravam no Supabase, e o app mostra o que já foi lança
 
 ## Login e permissões
 - Cada pessoa entra com **login e senha** (Supabase Auth). O login vira o e-mail interno `<login>@usuarios.gsinima.local`; nenhum e-mail é enviado.
-- A tabela `perfis` guarda nome, login, cargo em 4 grupos — Operador (Operador de ETA, Operador Volante), Analista (Analista de Laboratório), Gestor (Supervisor, Coordenador, Gerente, Diretor) e Administrador —, se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados, ações no computador e, para operadores, as **telas no computador** (`permissoes.telas`: painel e operacao).
+- A tabela `ourinhos_usuarios` guarda nome, login, cargo em 4 grupos — Operador (Operador de ETA, Operador Volante), Analista (Analista de Laboratório), Gestor (Supervisor, Coordenador, Gerente, Diretor) e Administrador —, se a conta está ativa e as permissões no mesmo formato da tela **Usuários e permissões**: blocos do app liberados, ações no computador e, para operadores, as **telas no computador** (`permissoes.telas`: painel e operacao).
 - Toda conta nova começa **sem permissões**; quem administra marca uma a uma. "Gerenciar permissões" (web.admin), "Cadastrar usuário" (web.cadastrar) e "Excluir usuário" (web.excluir) são separados; quem só cadastra não pode criar administradores.
 - O banco aplica as regras: sem login não se lê nada; cada formulário só aceita lançamento de quem tem o bloco liberado; o nome de quem lançou é preenchido pelo próprio banco. Ninguém apaga registros.
 - Na tela **Usuários e permissões**, o administrador altera perfil, blocos, ações e ativa/desativa contas.

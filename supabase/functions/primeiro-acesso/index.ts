@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   if (!LOGIN_OK.test(login)) return resposta({ pendente: false });
 
   const { data: perfil, error } = await admin
-    .from("perfis").select("id, nome, ativo, usuario_id").eq("login", login).maybeSingle();
+    .from("ourinhos_usuarios").select("id, nome, ativo, usuario_id").eq("login", login).maybeSingle();
   if (error) return resposta({ erro: "Não foi possível consultar o cadastro." }, 500);
   const pendente = !!perfil && perfil.ativo && !perfil.usuario_id;
 
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
   // Liga a conta ao perfil, só se ninguém fez isso antes (dois cliques ao mesmo tempo).
   const ligado = await admin
-    .from("perfis").update({ usuario_id: criado.data.user.id })
+    .from("ourinhos_usuarios").update({ usuario_id: criado.data.user.id })
     .eq("id", perfil!.id).is("usuario_id", null).select("id");
   if (ligado.error || !ligado.data?.length) {
     await admin.auth.admin.deleteUser(criado.data.user.id);
@@ -87,7 +87,7 @@ async function administradorQueChamou(admin: SupabaseClient, req: Request, oQue:
   if (!quem?.user) return resposta({ erro: `Entre de novo para ${oQue}.` }, 401);
 
   const { data: eu } = await admin
-    .from("perfis").select("ativo, permissoes").eq("usuario_id", quem.user.id).maybeSingle();
+    .from("ourinhos_usuarios").select("ativo, permissoes").eq("usuario_id", quem.user.id).maybeSingle();
   if (!eu || !eu.ativo || String(eu.permissoes?.web?.[permissao]) !== "true") {
     return resposta({ erro: `Sua conta não tem permissão para ${oQue}.` }, 403);
   }
@@ -101,12 +101,12 @@ async function excluir(admin: SupabaseClient, req: Request, perfilId: string) {
   if (eu instanceof Response) return eu;
 
   const { data: alvo } = await admin
-    .from("perfis").select("id, usuario_id, papel, permissoes").eq("id", perfilId).maybeSingle();
+    .from("ourinhos_usuarios").select("id, usuario_id, papel, permissoes").eq("id", perfilId).maybeSingle();
   if (!alvo) return resposta({ erro: "Usuário não encontrado." }, 404);
   if (alvo.usuario_id === eu) return resposta({ erro: "Você não pode excluir a sua própria conta." }, 400);
   // Quem não gerencia permissões não pode excluir um administrador.
   if (alvo.papel === "admin" || String(alvo.permissoes?.web?.admin) === "true") {
-    const { data: quem } = await admin.from("perfis").select("permissoes").eq("usuario_id", eu).maybeSingle();
+    const { data: quem } = await admin.from("ourinhos_usuarios").select("permissoes").eq("usuario_id", eu).maybeSingle();
     if (String(quem?.permissoes?.web?.admin) !== "true") return resposta({ erro: "Só quem gerencia usuários e permissões pode excluir um administrador." }, 403);
   }
 
@@ -119,7 +119,7 @@ async function excluir(admin: SupabaseClient, req: Request, perfilId: string) {
     const apagada = await admin.auth.admin.deleteUser(alvo.usuario_id);
     if (apagada.error) return resposta({ erro: "Não foi possível excluir a conta. Tente de novo." }, 500);
   }
-  const removido = await admin.from("perfis").delete().eq("id", alvo.id).select("id");
+  const removido = await admin.from("ourinhos_usuarios").delete().eq("id", alvo.id).select("id");
   if (removido.error || !removido.data?.length) {
     return resposta({ erro: "O login foi apagado, mas o cadastro não. Tente excluir de novo." }, 500);
   }
@@ -134,7 +134,7 @@ async function redefinir(admin: SupabaseClient, req: Request, perfilId: string) 
   const quem = { user: { id: euId } };
 
   const { data: alvo } = await admin
-    .from("perfis").select("id, usuario_id").eq("id", perfilId).maybeSingle();
+    .from("ourinhos_usuarios").select("id, usuario_id").eq("id", perfilId).maybeSingle();
   if (!alvo) return resposta({ erro: "Usuário não encontrado." }, 404);
   if (alvo.usuario_id === quem.user.id) {
     return resposta({ erro: "Você não pode redefinir a sua própria senha por aqui." }, 400);
@@ -143,14 +143,14 @@ async function redefinir(admin: SupabaseClient, req: Request, perfilId: string) 
 
   // Primeiro desliga o perfil da conta (só se ninguém mexeu nele no meio), depois apaga a conta.
   const desligado = await admin
-    .from("perfis").update({ usuario_id: null })
+    .from("ourinhos_usuarios").update({ usuario_id: null })
     .eq("id", alvo.id).eq("usuario_id", alvo.usuario_id).select("id");
   if (desligado.error || !desligado.data?.length) {
     return resposta({ erro: "Não foi possível redefinir a senha. Tente de novo." }, 409);
   }
   const apagado = await admin.auth.admin.deleteUser(alvo.usuario_id);
   if (apagado.error) {
-    await admin.from("perfis").update({ usuario_id: alvo.usuario_id }).eq("id", alvo.id).is("usuario_id", null);
+    await admin.from("ourinhos_usuarios").update({ usuario_id: alvo.usuario_id }).eq("id", alvo.id).is("usuario_id", null);
     return resposta({ erro: "Não foi possível redefinir a senha. Tente de novo." }, 500);
   }
   return resposta({ ok: true });
