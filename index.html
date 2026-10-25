@@ -1441,8 +1441,8 @@ class Component extends DCLogic {
       kp('Cloro Livre (Média)', cl.length ? br(media(cl), 2) + ' mg/L' : '—', cl.length ? cl.length + ' análises · ' + fora(cl, LIM.cloro) + ' fora de 0,2 a 2,0' : 'Sem análises no período'),
       kp('Flúor (Média)', fl.length ? br(media(fl), 2) + ' mg/L' : '—', fl.length ? fl.length + ' análises · ' + fora(fl, LIM.fluor) + ' fora de 0,6 a 0,8' : 'Sem análises no período'),
       kp('Volume Produzido', m3(volTot), 'Leituras do macromedidor no período'),
-      kp('Média de Operação Horária', hMed == null ? '—' : '≈ ' + hMed + ' h/dia',
-        !vazRef ? 'Sem vazão instantânea para o cálculo' : horas.length + ' dias · vazão de referência ' + br(vazRef, 0) + ' m³/h' + (VAZAO_FIXA[id] ? ' (fixa)' : ''),
+      kp('Média de Operação Horária', hMed == null ? '—' : hMed + ' h/dia',
+        !vazRef ? 'Sem vazão instantânea para o cálculo' : 'Valor aproximado',
         hMed != null && hMed > 20 ? 'Acima de 20 h/dia' : '')
     ];
 
