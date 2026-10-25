@@ -31,7 +31,8 @@
   var DOMINIO_LOGIN = 'usuarios.gsinima.local';
   var BLOCOS = ['eta', 'ete', 'poco', 'coleta', 'descarga'];
   var PAPEIS = { operador_volante: 'Operador Volante', operador_eta: 'Operador de ETA', analista: 'Analista de Laboratório', supervisor: 'Supervisor', coordenador: 'Coordenador', gerente: 'Gerente', diretor: 'Diretor', admin: 'Administrador' };
-  function podeNaWeb(acao) { return !!(perfil && perfil.permissoes && perfil.permissoes.web && perfil.permissoes.web[acao]); }
+  // Ações no computador (exportar, importar, capacidades, admin, cadastrar, excluir), já no formato atual (permCompleta).
+  function podeNaWeb(acao) { return !!(perfil && permCompleta(perfil.permissoes, perfil.papel).web[acao]); }
   var perfil = null;
 
   function operador() { return perfil ? perfil.nome : 'Operador'; }
@@ -1487,9 +1488,11 @@
   // ---------- telas permitidas (site único: celular x computador) ----------
   // Operador no celular: só o app. Operador no computador: as telas marcadas em "Telas no computador",
   // nunca "Usuários e permissões" nem "Importar e exportar". Os outros cargos veem tudo, como antes.
-  var TELAS = { WebDashboard: 'painel', WebQuimicos: 'quimicos', WebColetas: 'coletas', WebDescargas: 'descargas', WebOperacaoEta: 'operacao', WebEtas: 'operacao' };
-  var ORDEM_TELAS = ['WebDashboard', 'WebQuimicos', 'WebColetas', 'WebDescargas', 'WebOperacaoEta'];
-  var TODAS_TELAS = ORDEM_TELAS.concat(['WebEtas', 'WebOperacaoEtes', 'WebPocos', 'WebEsgoto', 'WebVolumes', 'WebCalibracoes', 'WebAdmin', 'WebDados', 'WebVersaoApp']);
+  // Cada tela do sistema e a chave dela em permissoes.telas (marcada em "Usuários e permissões", para qualquer cargo).
+  var TELAS = { WebDashboard: 'inicio', WebEtas: 'etas', WebOperacaoEta: 'etaForm', WebPocos: 'pocos', WebOperacaoEtes: 'etes', WebColetas: 'agua',
+    WebEsgoto: 'esgoto', WebCalibracoes: 'calibracoes', WebQuimicos: 'quimicos', WebVolumes: 'volumes', WebDescargas: 'descargas' };
+  var ORDEM_TELAS = Object.keys(TELAS); // a primeira liberada é a tela inicial no computador
+  var TODAS_TELAS = ORDEM_TELAS.concat(['WebAdmin', 'WebDados', 'WebVersaoApp']);
   // Grupos do menu lateral: somem quando nenhuma das telas deles pode ser aberta.
   var GRUPOS_MENU = { ops: ['WebEtas', 'WebOperacaoEta', 'WebPocos', 'WebOperacaoEtes'], qual: ['WebColetas', 'WebEsgoto', 'WebCalibracoes'], vol: ['WebVolumes', 'WebDescargas'] };
   // Operadores (volante e de ETA): no celular só o app; no computador, só as telas liberadas.
@@ -1497,19 +1500,15 @@
   function podeAbrir(nome, cel) {
     if (!perfil) return false;
     if (nome === 'Main') return true;
-    // Versão Aplicativo (o app dentro de um celular): só administrador e só no computador.
+    // Regras fixas do cargo: Versão Aplicativo só para administrador (no computador);
+    // operador, no celular, usa só o app (sem Painel de Gestão nem telas do sistema).
     if (nome === 'WebVersaoApp') return !cel && perfil.papel === 'admin';
-    if (eOperador()) {
-      if (cel) return false;
-      if (nome === 'WebAdmin' || nome === 'WebDados' || nome === 'MobileHome') return false;
-      // Por enquanto o operador tem só o Início (painel) e a Operação ETA; as outras telas voltam depois.
-      if (nome === 'WebQuimicos' || nome === 'WebColetas' || nome === 'WebDescargas' || nome === 'WebCalibracoes' || nome === 'WebVolumes' || nome === 'WebOperacaoEtes' || nome === 'WebPocos' || nome === 'WebEsgoto') return false;
-      var t = (perfil.permissoes && perfil.permissoes.telas) || {};
-      return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela só aparece se estiver marcada
-    }
+    if (cel && eOperador()) return false;
     if (nome === 'MobileHome') return !!cel;
     if (nome === 'WebAdmin') return podeNaWeb('admin') || podeNaWeb('cadastrar') || podeNaWeb('excluir');
-    return true;
+    if (nome === 'WebDados') return podeNaWeb('imp') || podeNaWeb('exp');
+    var t = permCompleta(perfil.permissoes, perfil.papel).telas;
+    return TELAS[nome] ? t[TELAS[nome]] === true : true; // tela do sistema: só se estiver marcada
   }
   function inicio(cel) {
     if (cel) return 'Main';
@@ -1630,7 +1629,7 @@
             alterarSenha: alterarSenha, trocandoSenha: trocandoSenha, senhaTxt: trocandoSenha ? 'Salvando…' : 'Salvar nova senha',
             menuFoto: abrirMenuFoto, senhaAberta: senhaAberta, senhaFechada: !senhaAberta, abrirSenha: abrirSenha, fecharSenha: fecharSenha,
             painelNome: eOperador() ? 'Início' : 'Painel',
-            podeCapacidades: !!perfil && !eOperador(), capacidades: abrirCapacidades
+            podeCapacidades: podeNaWeb('capacidades'), capacidades: abrirCapacidades, podeExp: podeNaWeb('exp'), podeImp: podeNaWeb('imp')
           });
           return v;
         };
@@ -1699,11 +1698,21 @@
   }
 
   // ---------- tela "Usuários e permissões" ----------
-  function permCompleta(p) {
-    var x = JSON.parse(JSON.stringify(p || {}));
-    x.web = Object.assign({ painelVer: false, painelExp: false, imp: false, exp: false, admin: false, cadastrar: false, excluir: false }, x.web || {});
-    delete x.web.acesso;
-    x.telas = Object.assign({ painel: false, quimicos: false, coletas: false, descargas: false, operacao: false }, x.telas || {});
+  // Permissões no formato atual. Converte o formato antigo (telas só para operador; "painel"/"operacao";
+  // capacidades por cargo) sem mudar o acesso de ninguém.
+  var CHAVES_TELAS = ['inicio', 'etas', 'etaForm', 'pocos', 'etes', 'agua', 'esgoto', 'calibracoes', 'quimicos', 'volumes', 'descargas'];
+  function permCompleta(p, papel) {
+    var x = JSON.parse(JSON.stringify(p || {})), op = papel === 'operador_eta' || papel === 'operador_volante';
+    BLOCOS.forEach(function (k) { x[k] = { on: !!(x[k] && x[k].on) }; });
+    var w = x.web || {};
+    x.web = { exp: !!w.exp, imp: !!w.imp, capacidades: w.capacidades == null ? !op && !!papel : !!w.capacidades, admin: !!w.admin, cadastrar: !!w.cadastrar, excluir: !!w.excluir };
+    var t = x.telas || {}, novo = {};
+    var antigo = !('inicio' in t);
+    CHAVES_TELAS.forEach(function (k) {
+      novo[k] = !antigo ? t[k] === true : !op ? !!papel
+        : k === 'inicio' ? t.painel === true : (k === 'etas' || k === 'etaForm') ? t.operacao === true : false;
+    });
+    x.telas = novo;
     return x;
   }
   function carregarUsuarios(comp, selecionar) {
@@ -1717,7 +1726,7 @@
       });
       if (!users.length) return;
       var perms = {};
-      r.data.forEach(function (p) { perms[p.id] = permCompleta(p.permissoes); });
+      r.data.forEach(function (p) { perms[p.id] = permCompleta(p.permissoes, p.papel); });
       var quer = selecionar || comp.state.sel;
       var sel = users.some(function (u) { return u.id === quer; }) ? quer : users[0].id;
       comp.setState({ users: users, perms: perms, sel: sel, saved: false, dbUsers: r.data });
@@ -1756,7 +1765,7 @@
         return '<optgroup label="' + g + '">' + CARGOS.filter(function (c) { return c[2] === g; }).map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</optgroup>';
       }).join('') +
       '</select>' +
-      '<span style="font-size:13px;color:#52627A;margin-top:-4px">A conta começa sem permissões; marque-as depois na tela.</span>' +
+      '<span style="font-size:13px;color:#52627A;margin-top:-4px">A conta começa com as permissões padrão do cargo; ajuste depois na tela.</span>' +
       '<p id="cu-msg" role="alert" style="margin:0;color:#8C1D18;font-size:14px;min-height:1em"></p>' +
       '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">' +
       '<button type="button" id="cu-cancel" style="height:46px;padding:0 18px;border:1.5px solid #C7D4E2;border-radius:12px;background:#fff;color:#0A2E5C;font-size:15px;font-weight:700;cursor:pointer">Cancelar</button>' +
@@ -1784,7 +1793,7 @@
       if (comp.state.dbUsers.some(function (p) { return p.login === l; })) { msg.textContent = 'Esse login já existe.'; login.focus(); return; }
       var b = fundo.querySelector('button[type=submit]');
       b.disabled = true; b.textContent = 'Cadastrando…'; msg.textContent = '';
-      q(sb.from('ourinhos_usuarios').insert({ login: l, nome: n, papel: c, permissoes: permCompleta(comp.preset(c)) }).select('id')).then(function (rows) {
+      q(sb.from('ourinhos_usuarios').insert({ login: l, nome: n, papel: c, permissoes: permCompleta(comp.preset(c), c) }).select('id')).then(function (rows) {
         fechar();
         toast('Usuário cadastrado. No primeiro acesso, ' + n + ' entra com o login "' + l + '" e a senha que quiser.', 'ok');
         return carregarUsuarios(comp, rows && rows[0] && rows[0].id);
@@ -1844,7 +1853,7 @@
       if (montar) montar.call(this);
       var comp = this;
       var vazio = { id: '_', name: 'Carregando…', email: '', role: 'operador_volante', last: '', active: true };
-      comp.setState({ users: [vazio], perms: { _: permCompleta(comp.preset('operador_volante')) }, sel: '_', saved: false });
+      comp.setState({ users: [vazio], perms: { _: permCompleta(comp.preset(''), '') }, sel: '_', saved: false });
       carregarUsuarios(comp);
     };
     var render = cls.prototype.renderVals;
@@ -1874,7 +1883,7 @@
         }
         var mudou = st.users.filter(function (u) {
           var orig = st.dbUsers.find(function (p) { return p.id === u.id; });
-          return orig && (orig.papel !== u.role || orig.ativo !== u.active || JSON.stringify(permCompleta(orig.permissoes)) !== JSON.stringify(st.perms[u.id]));
+          return orig && (orig.papel !== u.role || orig.ativo !== u.active || JSON.stringify(permCompleta(orig.permissoes, orig.papel)) !== JSON.stringify(st.perms[u.id]));
         });
         if (!mudou.length) { salvar.apply(this, arguments); return; }
         Promise.all(mudou.map(function (u) {
@@ -1897,7 +1906,7 @@
   }
 
   window.DB = {
-    client: sb, install: install, guardWeb: guardWeb, instalarAdmin: instalarAdmin,
+    client: sb, install: install, guardWeb: guardWeb, instalarAdmin: instalarAdmin, podeWeb: podeNaWeb,
     operador: operador, toast: toast,
     inicio: inicio, podeAbrir: podeAbrir, menuPermitido: menuPermitido,
     // Operação ETA (computador): confirmação e gravação do lançamento.
