@@ -1897,6 +1897,14 @@
       return q(ate(sb.from('ourinhos_calibracoes').select('criado_em,turno,operador,leituras').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: false }).limit(3000));
     },
     padroesCal: PADROES_CAL, regraCal: regraCal,
+    // Último período escolhido pela pessoa em cada tela com gráficos (fica na conta, em ourinhos_usuarios.preferencias).
+    periodoSalvo: function (tela) { return perfil && perfil.preferencias ? perfil.preferencias['periodo.' + tela] || null : null; },
+    salvarPeriodo: function (tela, p) {
+      if (!perfil) return;
+      var mudou = {}; mudou['periodo.' + tela] = p;
+      perfil.preferencias = Object.assign({}, perfil.preferencias, mudou);
+      sb.rpc('salvar_preferencia', { chave: 'periodo.' + tela, valor: p }).then(function () {}, function () {});
+    },
     // Operação das ETEs desde a data, da mais recente para a mais antiga (em páginas de 1.000 linhas).
     operacaoEtes: async function (desdeIso, ateIso) {
       var linhas = [], passo = 1000;
