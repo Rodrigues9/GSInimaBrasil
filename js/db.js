@@ -1955,14 +1955,31 @@
     // Painel das ETAs: lançamentos do formulário da operação no período.
     operacaoEtas: function (desdeIso, ateIso) { return paginado('ourinhos_operacao_etas', 'criado_em,eta,horario,dados', desdeIso, ateIso); },
     // Volumes de cada leitura de macromedidor desde a data (em páginas de 1.000 linhas).
+    // Nos dias que têm volume oficial (ourinhos_volumes_diarios, da planilha), ele substitui o volume das leituras:
+    // produção com o código do ponto e distribuição como "a_" + área. A vazão das leituras continua valendo.
     volumes: async function (desdeIso, ateIso) {
-      var linhas = [], passo = 1000;
-      for (var ini = 0; ; ini += passo) {
+      var linhas = [], oficiais = [], passo = 1000, ini;
+      for (ini = 0; ; ini += passo) {
         var r = await q(ate(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3,vazao_m3h').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
         linhas = linhas.concat(r || []);
         if (!r || r.length < passo) break;
       }
-      return linhas;
+      var diaDe = function (iso) { var d = new Date(iso); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+      for (ini = 0; ; ini += passo) {
+        var req = sb.from('ourinhos_volumes_diarios').select('data,tipo,ponto,volume').gte('data', diaDe(desdeIso));
+        if (ateIso) req = req.lte('data', diaDe(ateIso));
+        var o = await q(req.order('data', { ascending: true }).order('tipo').order('ponto').range(ini, ini + passo - 1));
+        oficiais = oficiais.concat(o || []);
+        if (!o || o.length < passo) break;
+      }
+      if (!oficiais.length) return linhas;
+      var t0 = Date.parse(desdeIso), t1 = ateIso ? Date.parse(ateIso) : Infinity, dias = {};
+      var extras = oficiais.map(function (x) {
+        dias[x.data] = true;
+        return { ponto_id: x.tipo === 'dist' ? 'a_' + x.ponto : x.ponto, criado_em: new Date(x.data + 'T12:00:00-03:00').toISOString(), volume_m3: Number(x.volume), vazao_m3h: null };
+      }).filter(function (x) { var t = Date.parse(x.criado_em); return t >= t0 && t < t1; });
+      linhas.forEach(function (l) { if (dias[diaDe(l.criado_em)]) l.volume_m3 = null; });
+      return linhas.concat(extras).sort(function (a, b) { return Date.parse(a.criado_em) - Date.parse(b.criado_em); });
     },
     exportarDados: exportarDados,
     aviso: function (msg, tipo) { toast(msg, tipo); },
