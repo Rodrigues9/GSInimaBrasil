@@ -1808,9 +1808,10 @@ const DIST = [
   ['belavista', 'Bela Vista (Ville de France)', 'poco', (v) => tem(v, 'm15') ? v.m15 : null],
   ['pacaembu', 'Pacaembu', 'poco', (v) => v.m9 != null || v.m10 != null ? (v.m9 || 0) + (v.m10 || 0) : null],
   ['novaalc', 'Nova Alcântara', 'poco', (v) => tem(v, 'm21') ? v.m21 : null],
-  ['semarea', 'Sem separação por área', 'sem', () => null] // nov e dez/2024: só o total do mês (vem da planilha)
+  // nov e dez/2024: só o total do mês, separado por sistema (vem da planilha). Não aparecem na lista de áreas.
+  ['sist_eta', 'Sistema ETAs (sem separação por área)', 'eta', () => null, true],
+  ['sist_poco', 'Sistemas dos poços (sem separação por área)', 'poco', () => null, true]
 ];
-const COR_SEM = '#9AA8B8'; // distribuído sem separação por área (cinza)
 const COR = { a: '#005e83', b: '#3ab0c8' }; // paleta dos gráficos: principal (maiores volumes) e secundária
 const GRUPO_PROD = { eta: 'ETAs', poco: 'Poços' };
 const GRUPO_DIST = { eta: 'Sistema ETAs', poco: 'Sistemas dos poços' };
@@ -1889,14 +1890,15 @@ class Component extends DCLogic {
     st.rows.forEach((r) => {
       if (r.volume_m3 == null) return;
       const k = chaveDia(r.criado_em), v = (porDia[k] = porDia[k] || {});
+      if (r.ponto_id.startsWith('a_')) v._of = true; // dia com distribuição oficial da planilha
       v[r.ponto_id] = (v[r.ponto_id] || 0) + Number(r.volume_m3);
     });
     const entre = (a, b) => { const out = []; for (let d = new Date(a); d <= b; d.setDate(d.getDate() + 1)) out.push(chaveDia(d)); return out; };
     const fx = faixaDoPeriodo(st.periodo), fa = faixaDoPeriodo({ tipo: 'ano', ano: anoDoPeriodo(st.periodo) });
     const dias = entre(fx.ini, fx.fim), diasAno = entre(fa.ini, fa.fim);
     const itensProd = PROD.map(([id, nome, g]) => ({ id, nome, g, val: (v) => v[id] != null ? v[id] : null }));
-    // Volume oficial da área no dia (planilha, "a_" + área) ou, sem ele, a fórmula sobre as leituras.
-    const itensDist = DIST.map(([id, nome, g, fn]) => ({ id, nome, g, val: (v) => { const x = v['a_' + id] != null ? v['a_' + id] : fn(v); return x == null ? null : Math.max(0, x); } }));
+    // Nos dias com distribuição oficial (planilha, "a_" + área) vale só ela; nos outros, a fórmula sobre as leituras.
+    const itensDist = DIST.map(([id, nome, g, fn, oculto]) => ({ id, nome, g, oculto, val: (v) => { const x = v._of ? v['a_' + id] : fn(v); return x == null ? null : Math.max(0, x); } }));
     const soma = (a) => a.reduce((s, x) => s + (x || 0), 0);
     const nDias = (a) => a.filter((x) => x != null).length;
     // Séries de cada item e dos grupos numa lista de dias (o período escolhido ou o ano inteiro dele).
@@ -1906,10 +1908,10 @@ class Component extends DCLogic {
       const sDist = itensDist.map((it) => Object.assign({}, it, { s: serie(it) }));
       const porGrupo = (lista, g) => ds.map((_, i) => lista.filter((it) => it.g === g).reduce((s, it) => s + (it.s[i] || 0), 0));
       return { sProd, sDist, sRetro: ds.map((k) => porDia[k] ? RETRO.reduce((s, id) => s + (porDia[k][id] || 0), 0) : null),
-        pEta: porGrupo(sProd, 'eta'), pPoco: porGrupo(sProd, 'poco'), dEta: porGrupo(sDist, 'eta'), dPoco: porGrupo(sDist, 'poco'), dSem: porGrupo(sDist, 'sem') };
+        pEta: porGrupo(sProd, 'eta'), pPoco: porGrupo(sProd, 'poco'), dEta: porGrupo(sDist, 'eta'), dPoco: porGrupo(sDist, 'poco') };
     };
     const P = montar(dias), A = montar(diasAno);
-    const { sProd, sDist, sRetro, pEta, pPoco, dEta, dPoco, dSem } = P;
+    const { sProd, sDist, sRetro, pEta, pPoco, dEta, dPoco } = P;
     const comLeitura = dias.map((k) => !!porDia[k]);
 
     // ----- agrupamento: o gráfico segue o período (dia ou mês); a tabela mostra os meses do ano do período -----
@@ -1931,7 +1933,7 @@ class Component extends DCLogic {
     const rotLongo = (g) => g.k.length === 7 ? mesLongo(g.k) : diaTxt(g.k) + '/' + g.k.slice(0, 4);
 
     // ----- foco -----
-    const lista = st.visao === 'dist' ? sDist.filter((it) => it.g !== 'sem') : sProd;
+    const lista = st.visao === 'dist' ? sDist.filter((it) => !it.oculto) : sProd;
     const foco = st.visao === 'comp' ? null : lista.find((it) => it.id === st.foco) || null;
 
     // ----- gráfico -----
@@ -1941,7 +1943,7 @@ class Component extends DCLogic {
     if (st.visao === 'comp') {
       g.titulo = 'Produzidos x distribuídos' + por;
       const liq = pEta.map((x, i) => x + pPoco[i] - (sRetro[i] || 0));
-      series = [{ t: 'Produzido (sem retrolavagens)', cor: COR.a, v: agr(liq) }, { t: 'Distribuído', cor: COR.b, v: agr(dEta.map((x, i) => x + dPoco[i] + dSem[i])) }];
+      series = [{ t: 'Produzido (sem retrolavagens)', cor: COR.a, v: agr(liq) }, { t: 'Distribuído', cor: COR.b, v: agr(dEta.map((x, i) => x + dPoco[i])) }];
       g.nota = 'A diferença entre as linhas são perdas (descartes e vazamentos) e volumes sem medição no dia.';
     } else if (foco) {
       g.titulo = foco.nome + ' —' + por;
@@ -1949,14 +1951,13 @@ class Component extends DCLogic {
     } else if (st.visao === 'dist') {
       g.titulo = 'Volume distribuído' + por;
       series = [{ t: GRUPO_DIST.eta, cor: COR.a, v: agr(dEta) }, { t: GRUPO_DIST.poco, cor: COR.b, v: agr(dPoco) }];
-      if (soma(dSem) > 0) series.push({ t: 'Sem separação por área', cor: COR_SEM, v: agr(dSem) });
     } else {
       g.titulo = 'Volume produzido' + por;
       series = [{ t: GRUPO_PROD.eta, cor: COR.a, v: agr(pEta) }, { t: GRUPO_PROD.poco, cor: COR.b, v: agr(pPoco) }];
     }
     if (st.visao !== 'comp' && !foco) g.nota = mensal ? 'Cada coluna soma os dias do mês com leitura.' : 'Dias sem leitura aparecem vazios.';
     // Observação discreta sobre as áreas que ainda não tinham macromedidor próprio.
-    if (st.visao === 'dist' && dias.length && dias[0] <= '2025-12-31') g.nota = (g.nota ? g.nota + ' ' : '') + 'Até dez/2025, Vila Margarida e São Silvestre estão em Centro, Parque Minas Gerais em Parque e Cohab em São João (sem macromedidor próprio na época).' + (dias[0] <= '2024-12-31' ? ' Em nov e dez/2024 só há o total do mês, dividido igualmente pelos dias.' : '');
+    if (st.visao === 'dist' && dias.length && dias[0] <= '2025-12-31') g.nota = (g.nota ? g.nota + ' ' : '') + 'Até dez/2025, Vila Margarida e São Silvestre estão em Centro, Parque Minas Gerais em Parque e Cohab em São João (sem macromedidor próprio na época).' + (dias[0] <= '2024-12-31' ? ' Em nov e dez/2024 só há o total do mês: Sistemas dos poços = produção de São João, Moradas, Ville de France, Pacaembu e Nova Alcântara; Sistema ETAs = total − poços.' : '');
     if (series.length > 1) g.legenda = series.map((x) => ({ t: x.t, cor: x.cor }));
     const n = grupos.length, empilhado = st.visao !== 'comp';
     const tops = grupos.map((_, i) => empilhado ? series.reduce((a, x) => a + x.v[i], 0) : Math.max(...series.map((x) => x.v[i])));
@@ -1992,7 +1993,7 @@ class Component extends DCLogic {
     g.sair = () => { if (this.state.hov != null) this.setState({ hov: null }); };
 
     // ----- números -----
-    const totP = soma(pEta) + soma(pPoco), totR = soma(sRetro), totD = soma(dEta) + soma(dPoco) + soma(dSem);
+    const totP = soma(pEta) + soma(pPoco), totR = soma(sRetro), totD = soma(dEta) + soma(dPoco);
     const nLeit = comLeitura.filter(Boolean).length || 1;
     let kpis;
     if (st.visao === 'comp') {
@@ -2047,13 +2048,13 @@ class Component extends DCLogic {
     const cel = (t, al, peso) => ({ t, al: al || 'right', peso: peso || 400 });
     const rotMes = (gr) => mesTxt(gr.k), anoTab = ' de ' + anoDoPeriodo(st.periodo);
     if (st.visao === 'comp') {
-      const liq = agr(A.pEta.map((x, i) => x + A.pPoco[i] - (A.sRetro[i] || 0)), meses), dis = agr(A.dEta.map((x, i) => x + A.dPoco[i] + A.dSem[i]), meses);
+      const liq = agr(A.pEta.map((x, i) => x + A.pPoco[i] - (A.sRetro[i] || 0)), meses), dis = agr(A.dEta.map((x, i) => x + A.dPoco[i]), meses);
       tab = { titulo: 'Por mês' + anoTab, cab: [{ t: 'Mês', al: 'left' }, { t: 'Produzido', al: 'right' }, { t: 'Distribuído', al: 'right' }, { t: 'Diferença', al: 'right' }, { t: 'Diferença (%)', al: 'right' }],
         linhas: meses.map((gr, i) => ({ bg: '#FFFFFF', c: [cel(rotMes(gr), 'left', 600), cel(br(liq[i])), cel(br(dis[i])), cel(br(liq[i] - dis[i])), cel(liq[i] ? br((liq[i] - dis[i]) / liq[i] * 100, 1) + '%' : '—')] })).reverse() };
     } else {
       const listaAno = st.visao === 'dist' ? A.sDist : A.sProd;
-      // A coluna "Sem separação por área" só aparece no ano que tem esse volume.
-      const itens = foco ? listaAno.filter((it) => it.id === foco.id) : listaAno.filter((it) => it.g !== 'sem' || it.s.some((x) => x));
+      // As colunas "sem separação por área" só aparecem no ano que tem esse volume.
+      const itens = foco ? listaAno.filter((it) => it.id === foco.id) : listaAno.filter((it) => !it.oculto || it.s.some((x) => x));
       tab = { titulo: (foco ? foco.nome + ' — por mês' : 'Por mês') + anoTab,
         cab: [{ t: 'Mês', al: 'left' }].concat(itens.map((it) => ({ t: it.nome, al: 'right' }))).concat(foco ? [] : [{ t: 'Total', al: 'right' }]),
         linhas: meses.map((gr) => {
