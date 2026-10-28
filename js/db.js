@@ -16,20 +16,24 @@
   // Modo Azure: login com a conta Microsoft (Azure Static Web Apps) e banco no Azure, pela API em /api.
   // As consultas continuam as mesmas; muda só o login, a foto e a troca de senha.
   var AZURE = env.MODO === 'azure';
-  if (!window.supabase || (!AZURE && (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY))) {
+  // Modo demonstração (versão do Power Apps): sem banco, com dados fictícios gerados por js/demo.js.
+  var DEMO = env.MODO === 'demo' && !!window.DEMO;
+  // Foto de perfil guardada no próprio cadastro (imagem embutida) em vez do Storage do Supabase.
+  var FOTO_NO_CADASTRO = AZURE || DEMO;
+  if (!DEMO && (!window.supabase || (!AZURE && (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY)))) {
     console.warn('Supabase não configurado: o app vai rodar só com dados de exemplo.');
     return;
   }
-  var sb = AZURE
-    ? window.supabase.createClient(location.origin + '/api', 'azure', { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } })
+  var sb = DEMO ? window.DEMO.cliente
+    : AZURE ? window.supabase.createClient(location.origin + '/api', 'azure', { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } })
     : window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, storageKey: 'gsinima.sessao' }
     });
-  // Na tela de entrada do modo Azure, login e senha somem: o botão leva ao login da Microsoft.
-  if (AZURE) {
+  // Na tela de entrada do Azure (e da demonstração), login e senha somem: o botão já entra.
+  if (AZURE || DEMO) {
     var css = document.createElement('style');
     css.textContent = 'div:has(> #lg-user), div:has(> #lg-pass) { display: none !important; }' +
-      ' form:has(#lg-user) button[type=button]::after { content: " com a conta Microsoft"; }';
+      ' form:has(#lg-user) button[type=button]::after { content: "' + (AZURE ? ' com a conta Microsoft' : ' na demonstração') + '"; }';
     document.head.appendChild(css);
   }
 
@@ -77,6 +81,14 @@
 
   async function carregarPerfil() {
     if (AZURE) return carregarPerfilAzure();
+    // Demonstração: entra direto como "Usuário Demonstração" (administrador), até a pessoa sair.
+    if (DEMO) {
+      var saiu = false;
+      try { saiu = sessionStorage.getItem('gsinima.demo.saiu') === '1'; } catch (e) { /* sem armazenamento */ }
+      perfil = saiu ? null : window.DEMO.perfil();
+      if (perfil) atualizarFotoUrl().then(function () {}, function () {});
+      return perfil;
+    }
     var s = await sb.auth.getSession();
     var sessao = s.data && s.data.session;
     if (!sessao) { perfil = null; return null; }
@@ -123,6 +135,11 @@
   }
 
   async function entrarOuPrimeiroAcesso(login, senha) {
+    if (DEMO) {
+      try { sessionStorage.removeItem('gsinima.demo.saiu'); } catch (e) { /* sem armazenamento */ }
+      storeSet('gsinima.web.atividade', String(Date.now()));
+      return carregarPerfil();
+    }
     // Modo Azure: vai para o login da Microsoft e volta para a mesma página.
     if (AZURE) {
       try { sessionStorage.setItem('gsinima.entrando', '1'); } catch (e) { /* sem armazenamento */ }
@@ -172,6 +189,11 @@
   }
 
   async function sair() {
+    if (DEMO) {
+      try { sessionStorage.setItem('gsinima.demo.saiu', '1'); } catch (e) { /* sem armazenamento */ }
+      perfil = null; fotoUrl = null; fotoDe = null;
+      return;
+    }
     if (AZURE) {
       perfil = null;
       location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent(location.pathname);
@@ -204,7 +226,7 @@
     if (!caminho) { if (fotoUrl) { fotoUrl = null; fotoDe = null; redesenhar(); } return Promise.resolve(); }
     if (caminho === fotoDe && fotoUrl) return Promise.resolve();
     // Modo Azure: a foto fica no próprio cadastro, como imagem embutida (data:image/jpeg).
-    if (AZURE) { fotoUrl = /^data:image\/jpeg;base64,/.test(caminho) ? caminho : null; fotoDe = caminho; redesenhar(); return Promise.resolve(); }
+    if (FOTO_NO_CADASTRO) { fotoUrl = /^data:image\/jpeg;base64,/.test(caminho) ? caminho : null; fotoDe = caminho; redesenhar(); return Promise.resolve(); }
     return sb.storage.from('avatares').createSignedUrl(caminho, 86400).then(function (r) {
       fotoUrl = r.data ? r.data.signedUrl : null;
       fotoDe = caminho;
@@ -241,7 +263,7 @@
       enviandoFoto = true; redesenhar();
       var antigo = perfil.foto;
       var caminho;
-      if (AZURE) {
+      if (FOTO_NO_CADASTRO) {
         prepararFoto(arq).then(function (blob) {
           return new Promise(function (ok, falha) {
             var leitor = new FileReader();
@@ -292,7 +314,7 @@
     sb.rpc('definir_minha_foto', { caminho: null }).then(function (r) {
       if (r.error) throw r.error;
       perfil.foto = null;
-      if (!AZURE) sb.storage.from('avatares').remove([antigo]).then(function () {}, function () {});
+      if (!FOTO_NO_CADASTRO) sb.storage.from('avatares').remove([antigo]).then(function () {}, function () {});
       return atualizarFotoUrl();
     }).then(function () {
       toast('Pronto: no lugar da foto aparecem as suas iniciais (' + iniciais() + ').', 'ok');
@@ -317,6 +339,7 @@
   function abrirSenha() {
     // Modo Azure: a senha é a da conta Microsoft; a troca é feita na página da Microsoft.
     if (AZURE) { window.open('https://mysignins.microsoft.com/security-info/password/change', '_blank', 'noopener'); return; }
+    if (DEMO) { toast('Na demonstração não há senha para trocar.'); return; }
     senhaAberta = true; redesenhar();
     setTimeout(function () { var a = document.getElementById('pf-atual'); if (a) a.focus(); }, 0);
   }

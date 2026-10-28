@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "appId": null,
+  "appDisplayName": "Ourinhos Saneamento - Demonstracao",
+  "region": "prod",
+  "appType": "CodeApp",
+  "environmentId": "Default-efb098e2-b8f8-4952-8770-f2cac20de3fe",
+  "description": "Sistema operacional com dados ficticios",
+  "buildPath": "dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {}
+}
