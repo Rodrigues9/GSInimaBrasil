@@ -13,13 +13,25 @@
   'use strict';
 
   var env = window.ENV || {};
-  if (!window.supabase || !env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+  // Modo Azure: login com a conta Microsoft (Azure Static Web Apps) e banco no Azure, pela API em /api.
+  // As consultas continuam as mesmas; muda só o login, a foto e a troca de senha.
+  var AZURE = env.MODO === 'azure';
+  if (!window.supabase || (!AZURE && (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY))) {
     console.warn('Supabase não configurado: o app vai rodar só com dados de exemplo.');
     return;
   }
-  var sb = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'gsinima.sessao' }
-  });
+  var sb = AZURE
+    ? window.supabase.createClient(location.origin + '/api', 'azure', { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } })
+    : window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: 'gsinima.sessao' }
+    });
+  // Na tela de entrada do modo Azure, login e senha somem: o botão leva ao login da Microsoft.
+  if (AZURE) {
+    var css = document.createElement('style');
+    css.textContent = 'div:has(> #lg-user), div:has(> #lg-pass) { display: none !important; }' +
+      ' form:has(#lg-user) button[type=button]::after { content: " com a conta Microsoft"; }';
+    document.head.appendChild(css);
+  }
 
   // ---------- utilidades ----------
   function storeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -43,7 +55,28 @@
     return acc;
   }
 
+  // Modo Azure: quem está conectado vem de /.auth/me (login Microsoft do Static Web Apps).
+  async function carregarPerfilAzure() {
+    var me = await fetch('/.auth/me', { cache: 'no-store' }).then(function (r) { return r.json(); });
+    var cp = me && me.clientPrincipal;
+    if (!cp) { perfil = null; return null; }
+    var email = String(cp.userDetails || '').toLowerCase();
+    // Voltando do login da Microsoft: conta como atividade agora.
+    try { if (sessionStorage.getItem('gsinima.entrando')) { sessionStorage.removeItem('gsinima.entrando'); storeSet('gsinima.web.atividade', String(Date.now())); } } catch (e) { /* sem armazenamento */ }
+    await sb.rpc('registrar_acesso'); // no primeiro acesso, liga a conta Microsoft ao cadastro
+    var r = await sb.from('ourinhos_usuarios').select('*').eq('email', email).maybeSingle();
+    if (r.error) throw r.error;
+    perfil = r.data || null;
+    if (!perfil || !perfil.ativo) {
+      perfil = null;
+      throw new Error(!r.data ? 'a conta ' + email + ' não está cadastrada no sistema, fale com o administrador' : 'conta desativada, fale com o administrador');
+    }
+    atualizarFotoUrl().then(function () {}, function () {});
+    return perfil;
+  }
+
   async function carregarPerfil() {
+    if (AZURE) return carregarPerfilAzure();
     var s = await sb.auth.getSession();
     var sessao = s.data && s.data.session;
     if (!sessao) { perfil = null; return null; }
@@ -90,6 +123,12 @@
   }
 
   async function entrarOuPrimeiroAcesso(login, senha) {
+    // Modo Azure: vai para o login da Microsoft e volta para a mesma página.
+    if (AZURE) {
+      try { sessionStorage.setItem('gsinima.entrando', '1'); } catch (e) { /* sem armazenamento */ }
+      location.href = '/.auth/login/aad?post_login_redirect_uri=' + encodeURIComponent(location.pathname + location.search);
+      return new Promise(function () {});
+    }
     try {
       return await entrar(login, senha);
     } catch (err) {
@@ -133,6 +172,11 @@
   }
 
   async function sair() {
+    if (AZURE) {
+      perfil = null;
+      location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent(location.pathname);
+      return new Promise(function () {});
+    }
     try { await sb.auth.signOut(); } catch (e) { /* já saiu */ }
     perfil = null;
     fotoUrl = null; fotoDe = null;
@@ -159,6 +203,8 @@
     var caminho = perfil && perfil.foto;
     if (!caminho) { if (fotoUrl) { fotoUrl = null; fotoDe = null; redesenhar(); } return Promise.resolve(); }
     if (caminho === fotoDe && fotoUrl) return Promise.resolve();
+    // Modo Azure: a foto fica no próprio cadastro, como imagem embutida (data:image/jpeg).
+    if (AZURE) { fotoUrl = /^data:image\/jpeg;base64,/.test(caminho) ? caminho : null; fotoDe = caminho; redesenhar(); return Promise.resolve(); }
     return sb.storage.from('avatares').createSignedUrl(caminho, 86400).then(function (r) {
       fotoUrl = r.data ? r.data.signedUrl : null;
       fotoDe = caminho;
@@ -195,6 +241,28 @@
       enviandoFoto = true; redesenhar();
       var antigo = perfil.foto;
       var caminho;
+      if (AZURE) {
+        prepararFoto(arq).then(function (blob) {
+          return new Promise(function (ok, falha) {
+            var leitor = new FileReader();
+            leitor.onload = function () { ok(leitor.result); };
+            leitor.onerror = function () { falha(new Error('não foi possível ler a imagem')); };
+            leitor.readAsDataURL(blob);
+          });
+        }).then(function (dados) {
+          caminho = dados;
+          return sb.rpc('definir_minha_foto', { caminho: dados });
+        }).then(function (r) {
+          if (r.error) throw r.error;
+          perfil.foto = caminho;
+          return atualizarFotoUrl();
+        }).then(function () {
+          toast('Foto atualizada.', 'ok');
+        }).catch(function (err) {
+          toast('A foto NÃO foi trocada (' + erroTxt(err) + ').');
+        }).then(function () { enviandoFoto = false; redesenhar(); });
+        return;
+      }
       sb.auth.getUser().then(function (u) {
         if (!u.data || !u.data.user) throw new Error('entre de novo');
         caminho = u.data.user.id + '/' + Date.now() + '.jpg';
@@ -224,7 +292,7 @@
     sb.rpc('definir_minha_foto', { caminho: null }).then(function (r) {
       if (r.error) throw r.error;
       perfil.foto = null;
-      sb.storage.from('avatares').remove([antigo]).then(function () {}, function () {});
+      if (!AZURE) sb.storage.from('avatares').remove([antigo]).then(function () {}, function () {});
       return atualizarFotoUrl();
     }).then(function () {
       toast('Pronto: no lugar da foto aparecem as suas iniciais (' + iniciais() + ').', 'ok');
@@ -247,6 +315,8 @@
   // Fica fechado (só o botão "Alterar senha"); ao clicar, abrem os três campos.
   var trocandoSenha = false, senhaAberta = false;
   function abrirSenha() {
+    // Modo Azure: a senha é a da conta Microsoft; a troca é feita na página da Microsoft.
+    if (AZURE) { window.open('https://mysignins.microsoft.com/security-info/password/change', '_blank', 'noopener'); return; }
     senhaAberta = true; redesenhar();
     setTimeout(function () { var a = document.getElementById('pf-atual'); if (a) a.focus(); }, 0);
   }

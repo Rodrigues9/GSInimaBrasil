@@ -1,0 +1,10 @@
+{
+  "name": "ourinhos-api",
+  "version": "1.0.0",
+  "description": "Ponte entre o site (login Microsoft do Static Web Apps) e a API do banco (PostgREST no Azure).",
+  "main": "src/index.js",
+  "private": true,
+  "dependencies": {
+    "@azure/functions": "^4.5.0"
+  }
+}

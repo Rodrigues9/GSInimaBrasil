@@ -62,3 +62,13 @@ insert into public.ourinhos_usuarios (login, nome, papel, ativo, email, permisso
 values ('felipe.altafini', 'Felipe Rodrigues', 'admin', true, 'felipe.altafini@gsinima.com.br',
   '{"eta": {"on": true}, "ete": {"on": true}, "web": {"exp": true, "imp": true, "admin": true, "excluir": true, "cadastrar": true, "capacidades": true}, "poco": {"on": true}, "telas": {"agua": true, "etas": true, "etes": true, "pocos": true, "esgoto": true, "inicio": true, "etaForm": true, "volumes": true, "quimicos": true, "descargas": true, "calibracoes": true}, "coleta": {"on": true}, "descarga": {"on": true}}')
 on conflict do nothing;
+
+-- Foto de perfil: no Azure fica no próprio cadastro, como imagem embutida (JPEG de até ~90 KB).
+create or replace function public.definir_minha_foto(caminho text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if caminho is not null and (caminho !~ '^data:image/jpeg;base64,[A-Za-z0-9+/=]+$' or length(caminho) > 120000) then
+    raise exception 'foto inválida';
+  end if;
+  update public.ourinhos_usuarios set foto = caminho where usuario_id = auth.uid();
+end $$;
