@@ -10,7 +10,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 loadDotEnv();
-const modo = process.env.MODO || '';
+const modo = process.env.MODO || process.argv[2] || ''; // também aceita "node scripts/build.js demo"
 const azure = modo === 'azure', demo = modo === 'demo';
 const out = demo ? path.join(root, 'powerapps', 'dist') : path.join(root, 'dist');
 
