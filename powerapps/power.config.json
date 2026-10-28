@@ -4,7 +4,7 @@
   "appDisplayName": "Ourinhos Saneamento - Demonstracao",
   "region": "prod",
   "appType": "CodeApp",
-  "environmentId": "Default-efb098e2-b8f8-4952-8770-f2cac20de3fe",
+  "environmentId": "0ec1e2c8-ab09-ebab-9228-36eb4b115fe4",
   "description": "Sistema operacional com dados ficticios",
   "buildPath": "dist",
   "buildEntryPoint": "index.html",
