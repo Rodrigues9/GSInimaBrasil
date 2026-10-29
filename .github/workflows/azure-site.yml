@@ -1,0 +1,49 @@
+# Publica a versão Azure do site (Azure Static Web Apps) a cada envio para a branch "azure".
+#
+# Monta o site com MODO=azure (login Microsoft, sem logos, nome da empresa genérico) e envia o site e a
+# ponte /api (pasta api/) para o Static Web Apps "swa-ourinhos-saneamento".
+# A branch main continua indo para a Vercel, como antes.
+#
+# Segredo necessário (Settings > Secrets and variables > Actions):
+#   AZURE_STATIC_WEB_APPS_API_TOKEN - token de implantação do Static Web Apps
+#   (portal do Azure > swa-ourinhos-saneamento > Gerenciar token de implantação)
+name: Publicar site no Azure
+
+on:
+  push:
+    branches: [azure]
+  workflow_dispatch: # permite publicar na hora, pelo botão "Run workflow"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-site
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Montar o site (versão Azure)
+        run: |
+          npm ci
+          MODO=azure node scripts/build.js
+
+      - name: Publicar no Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: dist
+          api_location: api
+          output_location: ""
+          skip_app_build: true
