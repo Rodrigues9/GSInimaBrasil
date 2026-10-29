@@ -3,8 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// PASTA=powerapps/dist serve a versão de demonstração (Power Apps).
-const root = path.resolve(__dirname, '..', process.env.PASTA || 'dist');
+const root = path.resolve(__dirname, '..', 'dist');
 const port = Number(process.env.PORT) || 3000;
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' };
 

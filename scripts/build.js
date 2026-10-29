@@ -2,17 +2,11 @@
 // - copia as páginas e o js/
 // - copia o supabase-js (versão para navegador) e o xlsx (planilhas) para dist/vendor/
 // - gera dist/env.js com as variáveis NEXT_PUBLIC_* (do .env local ou das variáveis da Vercel)
-// MODO=azure: site no Azure Static Web Apps, com login Microsoft e a API em /api (não usa as chaves do Supabase).
-// MODO=demo: versão do Power Apps, sem banco e com dados fictícios (js/demo.js), em powerapps/dist/,
-//            com endereços relativos (o Power Apps serve o site dentro de uma pasta própria).
 const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-loadDotEnv();
-const modo = process.env.MODO || '';
-const azure = modo === 'azure', demo = modo === 'demo';
-const out = demo ? path.join(root, 'powerapps', 'dist') : path.join(root, 'dist');
+const out = path.join(root, 'dist');
 
 function loadDotEnv() {
   const file = path.join(root, '.env');
@@ -29,35 +23,25 @@ function copy(from, to) {
   fs.cpSync(src, dst, { recursive: true });
 }
 
+loadDotEnv();
+// MODO=azure: site no Azure Static Web Apps, com login Microsoft e a API em /api (não usa as chaves do Supabase).
+const azure = process.env.MODO === 'azure';
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-if (!azure && !demo && (!url || !key)) {
+if (!azure && (!url || !key)) {
   console.error('Faltam NEXT_PUBLIC_SUPABASE_URL e/ou NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (no .env ou nas variáveis de ambiente da Vercel).');
   process.exit(1);
 }
 
 fs.rmSync(out, { recursive: true, force: true });
-fs.mkdirSync(out, { recursive: true });
+fs.mkdirSync(out);
 ['index.html', 'favicon.png', 'img', 'js'].forEach((p) => copy(p));
 copy('node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'vendor/supabase.js');
 // Biblioteca de planilhas (só é carregada quando alguém exporta em Excel).
 copy('node_modules/xlsx/dist/xlsx.full.min.js', 'vendor/xlsx.js');
 fs.writeFileSync(path.join(out, 'env.js'),
-  'window.ENV = ' + JSON.stringify(azure ? { MODO: 'azure' } : demo ? { MODO: 'demo' } : { SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');
+  'window.ENV = ' + JSON.stringify(azure ? { MODO: 'azure' } : { SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');
 // Configuração do Azure Static Web Apps (login Microsoft e proteção da API).
 if (azure) copy('staticwebapp.config.json');
-if (demo) {
-  // Endereços relativos ("/img/x.png" -> "img/x.png") e o gerador de dados fictícios antes do db.js.
-  const relativo = (txt) => txt.replace(/(["'])\/(img|js|vendor)\//g, '$1$2/').replace(/(["'])\/(env\.js|favicon\.png)/g, '$1$2');
-  const html = path.join(out, 'index.html');
-  let s = relativo(fs.readFileSync(html, 'utf8'));
-  s = s.replace('<script src="js/db.js"></script>', '<script src="js/demo.js"></script>\n<script src="js/db.js"></script>');
-  if (!s.includes('js/demo.js')) { console.error('Não achei onde incluir o js/demo.js no index.html.'); process.exit(1); }
-  fs.writeFileSync(html, s);
-  const db = path.join(out, 'js', 'db.js');
-  fs.writeFileSync(db, relativo(fs.readFileSync(db, 'utf8')));
-} else {
-  fs.rmSync(path.join(out, 'js', 'demo.js'), { force: true });
-}
 
-console.log('Site gerado em ' + path.relative(root, out) + '/');
+console.log('Site gerado em dist/');
