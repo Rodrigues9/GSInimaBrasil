@@ -53,3 +53,8 @@ O registro próprio do app no Entra ID (para limitar o login só à empresa, no 
 - **Nomes**: os locais (ETAs, poços, ETEs, macromedidores, bairros) têm os nomes reais; só o nome da empresa (GS Inima, Ourinhos Saneamento) vira genérico, e as pessoas dos dados são inventadas.
 - **Dados fictícios de 2025** no banco do Azure: `node scripts/azure/4-dados-ficticios.js 2025-01-01 2025-12-31 > dados.sql` e `psql -f dados.sql` (apaga os lançamentos e grava um ano inventado; pessoas inventadas; mantém o administrador). Nada vem do Supabase.
 - Os painéis abrem no mês atual: para ver os dados, escolha **Ano → 2025** no seletor de período. A Página Inicial mostra só os últimos lançamentos, por isso fica vazia.
+
+## Pendências registradas (para depois)
+
+- **Endereços limpos (29/10/2026)**: trocar `.../#WebDashboard` por `.../inicio`, `.../#WebVolumes` por `.../volumes` etc., só na versão Azure (o Static Web Apps já tem o `navigationFallback`). Links antigos com `#` devem continuar funcionando e redirecionar.
+- **Domínio próprio (29/10/2026)**: trocar `green-cliff-075ff460f.1.azurestaticapps.net` (endereço provisório do Azure) por um endereço da empresa, ex. `sistema.ourinhossaneamento.com.br`. Depende do TI cadastrar o registro no DNS; o plano gratuito inclui o HTTPS.
