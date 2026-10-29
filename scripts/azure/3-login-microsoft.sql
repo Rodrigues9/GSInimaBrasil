@@ -72,3 +72,8 @@ begin
   end if;
   update public.ourinhos_usuarios set foto = caminho where usuario_id = auth.uid();
 end $$;
+
+-- A foto embutida (até ~120 mil caracteres) não cabe no limite antigo de 200 caracteres do caminho do Storage.
+alter table public.ourinhos_usuarios drop constraint if exists ourinhos_usuarios_foto_check;
+alter table public.ourinhos_usuarios drop constraint if exists perfis_foto_check;
+alter table public.ourinhos_usuarios add constraint ourinhos_usuarios_foto_check check (foto is null or char_length(foto) <= 130000);

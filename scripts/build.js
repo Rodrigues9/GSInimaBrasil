@@ -43,5 +43,14 @@ fs.writeFileSync(path.join(out, 'env.js'),
   'window.ENV = ' + JSON.stringify(azure ? { MODO: 'azure' } : { SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');
 // Configuração do Azure Static Web Apps (login Microsoft e proteção da API).
 if (azure) copy('staticwebapp.config.json');
+// Versão Azure (teste): sem logos e com nomes fictícios (scripts/azure/ficticio.js).
+if (azure) {
+  const { ficticio, semLogos, faviconNeutro } = require('./azure/ficticio');
+  const html = path.join(out, 'index.html'), db = path.join(out, 'js', 'db.js');
+  fs.writeFileSync(html, ficticio(semLogos(fs.readFileSync(html, 'utf8'))));
+  fs.writeFileSync(db, ficticio(fs.readFileSync(db, 'utf8')));
+  fs.writeFileSync(path.join(out, 'favicon.png'), faviconNeutro());
+  fs.rmSync(path.join(out, 'img'), { recursive: true, force: true }); // as imagens eram só os logos
+}
 
 console.log('Site gerado em dist/');
