@@ -23,7 +23,7 @@ Proteção: só os dados ficam fechados (como hoje). A página abre, mas nada ap
 
 Senhas e segredos ficam só no computador do Felipe (`%USERPROFILE%\.ourinhos-azure\segredos.json`) e nas configurações do Azure, nunca no GitHub.
 
-Publicar o site: `MODO=azure node scripts/build.js` e depois `npx @azure/static-web-apps-cli deploy ./dist --api-location ./api --api-language node --api-version 20 --env production` (com o token de implantação do Static Web Apps em `SWA_CLI_DEPLOYMENT_TOKEN`).
+Publicar o site: **automático**. Cada envio para a branch `azure` no GitHub roda a rotina "Publicar site no Azure" (.github/workflows/azure-site.yml), que monta a versão Azure e publica no Static Web Apps. O token de implantação fica guardado no segredo `AZURE_STATIC_WEB_APPS_API_TOKEN` do GitHub. Publicação manual (reserva): `MODO=azure node scripts/build.js` e `npx @azure/static-web-apps-cli deploy ./dist --api-location ./api --api-language node --api-version 20 --env production`.
 
 O registro próprio do app no Entra ID (para limitar o login só à empresa, no plano Standard) depende do TI: a conta do Felipe não pode registrar aplicativos.
 
