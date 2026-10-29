@@ -58,3 +58,5 @@ O registro próprio do app no Entra ID (para limitar o login só à empresa, no 
 
 - **Endereços limpos (29/10/2026)**: trocar `.../#WebDashboard` por `.../inicio`, `.../#WebVolumes` por `.../volumes` etc., só na versão Azure (o Static Web Apps já tem o `navigationFallback`). Links antigos com `#` devem continuar funcionando e redirecionar.
 - **Domínio próprio (29/10/2026)**: trocar `green-cliff-075ff460f.1.azurestaticapps.net` (endereço provisório do Azure) por um endereço da empresa, ex. `sistema.ourinhossaneamento.com.br`. Depende do TI cadastrar o registro no DNS; o plano gratuito inclui o HTTPS.
+- **Regras de acesso rápidas** (`scripts/azure/5-regras-rapidas.sql`): as regras passaram a calcular "quem está conectado" uma vez por consulta, e não uma vez por linha. Os volumes do ano caíram de 27–84 s para menos de 2 s, com o mesmo resultado de acesso. Rodar de novo depois de restaurar a estrutura.
+- Cada pessoa tem o último período guardado por tela (`ourinhos_usuarios.preferencias`). Se os dados mudarem de ano, limpe as chaves `periodo.*` para as telas voltarem a abrir no mês atual.
