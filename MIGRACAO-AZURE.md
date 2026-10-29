@@ -50,6 +50,6 @@ O registro próprio do app no Entra ID (para limitar o login só à empresa, no 
 ## Versão de teste para o TI: sem marcas e com dados fictícios (29/10/2026)
 
 - **Sem logos**: no build `MODO=azure`, `scripts/azure/ficticio.js` troca o logo animado da entrada, os logos do menu e o ícone da aba por um quadro "LOGO" do mesmo tamanho. O código original (e o site da Vercel) continua com os logos.
-- **Nomes fictícios**: o mesmo arquivo troca, só na versão Azure, cidade, empresa, poços, ETEs, reservatórios e bairros por nomes inventados (ex.: Poço Diamantes → Poço Aurora, ETE Choso Misato → ETE Recanto, ETA Pardo → ETA Manso).
+- **Nomes**: os locais (ETAs, poços, ETEs, macromedidores, bairros) têm os nomes reais; só o nome da empresa (GS Inima, Ourinhos Saneamento) vira genérico, e as pessoas dos dados são inventadas.
 - **Dados fictícios de 2025** no banco do Azure: `node scripts/azure/4-dados-ficticios.js 2025-01-01 2025-12-31 > dados.sql` e `psql -f dados.sql` (apaga os lançamentos e grava um ano inventado; pessoas inventadas; mantém o administrador). Nada vem do Supabase.
 - Os painéis abrem no mês atual: para ver os dados, escolha **Ano → 2025** no seletor de período. A Página Inicial mostra só os últimos lançamentos, por isso fica vazia.

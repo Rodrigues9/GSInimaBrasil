@@ -1,20 +1,14 @@
-// Versão Azure (teste para o TI): sem marcas e sem nomes reais.
-// Aplicado pelo build (MODO=azure) nos arquivos de dist/; o código original continua com os nomes e logos reais.
+// Versão Azure (teste para o TI): sem marcas.
+// Aplicado pelo build (MODO=azure) nos arquivos de dist/; o código original continua com os logos e o nome da empresa.
 // - logos (animado da entrada, do menu aberto e recolhido, favicon) viram um quadro "LOGO" do mesmo tamanho;
-// - nomes de lugares, sistemas, empresa e cidade viram nomes fictícios (os dados fictícios do banco usam os mesmos).
+// - o nome da empresa vira um nome genérico; os nomes dos locais (ETAs, poços, ETEs, macromedidores) são os reais.
 const zlib = require('zlib');
 
-// Nome real -> nome fictício. Os mais longos primeiro (ex.: "Nova Alcântara" antes de "Alcântara").
+// Nome real -> nome genérico. Os mais longos primeiro.
 const NOMES = [
   ['GS Inima Tech', 'Sistema Operacional'], ['GS Inima TECH', 'Sistema Operacional'], ['GS Inima', 'Empresa Modelo'],
-  ['Ourinhos Saneamento', 'Saneamento Modelo'], ['Ourinhos', 'Cidade Modelo'],
-  ['Nova Alcântara', 'Jardim Novo'], ['Alcântara', 'Jardim Novo'],
-  ['Ville de France', 'Primavera'], ['Choso Misato', 'Recanto'], ['Minas Gerais', 'das Águas'],
-  ['São Silvestre', 'Santa Clara'], ['São João', 'Mirante'], ['Bela Vista', 'Colina'],
-  ['Diamantes', 'Aurora'], ['Esmeralda', 'Bosque'], ['Moradas', 'Cascata'], ['Pacaembu', 'Lagoa'],
-  ['Trianon', 'Horizonte'], ['Paineiras', 'Serra Verde'], ['Anchieta', 'Vila Rica'], ['Cohab', 'Conjunto Sol'],
-  ['Margarida', 'Esperança'], ['Pardo', 'Manso'],
-  // dados de exemplo das telas (quando ainda não há lançamentos)
+  ['Ourinhos Saneamento', 'Saneamento Modelo'],
+  // pessoas nos dados de exemplo das telas (quando ainda não há lançamentos)
   ["'Felipe Rodrigues'", "'Bruno Lima'"], ["'Felipe'", "'Bruno'"]
 ];
 // Mesmo texto escrito com acentos em \u00xx (como fica dentro dos modelos das telas no index.html).

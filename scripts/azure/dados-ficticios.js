@@ -1,7 +1,6 @@
 // Gerador de dados FICTÍCIOS para o banco da versão Azure (teste para o TI).
 // Usado por 4-dados-ficticios.js: gera um ano de lançamentos inventados (macromedidores, análises, níveis,
-// ETEs, calibrações, químicos, coletas, descargas e usuários). Os nomes reais são trocados pelos fictícios
-// de ficticio.js, os mesmos que a versão Azure do site mostra.
+// ETEs, calibrações, químicos, coletas, descargas e usuários) com os nomes reais dos locais e pessoas inventadas.
 'use strict';
 
   // ---------- números "aleatórios" sempre iguais (mesma demonstração para todo mundo) ----------

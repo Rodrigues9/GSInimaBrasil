@@ -2,7 +2,7 @@
 // Uso: node scripts/azure/4-dados-ficticios.js 2025-01-01 2025-12-31 > %USERPROFILE%\.ourinhos-azure\dados.sql
 //      e depois psql -f com o administrador do servidor.
 // Apaga antes os lançamentos existentes (o banco do Azure só tem estrutura e o administrador).
-// Os nomes reais (pontos, ETEs, bairros) viram os fictícios de ficticio.js; as pessoas já são inventadas.
+// Os locais (pontos, ETEs, bairros) têm os nomes reais; as pessoas e os valores são inventados.
 const { gerar } = require('./dados-ficticios');
 const { ficticio } = require('./ficticio');
 
@@ -11,9 +11,9 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(ini || '') || !/^\d{4}-\d{2}-\d{2}$/.test(fim ||
   console.error('Informe o período: node scripts/azure/4-dados-ficticios.js 2025-01-01 2025-12-31');
   process.exit(1);
 }
-const t = JSON.parse(ficticio(JSON.stringify(gerar(ini, fim)).replace(/Av\. Jacinto Ferreira de Sá/g, 'Av. das Palmeiras')));
+const t = JSON.parse(ficticio(JSON.stringify(gerar(ini, fim))));
 // Valores aceitos pelas regras do banco: origem (app/planilha), grupo dos macromedidores (eta/poco) e código do sistema.
-const SISTEMA = { 'ETAs': 'eta', 'Mirante': 'sj', 'Cascata': 'mor' };
+const SISTEMA = { 'ETAs': 'eta', 'São João': 'sj', 'Moradas': 'mor' };
 Object.keys(t).forEach((n) => (t[n] || []).forEach((l) => {
   if ('origem' in l) l.origem = 'planilha';
   if (n === 'ourinhos_macros' && l.grupo !== 'eta') l.grupo = 'poco';
