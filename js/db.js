@@ -16,6 +16,8 @@
   // Modo Azure: login com a conta Microsoft (Azure Static Web Apps) e banco no Azure, pela API em /api.
   // As consultas continuam as mesmas; muda só o login, a foto e a troca de senha.
   var AZURE = env.MODO === 'azure';
+  // Linhas por página nas buscas longas: o Supabase entrega no máximo 1.000; a API do Azure aceita mais (menos idas e vindas).
+  var PASSO = AZURE ? 5000 : 1000;
   if (!window.supabase || (!AZURE && (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY))) {
     console.warn('Supabase não configurado: o app vai rodar só com dados de exemplo.');
     return;
@@ -442,7 +444,7 @@
     return out;
   }
   async function buscarTudo(tabela, campoData, de, ate) {
-    var linhas = [], passo = 1000;
+    var linhas = [], passo = PASSO;
     for (var ini = 0; ; ini += passo) {
       var r = await q(sb.from(tabela).select('*').gte(campoData, de).lt(campoData, ate).order(campoData, { ascending: true }).range(ini, ini + passo - 1));
       linhas = linhas.concat(r || []);
@@ -820,7 +822,7 @@
   function ate(req, ateIso) { return ateIso ? req.lt('criado_em', ateIso) : req; }
   // Busca no período em páginas de 1.000 linhas, da mais antiga para a mais recente.
   async function paginado(tabela, campos, desdeIso, ateIso) {
-    var linhas = [], passo = 1000;
+    var linhas = [], passo = PASSO;
     for (var ini = 0; ; ini += passo) {
       var r = await q(ate(sb.from(tabela).select(campos).gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
       linhas = linhas.concat(r || []);
@@ -1997,7 +1999,7 @@
     },
     // Operação das ETEs desde a data, da mais recente para a mais antiga (em páginas de 1.000 linhas).
     operacaoEtes: async function (desdeIso, ateIso) {
-      var linhas = [], passo = 1000;
+      var linhas = [], passo = PASSO;
       for (var ini = 0; ; ini += passo) {
         var r = await q(ate(sb.from('ourinhos_operacao_etes').select('criado_em,turno,ete,vazao_m3h,checklist,analises,operador').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: false }).range(ini, ini + passo - 1));
         linhas = linhas.concat(r || []);
@@ -2028,7 +2030,7 @@
     // Nos dias que têm volume oficial (ourinhos_volumes_diarios, da planilha), ele substitui o volume das leituras:
     // produção com o código do ponto e distribuição como "a_" + área. A vazão das leituras continua valendo.
     volumes: async function (desdeIso, ateIso) {
-      var linhas = [], oficiais = [], passo = 1000, ini;
+      var linhas = [], oficiais = [], passo = PASSO, ini;
       for (ini = 0; ; ini += passo) {
         var r = await q(ate(sb.from('ourinhos_macros').select('ponto_id,criado_em,volume_m3,vazao_m3h').gte('criado_em', desdeIso), ateIso).order('criado_em', { ascending: true }).range(ini, ini + passo - 1));
         linhas = linhas.concat(r || []);

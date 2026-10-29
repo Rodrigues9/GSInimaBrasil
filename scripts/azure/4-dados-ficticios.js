@@ -1,5 +1,5 @@
 // Migração para o Azure, passo 4 (teste para o TI): grava no banco "ourinhos" do Azure um ano de dados FICTÍCIOS.
-// Uso: node scripts/azure/4-dados-ficticios.js 2025-01-01 2025-12-31 > %USERPROFILE%\.ourinhos-azure\dados.sql
+// Uso: node scripts/azure/4-dados-ficticios.js 2026-01-01 2026-10-29 > %USERPROFILE%\.ourinhos-azure\dados.sql
 //      e depois psql -f com o administrador do servidor.
 // Apaga antes os lançamentos existentes (o banco do Azure só tem estrutura e o administrador).
 // Os locais (pontos, ETEs, bairros) têm os nomes reais; as pessoas e os valores são inventados.
@@ -8,10 +8,13 @@ const { ficticio } = require('./ficticio');
 
 const [ini, fim] = process.argv.slice(2);
 if (!/^\d{4}-\d{2}-\d{2}$/.test(ini || '') || !/^\d{4}-\d{2}-\d{2}$/.test(fim || '')) {
-  console.error('Informe o período: node scripts/azure/4-dados-ficticios.js 2025-01-01 2025-12-31');
+  console.error('Informe o período: node scripts/azure/4-dados-ficticios.js 2026-01-01 2026-10-29');
   process.exit(1);
 }
 const t = JSON.parse(ficticio(JSON.stringify(gerar(ini, fim))));
+// Nada no futuro: no último dia, só os lançamentos até a hora atual.
+const agora = new Date().toISOString();
+Object.keys(t).forEach((n) => { t[n] = (t[n] || []).filter((l) => (l.criado_em || l.coletada_em || '') <= agora); });
 // Valores aceitos pelas regras do banco: origem (app/planilha), grupo dos macromedidores (eta/poco) e código do sistema.
 const SISTEMA = { 'ETAs': 'eta', 'São João': 'sj', 'Moradas': 'mor' };
 Object.keys(t).forEach((n) => (t[n] || []).forEach((l) => {
@@ -23,7 +26,7 @@ Object.keys(t).forEach((n) => (t[n] || []).forEach((l) => {
 // Usuários fictícios: sem conta ligada (usuario_id fica vazio até um primeiro acesso), sem o usuário de demonstração.
 t.ourinhos_usuarios = t.ourinhos_usuarios.filter((u) => u.login !== 'demonstracao').map((u) => Object.assign(u, { usuario_id: null, criado_por: null }));
 
-const TABELAS = ['capacidades_pocos', 'ourinhos_usuarios', 'ourinhos_macros', 'ourinhos_analises_pocos', 'ourinhos_medicoes_pocos', 'ourinhos_operacao_etes',
+const TABELAS = ['capacidades_pocos', 'ourinhos_usuarios', 'ourinhos_macros', 'ourinhos_operacao_etas', 'ourinhos_analises_pocos', 'ourinhos_medicoes_pocos', 'ourinhos_operacao_etes',
   'ourinhos_analises_esgoto', 'ourinhos_calibracoes', 'ourinhos_analises_agua', 'ourinhos_estoque_quimicos', 'ourinhos_descarregamentos',
   'ourinhos_coletas_campo', 'descargas_rede'];
 const out = ['\\set ON_ERROR_STOP on', 'begin;',

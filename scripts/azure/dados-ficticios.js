@@ -108,6 +108,30 @@
             'sulfeto-b': arred(entre(0.05, 0.3), 2), 'sulfeto-t': arred(entre(0.01, 0.08), 2) },
           observacao: null, operador: ANALISTAS[0], usuario_id: null, origem: 'demonstracao', linha_planilha: null });
       });
+      // Operação das ETAs (formulário "Operação ETA"): quatro lançamentos por dia em cada ETA, mais forte na chuva de verão.
+      ['pardo1', 'pardo2'].forEach(function (eta, e) {
+        var verao = d.getMonth() <= 2 || d.getMonth() >= 10, chuvoso = rnd() < (verao ? 0.35 : 0.1);
+        [2, 8, 14, 20].forEach(function (h) {
+          var turb = arred(chuvoso ? entre(60, 250) : entre(8, 45), 1), pacC = arred(10 + turb * 0.12 + entre(-2, 2), 1);
+          var dados = {
+            captacao: { vazao_m3h: arred((e ? 380 : 1580) * entre(0.92, 1.06)), nivel_rio_m: arred((verao ? 2.4 : 1.6) + entre(-0.3, 0.3), 2), bombas: e ? 1 : 2 },
+            bruta: { turbidez: turb, cor: arred(turb * entre(2.5, 4)), ph: arred(entre(6.8, 7.5), 2) },
+            pac: { pac_vazao_mlmin: arred(pacC * (e ? 16 : 62)), pac_concentracao_mgl: pacC },
+            coagulada: { ph: arred(entre(6.4, 7), 2) },
+            decantada: { turbidez: arred(entre(1, 4), 2) },
+            filtrada: { turbidez: arred(entre(0.2, 0.8), 2) },
+            tratada: { turbidez: arred(entre(0.15, 0.7), 2), cor: arred(entre(1, 6)), ph: arred(entre(6.8, 7.6), 2), cloro_mgl: arred(rnd() < 0.02 ? entre(2.05, 2.3) : entre(0.9, 1.6), 2),
+              fluor_mgl: arred(rnd() < 0.03 ? entre(0.5, 0.58) : entre(0.62, 0.78), 2), cloro_dosagem_lh: arred(entre(18, 32), 1), fluor_dosagem_mlmin: arred(entre(180, 320)) }
+          };
+          // Lavagem de filtros: na Pardo I, um filtro por manhã; às vezes todos depois de chuva forte.
+          if (h === 8 && (!e || rnd() < 0.3)) {
+            var todos = chuvoso && rnd() < 0.3, n = 1 + Math.floor(rnd() * 8);
+            dados.filtrada.lavagem = { filtros: todos ? [1, 2, 3, 4, 5, 6, 7, 8] : [n], inicio: '08:' + String(10 + Math.floor(rnd() * 40)), fim: '09:' + String(10 + Math.floor(rnd() * 40)) };
+          }
+          t.ourinhos_operacao_etas.push({ id: uuid(), criado_em: quando(dia, h, 5 + Math.floor(rnd() * 20)), usuario_id: null, operador: quem(), eta: eta,
+            horario: String(h).padStart(2, '0') + ':00:00', operadores: [quem()], dados: dados, observacao: null });
+        });
+      });
       // Calibração diária dos equipamentos do laboratório.
       t.ourinhos_calibracoes.push({ id: uuid(), criado_em: quando(dia, 7, 40), turno: 'Diurno', operador: quem(), usuario_id: null, origem: 'demonstracao', linha_planilha: null, observacao: null,
         leituras: { c0: 0, c10: arred(entre(9.6, 10.3), 1), c500: arred(entre(490, 510)), p4: arred(entre(3.98, 4.03), 2), p7: arred(entre(6.98, 7.03), 2), p10: arred(entre(9.97, 10.04), 2),
