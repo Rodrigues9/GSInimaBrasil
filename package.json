@@ -5,9 +5,7 @@
   "description": "App do operador e sistema web da Ourinhos Saneamento",
   "scripts": {
     "build": "node scripts/build.js",
-    "dev": "node scripts/build.js && node scripts/serve.js",
-    "build:demo": "node scripts/build.js demo",
-    "demo": "node scripts/build.js demo && node scripts/serve.js powerapps/dist 3010"
+    "dev": "node scripts/build.js && node scripts/serve.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
