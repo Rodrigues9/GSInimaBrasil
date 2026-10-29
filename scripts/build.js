@@ -43,11 +43,16 @@ fs.writeFileSync(path.join(out, 'env.js'),
   'window.ENV = ' + JSON.stringify(azure ? { MODO: 'azure' } : { SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key }) + ';\n');
 // Configuração do Azure Static Web Apps (login Microsoft e proteção da API).
 if (azure) copy('staticwebapp.config.json');
-// Versão Azure (teste): sem logos e com nomes fictícios (scripts/azure/ficticio.js).
+// Versão Azure (teste): sem logos, nome da empresa genérico (scripts/azure/ficticio.js)
+// e o experimento de leitura do macromedidor pela câmera (js/camera.js).
 if (azure) {
   const { ficticio, semLogos, faviconNeutro } = require('./azure/ficticio');
   const html = path.join(out, 'index.html'), db = path.join(out, 'js', 'db.js');
-  fs.writeFileSync(html, ficticio(semLogos(fs.readFileSync(html, 'utf8'))));
+  const tagDb = '<script src="/js/db.js"></script>';
+  let pagina = ficticio(semLogos(fs.readFileSync(html, 'utf8')));
+  if (!pagina.includes(tagDb)) { console.error('Não achei o db.js no index.html para incluir a câmera.'); process.exit(1); }
+  pagina = pagina.replace(tagDb, tagDb + '\n<script src="/js/camera.js"></script>');
+  fs.writeFileSync(html, pagina);
   fs.writeFileSync(db, ficticio(fs.readFileSync(db, 'utf8')));
   fs.writeFileSync(path.join(out, 'favicon.png'), faviconNeutro());
   fs.rmSync(path.join(out, 'img'), { recursive: true, force: true }); // as imagens eram só os logos
