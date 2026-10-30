@@ -23,7 +23,7 @@ Proteção: só os dados ficam fechados (como hoje). A página abre, mas nada ap
 
 Senhas e segredos ficam só no computador do Felipe (`%USERPROFILE%\.ourinhos-azure\segredos.json`) e nas configurações do Azure, nunca no GitHub.
 
-Publicar o site: **automático**. Cada envio para a branch `azure` no GitHub roda a rotina "Publicar site no Azure" (.github/workflows/azure-site.yml), que monta a versão Azure e publica no Static Web Apps. O token de implantação fica guardado no segredo `AZURE_STATIC_WEB_APPS_API_TOKEN` do GitHub. Publicação manual (reserva): `MODO=azure node scripts/build.js` e `npx @azure/static-web-apps-cli deploy ./dist --api-location ./api --api-language node --api-version 20 --env production`.
+Publicar o site: **automático pelo Azure DevOps**. Cada envio para a branch `azure` do repositório do Azure DevOps roda o pipeline "Publicar site no Azure" (`azure-pipelines.yml`), que monta a versão Azure e publica no Static Web Apps. O token de implantação fica na variável secreta do pipeline. Publicação manual (reserva): `MODO=azure node scripts/build.js` e `npx @azure/static-web-apps-cli deploy ./dist --api-location ./api --api-language node --api-version 20 --env production`.
 
 O registro próprio do app no Entra ID (para limitar o login só à empresa, no plano Standard) depende do TI: a conta do Felipe não pode registrar aplicativos.
 
@@ -66,5 +66,5 @@ O registro próprio do app no Entra ID (para limitar o login só à empresa, no 
 
 - Organização **felipealtafini** (https://dev.azure.com/felipealtafini), projeto privado **Ourinhos Saneamento**. O repositório recebeu todas as branches (`azure` como padrão, `main`, `site-aberto`, `backup-semanal`) e a tag `versao-site-aberto-2026-10-28`, com todo o histórico.
 - Pipeline **"Publicar site no Azure"** (`azure-pipelines.yml`): a cada envio para a branch `azure`, monta a versão Azure e publica no Static Web Apps. A variável secreta `AZURE_STATIC_WEB_APPS_API_TOKEN` já está cadastrada.
-- **Pendente**: a organização nova ainda não tem cota de agentes hospedados ("No agent found in pool Azure Pipelines"). O formulário de pedido foi desativado pela Microsoft: a cota gratuita agora é liberada automaticamente ao ligar a organização a uma assinatura do Azure (Configurações da organização > Cobrança). Fazer isso quando a assinatura paga da empresa estiver pronta. Até lá, quem publica é o GitHub Actions; depois, desligar `.github/workflows/azure-site.yml` para não publicar em dobro.
+- **Publicação pelo Azure DevOps (29/10/2026)**: a cota gratuita foi liberada (1 agente hospedado, 1.800 minutos por mês) e a primeira publicação pelo pipeline deu certo. A rotina do GitHub Actions (`.github/workflows/azure-site.yml`) foi removida: o site do Azure agora é publicado só pelo Azure DevOps, a cada envio para a branch `azure` do repositório do Azure DevOps (remoto `azuredevops`). O segredo `AZURE_STATIC_WEB_APPS_API_TOKEN` do GitHub ficou sem uso e pode ser apagado.
 - No computador, o repositório tem dois destinos: `origin` (GitHub) e `azuredevops` (Azure DevOps). A Vercel (site atual, branch `main`) continua ligada ao GitHub.
